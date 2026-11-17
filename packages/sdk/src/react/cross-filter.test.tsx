@@ -221,7 +221,31 @@ describe('cross-filtering', () => {
     server.events.removeAllListeners();
   });
 
-  it('applies the dashboard’s default filters to every widget', async () => {
+  it('FR-4.4 shows each filter as a removable chip, with a control that clears them all', async () => {
+    await renderOverview('asha');
+    await waitForWidgets();
+    const before = [...CHARTS, 'Countries'].map(tableText);
+    expect(screen.queryByRole('group', { name: 'Active filters' })).toBeNull();
+
+    select('Population by region', 'South Asia');
+    select('GDP by income level', 'Lower middle income');
+    const filterBar = within(screen.getByRole('group', { name: 'Active filters' }));
+    const chips = () =>
+      filterBar.queryAllByRole('listitem').map((chip) => chip.firstChild?.textContent);
+    expect(chips()).toEqual(['Region: South Asia', 'Income level: Lower middle income']);
+
+    fireEvent.click(filterBar.getByRole('button', { name: 'Remove filter Region: South Asia' }));
+    expect(chips()).toEqual(['Income level: Lower middle income']);
+    expect(filterButton('Population by region', 'South Asia').getAttribute('aria-pressed')).toBe(
+      'false',
+    );
+
+    fireEvent.click(filterBar.getByRole('button', { name: 'Clear all' }));
+    expect(screen.queryByRole('group', { name: 'Active filters' })).toBeNull();
+    await waitFor(() => expect([...CHARTS, 'Countries'].map(tableText)).toEqual(before));
+  });
+
+  it('applies the dashboard’s default filters to every widget without showing them as chips', async () => {
     await renderOverview('asha', {}, (config) => ({
       ...config,
       defaultFilters: [{ field: 'region', op: 'eq', value: 'South Asia' }],
@@ -230,5 +254,6 @@ describe('cross-filtering', () => {
 
     expect(column('Population by region', 0)).toEqual(['South Asia']);
     expect(regionsOfCountries()).toEqual(['South Asia']);
+    expect(screen.queryByRole('group', { name: 'Active filters' })).toBeNull();
   });
 });

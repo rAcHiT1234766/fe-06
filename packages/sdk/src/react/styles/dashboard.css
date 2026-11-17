@@ -29,6 +29,64 @@
   color: var(--dk-color-text-muted);
 }
 
+.dk-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dk-space-2);
+}
+
+.dk-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dk-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dk-space-1);
+  padding: var(--dk-space-1) var(--dk-space-1) var(--dk-space-1) var(--dk-space-3);
+  border: 1px solid var(--dk-color-border);
+  border-radius: var(--dk-radius);
+  background: var(--dk-color-surface-raised);
+}
+
+.dk-chip-remove {
+  display: inline-grid;
+  place-items: center;
+  width: 1.75em;
+  min-width: 24px;
+  height: 1.75em;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--dk-radius-sm);
+  background: none;
+  color: var(--dk-color-text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.dk-chip-remove:hover {
+  background: color-mix(in srgb, var(--dk-color-text) 8%, transparent);
+  color: var(--dk-color-text);
+}
+
+.dk-text-button {
+  padding: var(--dk-space-1) var(--dk-space-2);
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
 .dk-grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));

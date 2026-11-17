@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { applyDefaultFilters } from '../core/merge-query';
 import type { DashboardConfig } from '../core/types';
 import { useDashKit } from './context';
+import { FilterBar } from './FilterBar';
 import { useDashboardConfig } from './hooks/use-dashboard-config';
 import { ThemeRoot } from './ThemeRoot';
 import { ErrorState } from './ui/ErrorState';
@@ -34,6 +35,7 @@ function DashboardContent({ config }: { config: DashboardConfig }) {
           {config.description && <p className="dk-dashboard-description">{config.description}</p>}
         </div>
       </header>
+      <FilterBar />
       <div className="dk-grid">
         {layout.map(({ i, x, y, w, h }) => {
           const widget = widgets.find((candidate) => candidate.id === i);
