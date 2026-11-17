@@ -17,6 +17,7 @@
     "./dist/dashkit.js"
   ],
   "scripts": {
+    "dev": "vite build --watch",
     "build": "vite build && vite build --config vite.element.config.ts",
     "typecheck": "tsc --noEmit",
     "size": "node scripts/size.ts",

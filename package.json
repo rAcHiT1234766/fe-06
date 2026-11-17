@@ -7,7 +7,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "pnpm -r --parallel dev",
+    "dev": "pnpm --filter @dashkit/sdk build && pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit && pnpm -r typecheck",

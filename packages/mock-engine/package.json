@@ -5,7 +5,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./brands": "./src/brands.ts",
-    "./msw": "./src/msw-handlers.ts"
+    "./msw": "./src/msw-handlers.ts",
+    "./users": "./src/users.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
