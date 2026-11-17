@@ -16,7 +16,7 @@ export function createFilterStore(initialFilters: ActiveFilter[] = []) {
 
   return {
     getFilters: () => filters,
-    subscribe(listener: () => void) {
+    subscribe: (listener: () => void) => {
       listeners.add(listener);
       return () => {
         listeners.delete(listener);

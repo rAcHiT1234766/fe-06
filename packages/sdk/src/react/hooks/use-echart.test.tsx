@@ -4,6 +4,7 @@ import type { ChartOption } from '../charts/chart-options';
 import { useEChart } from './use-echart';
 
 const chart = {
+  on: vi.fn<(eventName: string, handler: (event: { dataIndex: number }) => void) => void>(),
   setOption: vi.fn(),
   setTheme: vi.fn(),
   resize: vi.fn(),
@@ -40,8 +41,14 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function Chart({ option, theme }: { option: ChartOption; theme: object }) {
-  const ref = useEChart(option, theme);
+interface ChartProps {
+  option: ChartOption;
+  theme: object;
+  onItemClick?: (dataIndex: number) => void;
+}
+
+function Chart({ option, theme, onItemClick }: ChartProps) {
+  const ref = useEChart(option, theme, onItemClick);
   return <div ref={ref} data-testid="chart" />;
 }
 
@@ -85,6 +92,20 @@ describe('useEChart', () => {
     );
     render(<Chart option={{}} theme={{}} />);
     expect(chart.setOption).toHaveBeenLastCalledWith({ animation: false }, { notMerge: true });
+  });
+
+  it('FR-4.1 passes a clicked item to the handler from the latest render', () => {
+    const first = vi.fn();
+    const latest = vi.fn();
+    const view = render(<Chart option={{}} theme={{}} onItemClick={first} />);
+    view.rerender(<Chart option={{}} theme={{}} onItemClick={latest} />);
+
+    expect(chart.on).toHaveBeenCalledOnce();
+    const [eventName, handleClick] = chart.on.mock.calls[0]!;
+    expect(eventName).toBe('click');
+    handleClick({ dataIndex: 3 });
+    expect(latest).toHaveBeenCalledWith(3);
+    expect(first).not.toHaveBeenCalled();
   });
 
   it('NFR-C4 disconnects its observer and disposes the chart on unmount', () => {

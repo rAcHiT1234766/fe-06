@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+import { applyDefaultFilters } from '../core/merge-query';
 import type { DashboardConfig } from '../core/types';
 import { useDashKit } from './context';
 import { useDashboardConfig } from './hooks/use-dashboard-config';
@@ -13,6 +15,8 @@ export type DashboardProps =
 
 function DashboardContent({ config }: { config: DashboardConfig }) {
   const { brand } = useDashKit().theme;
+  // Each widget's data effect depends on its query, so the widgets must keep their identity.
+  const widgets = useMemo(() => applyDefaultFilters(config), [config]);
   // Widgets follow the layout's reading order, so keyboard and screen reader order match the screen.
   const layout = config.layouts.lg.toSorted((a, b) => a.y - b.y || a.x - b.x);
   return (
@@ -32,7 +36,7 @@ function DashboardContent({ config }: { config: DashboardConfig }) {
       </header>
       <div className="dk-grid">
         {layout.map(({ i, x, y, w, h }) => {
-          const widget = config.widgets.find((candidate) => candidate.id === i);
+          const widget = widgets.find((candidate) => candidate.id === i);
           if (!widget) return null;
           const placement = { gridColumn: `${x + 1} / span ${w}`, gridRow: `${y + 1} / span ${h}` };
           return (

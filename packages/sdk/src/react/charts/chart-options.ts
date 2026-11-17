@@ -6,7 +6,7 @@ import type {
 } from 'echarts/components';
 import type { ComposeOption } from 'echarts/core';
 import { formatValue } from '../../core/format';
-import type { QueryResult, WidgetConfig } from '../../core/types';
+import type { QueryResult, Scalar, WidgetConfig } from '../../core/types';
 
 export type ChartOption = ComposeOption<
   | BarSeriesOption
@@ -19,21 +19,50 @@ export type ChartOption = ComposeOption<
 
 type Column = QueryResult['columns'][number];
 
-export type BuildChartOption = (result: QueryResult, widget: WidgetConfig) => ChartOption;
+/** The values a chart's own cross-filter selected, and the colour that outlines them. */
+export interface ChartSelection {
+  values: Scalar[];
+  outlineColor: string;
+}
+
+export type BuildChartOption = (
+  result: QueryResult,
+  widget: WidgetConfig,
+  selection?: ChartSelection,
+) => ChartOption;
 
 function describeResult({ columns, rows }: QueryResult) {
   const dimension = columns.find((column) => column.role === 'dimension');
-  const categories = rows.map((row) =>
-    dimension ? formatValue(row[dimension.name] ?? null, dimension.format) : '',
-  );
+  const keys = rows.map((row) => (dimension ? (row[dimension.name] ?? null) : null));
+  const categories = keys.map((key) => (dimension ? formatValue(key, dimension.format) : ''));
   const measures = columns.filter((column) => column.role === 'measure');
   const valuesOf = (measure: Column) =>
     rows.map((row) => {
       const value = row[measure.name];
       return typeof value === 'number' ? value : null;
     });
-  return { categories, measures, valuesOf };
+  return { keys, categories, measures, valuesOf };
 }
+
+// Dimming the other items and outlining the selected ones shows the selection without relying on
+// colour alone.
+function markSelection<Item extends object>(
+  item: Item,
+  key: Scalar,
+  selection: ChartSelection | undefined,
+) {
+  if (!selection) return item;
+  const itemStyle = selection.values.includes(key)
+    ? { borderColor: selection.outlineColor, borderWidth: 2 }
+    : { opacity: 0.35 };
+  return { ...item, itemStyle };
+}
+
+const seriesData = (
+  values: (number | null)[],
+  keys: Scalar[],
+  selection: ChartSelection | undefined,
+) => values.map((value, index) => markSelection({ value }, keys[index] ?? null, selection));
 
 const tooltipFor = (measure: Column) => ({
   valueFormatter: (value: unknown) =>
@@ -55,8 +84,8 @@ function legendFor(widget: WidgetConfig, seriesCount: number) {
   };
 }
 
-export const buildBarOption: BuildChartOption = (result, widget) => {
-  const { categories, measures, valuesOf } = describeResult(result);
+export const buildBarOption: BuildChartOption = (result, widget, selection) => {
+  const { keys, categories, measures, valuesOf } = describeResult(result);
   const isHorizontal = widget.options?.orientation === 'horizontal';
   // Reading top to bottom should follow the query's sort order, which a y axis would reverse.
   const categoryAxis = { type: 'category' as const, data: categories, inverse: isHorizontal };
@@ -69,15 +98,15 @@ export const buildBarOption: BuildChartOption = (result, widget) => {
     series: measures.map((measure) => ({
       type: 'bar',
       name: measure.label,
-      data: valuesOf(measure),
+      data: seriesData(valuesOf(measure), keys, selection),
       tooltip: tooltipFor(measure),
       ...(widget.options?.stacked && { stack: 'total' }),
     })),
   };
 };
 
-export const buildLineOption: BuildChartOption = (result, widget) => {
-  const { categories, measures, valuesOf } = describeResult(result);
+export const buildLineOption: BuildChartOption = (result, widget, selection) => {
+  const { keys, categories, measures, valuesOf } = describeResult(result);
   return {
     ...legendFor(widget, measures.length),
     tooltip: { trigger: 'axis' },
@@ -87,14 +116,14 @@ export const buildLineOption: BuildChartOption = (result, widget) => {
     series: measures.map((measure) => ({
       type: 'line',
       name: measure.label,
-      data: valuesOf(measure),
+      data: seriesData(valuesOf(measure), keys, selection),
       tooltip: tooltipFor(measure),
     })),
   };
 };
 
-export const buildPieOption: BuildChartOption = (result, widget) => {
-  const { categories, measures, valuesOf } = describeResult(result);
+export const buildPieOption: BuildChartOption = (result, widget, selection) => {
+  const { keys, categories, measures, valuesOf } = describeResult(result);
   // Each slice is labelled directly, so a legend would only repeat the names.
   const showLegend = widget.options?.showLegend ?? false;
   return {
@@ -111,8 +140,14 @@ export const buildPieOption: BuildChartOption = (result, widget) => {
         // A smaller pie with short label lines leaves room for long category names to wrap by word.
         label: { overflow: 'break' },
         labelLine: { length: 8, length2: 8 },
-        // '-' is how ECharts marks a missing value in a pie.
-        data: categories.map((name, index) => ({ name, value: values[index] ?? '-' })),
+        data: categories.map((name, index) =>
+          // '-' is how ECharts marks a missing value in a pie.
+          markSelection(
+            { name, value: values[index] ?? ('-' as const) },
+            keys[index] ?? null,
+            selection,
+          ),
+        ),
         tooltip: tooltipFor(measure),
       };
     }),

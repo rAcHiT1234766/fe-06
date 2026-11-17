@@ -1,15 +1,28 @@
-import { useEffect, useLayoutEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from 'react';
+import { createFilterStore } from '../core/filter-store';
 import { QueryClient } from '../core/query-client';
 import { findLowContrastPairs } from '../core/theme/contrast';
 import { createTheme, resolveTheme } from '../core/theme/create-theme';
-import type { DashKitOptions } from '../core/types';
+import type { ActiveFilter, DashKitOptions } from '../core/types';
 import { DashKitContext } from './context';
 
 /** Props for {@link DashKitProvider}. Pass `token`, `getToken`, or both. */
 export interface DashKitProviderProps extends Pick<
   DashKitOptions,
-  'apiUrl' | 'token' | 'getToken' | 'theme'
+  'apiUrl' | 'token' | 'getToken' | 'theme' | 'onFilterChange'
 > {
+  /**
+   * Replaces the active cross-filters whenever a new array is passed, for example from the host's
+   * own controls. Clicks in the dashboard still change them and are reported to `onFilterChange`.
+   */
+  filters?: ActiveFilter[];
   children: ReactNode;
 }
 
@@ -28,9 +41,8 @@ function subscribeToColorScheme(onChange: () => void) {
 const systemPrefersDark = () => window.matchMedia(DARK_MODE_QUERY).matches;
 
 /**
- * Connects the dashboards inside it to the data API and gives them a theme. Data and theme are
- * not shared between providers, so give each dashboard on a page its own provider when they
- * belong to different users or brands.
+ * Connects a dashboard to the data API and gives it a theme and its cross-filters. Nothing is
+ * shared between providers, so give each dashboard on a page its own provider.
  * @example
  * <DashKitProvider apiUrl="https://api.example.com" getToken={fetchEmbedToken} theme={{ mode: 'auto' }}>
  *   <Dashboard dashboardId="overview" />
@@ -41,12 +53,24 @@ export function DashKitProvider({
   token,
   getToken,
   theme,
+  filters,
+  onFilterChange,
   children,
 }: DashKitProviderProps) {
   // A new token may belong to a different user, so it gets a new client with an empty cache.
   const client = useMemo(() => new QueryClient({ apiUrl, token }), [apiUrl, token]);
   // A layout effect, so getToken is in place before any widget's data effect sends a request.
   useLayoutEffect(() => client.setGetToken(getToken), [client, getToken]);
+
+  // Starting from the host's filters means the first queries are already filtered.
+  const [filterStore] = useState(() => createFilterStore(filters));
+  useEffect(() => {
+    if (filters) filterStore.set(filters);
+  }, [filterStore, filters]);
+  useEffect(() => {
+    if (!onFilterChange) return;
+    return filterStore.subscribe(() => onFilterChange(filterStore.getFilters()));
+  }, [filterStore, onFilterChange]);
 
   const prefersDark = useSyncExternalStore(subscribeToColorScheme, systemPrefersDark);
   const resolvedTheme = useMemo(
@@ -64,6 +88,9 @@ export function DashKitProvider({
     }
   }, [resolvedTheme]);
 
-  const value = useMemo(() => ({ client, theme: resolvedTheme }), [client, resolvedTheme]);
+  const value = useMemo(
+    () => ({ client, filterStore, theme: resolvedTheme }),
+    [client, filterStore, resolvedTheme],
+  );
   return <DashKitContext.Provider value={value}>{children}</DashKitContext.Provider>;
 }

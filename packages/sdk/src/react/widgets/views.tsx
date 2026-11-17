@@ -9,6 +9,7 @@ import {
 } from '../charts/chart-options';
 import { buildEChartsTheme } from '../charts/echarts-theme';
 import { useDashKit } from '../context';
+import { useSelection } from '../hooks/use-cross-filter';
 import { useEChart } from '../hooks/use-echart';
 import { DataTable } from './DataTable';
 
@@ -23,21 +24,33 @@ function ChartView({
   buildOption,
 }: WidgetViewProps & { buildOption: BuildChartOption }) {
   const { theme } = useDashKit();
+  const selection = useSelection(widget);
+  const selectedValues = selection?.values;
+  const outlineColor = theme.colors.text;
   const chartTheme = useMemo(() => buildEChartsTheme(theme), [theme]);
-  const option = useMemo(() => buildOption(result, widget), [buildOption, result, widget]);
-  const chartRef = useEChart(option, chartTheme);
+  const option = useMemo(
+    () => buildOption(result, widget, selectedValues && { values: selectedValues, outlineColor }),
+    [buildOption, result, widget, selectedValues, outlineColor],
+  );
+  const chartRef = useEChart(
+    option,
+    chartTheme,
+    selection && ((rowIndex) => selection.toggle(result.rows[rowIndex]?.[selection.field] ?? null)),
+  );
   return (
     <>
       <div ref={chartRef} className="dk-chart" role="img" aria-label={`${widget.title} chart`} />
-      {/* The canvas is invisible to screen readers, so they get the same numbers as a table. */}
-      <div className="dk-visually-hidden">
-        <DataTable result={result} caption={widget.title} />
+      {/* The canvas is out of reach for screen readers and keyboards, so they get the same numbers,
+          and the same filter buttons, as a table. */}
+      <div className="dk-visually-hidden dk-chart-data">
+        <DataTable result={result} caption={widget.title} selection={selection} />
       </div>
     </>
   );
 }
 
 function TableView({ widget, result }: WidgetViewProps) {
+  const selection = useSelection(widget);
   return (
     // Focusable so keyboard users can scroll a table taller or wider than its widget.
     <div
@@ -46,7 +59,7 @@ function TableView({ widget, result }: WidgetViewProps) {
       role="region"
       aria-label={`${widget.title} table`}
     >
-      <DataTable result={result} caption={widget.title} />
+      <DataTable result={result} caption={widget.title} selection={selection} />
     </div>
   );
 }

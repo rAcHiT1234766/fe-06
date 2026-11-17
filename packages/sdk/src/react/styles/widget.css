@@ -22,6 +22,7 @@
 }
 
 .dk-widget-body {
+  position: relative;
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -32,6 +33,38 @@
 .dk-chart {
   flex: 1;
   min-height: 0;
+}
+
+/* Keyboard users filter through a chart's data table, which covers the chart while it has focus. */
+.dk-chart-data:focus-within {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: var(--dk-space-3) var(--dk-space-4);
+  overflow: auto;
+  clip-path: none;
+  white-space: normal;
+  background: var(--dk-color-surface);
+}
+
+.dk-select {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+/* Weight and a solid underline mark the selected value, so the state never rests on colour. */
+.dk-select[aria-pressed='true'] {
+  font-weight: 600;
+  text-decoration-style: solid;
 }
 
 .dk-kpi {

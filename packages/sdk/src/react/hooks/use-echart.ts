@@ -1,6 +1,11 @@
 import { BarChart, LineChart, PieChart } from 'echarts/charts';
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components';
-import { init, use as registerChartModules, type EChartsType } from 'echarts/core';
+import {
+  init,
+  use as registerChartModules,
+  type ECElementEvent,
+  type EChartsType,
+} from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useEffect, useRef } from 'react';
 import type { ChartOption } from '../charts/chart-options';
@@ -18,15 +23,25 @@ registerChartModules([
 
 const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export function useEChart(option: ChartOption, theme: object) {
+export function useEChart(
+  option: ChartOption,
+  theme: object,
+  onItemClick?: (dataIndex: number) => void,
+) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<EChartsType>(null);
+  // The chart subscribes to clicks once and calls whichever handler the latest render passed.
+  const onItemClickRef = useRef(onItemClick);
+  useEffect(() => {
+    onItemClickRef.current = onItemClick;
+  });
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
     const chart = init(container);
     chartRef.current = chart;
+    chart.on('click', (event: ECElementEvent) => onItemClickRef.current?.(event.dataIndex));
     const resizeObserver = new ResizeObserver(() => chart.resize());
     resizeObserver.observe(container);
     // Canvas text only uses fonts that have finished loading, so measure again once they have.
