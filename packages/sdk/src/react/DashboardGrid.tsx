@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { GridLayout, useContainerWidth, type Layout } from 'react-grid-layout';
 import type { LayoutItem, WidgetConfig } from '../core/types';
 import { useDashKit } from './context';
@@ -10,6 +11,8 @@ interface DashboardGridProps {
   isEditing?: boolean;
   /** Called when a drag or resize ends, not on every movement. */
   onLayoutChange?: (layout: LayoutItem[]) => void;
+  /** The builder's buttons for one widget, shown next to its drag handle. */
+  actionsFor?: (widget: WidgetConfig) => ReactNode;
 }
 
 // The grid adds working flags such as `moved`, which do not belong in a saved dashboard.
@@ -35,6 +38,7 @@ export function DashboardGrid({
   layout,
   isEditing = false,
   onLayoutChange,
+  actionsFor,
 }: DashboardGridProps) {
   const { typography } = useDashKit().theme;
   const { width, containerRef } = useContainerWidth();
@@ -44,7 +48,13 @@ export function DashboardGrid({
   const gap = typography.baseFontSize;
 
   return (
+    // The container stays even when empty: the width hook measures it once, when it mounts.
     <div ref={containerRef} className="dk-grid">
+      {placed.length === 0 && (
+        <p className="dk-state">
+          {isEditing ? 'Add a widget to start.' : 'This dashboard has no widgets yet.'}
+        </p>
+      )}
       <GridLayout
         width={width}
         layout={placed.map(({ item }) => item)}
@@ -60,8 +70,11 @@ export function DashboardGrid({
               widget={widget}
               actions={
                 isEditing && (
-                  // There is no keyboard way to move a widget, so screen readers skip the handle.
-                  <span className="dk-drag-handle" title="Drag to move" aria-hidden="true" />
+                  <div className="dk-widget-actions">
+                    {actionsFor?.(widget)}
+                    {/* There is no keyboard way to move a widget, so screen readers skip the handle. */}
+                    <span className="dk-drag-handle" title="Drag to move" aria-hidden="true" />
+                  </div>
                 )
               }
             />

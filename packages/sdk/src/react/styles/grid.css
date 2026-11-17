@@ -50,6 +50,31 @@
   min-height: 0;
 }
 
+.dk-widget-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--dk-space-1);
+}
+
+.dk-icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--dk-radius-sm);
+  background: none;
+  color: var(--dk-color-text-muted);
+  cursor: pointer;
+}
+
+.dk-icon-button:hover {
+  background: color-mix(in srgb, var(--dk-color-text) 8%, transparent);
+  color: var(--dk-color-text);
+}
+
 .dk-drag-handle {
   flex: none;
   width: 18px;

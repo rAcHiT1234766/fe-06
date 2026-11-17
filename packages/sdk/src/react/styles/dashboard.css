@@ -87,6 +87,17 @@
   cursor: pointer;
 }
 
+.dk-palette {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dk-space-2);
+}
+
+.dk-palette-label {
+  color: var(--dk-color-text-muted);
+}
+
 .dk-toolbar {
   display: flex;
   flex-wrap: wrap;

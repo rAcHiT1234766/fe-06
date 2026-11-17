@@ -1,5 +1,19 @@
 import { useState } from 'react';
-import type { DashboardConfig, DashKitOptions, LayoutItem } from '../core/types';
+import {
+  addWidget,
+  duplicateWidget,
+  removeWidget,
+  withYearRule,
+} from '../core/config/edit-dashboard';
+import type {
+  DashboardConfig,
+  DashKitOptions,
+  LayoutItem,
+  WidgetConfig,
+  WidgetType,
+} from '../core/types';
+import { Palette } from './builder/Palette';
+import { WidgetActions } from './builder/WidgetActions';
 import {
   DashboardHeader,
   DashboardLoader,
@@ -9,6 +23,8 @@ import {
 import { DashboardGrid } from './DashboardGrid';
 import { FilterBar } from './FilterBar';
 import { useIsEditor } from './hooks/use-is-editor';
+import { useLatestYear } from './hooks/use-latest-year';
+import { widgetRegistry } from './widgets/registry';
 
 /** Props for {@link DashboardBuilder}. With `mode: 'edit'` an editor starts in the builder. */
 export type DashboardBuilderProps = DashboardProps & Pick<DashKitOptions, 'mode'>;
@@ -32,14 +48,31 @@ function Builder({
     isStartingInEdit ? { base: savedConfig, config: savedConfig } : undefined,
   );
   const draftConfig = isEditor && draft?.base === savedConfig ? draft.config : undefined;
+  const isEditing = draftConfig !== undefined;
   const config = draftConfig ?? savedConfig;
   const widgets = useDashboardWidgets(config);
+  const latestYear = useLatestYear(isEditing);
+
+  const editDraft = (edit: (current: DashboardConfig) => DashboardConfig) =>
+    setDraft((current) => current && { ...current, config: edit(current.config) });
 
   // Only the lg layout is authored; smaller ones are derived from it.
   const changeLayout = (lg: LayoutItem[]) =>
-    setDraft(
-      (current) => current && { ...current, config: { ...current.config, layouts: { lg } } },
-    );
+    editDraft((current) => ({ ...current, layouts: { lg } }));
+
+  const addFromPalette = (type: WidgetType) => {
+    const { defaultSize, starter } = widgetRegistry[type];
+    const widget = { type, ...starter, query: withYearRule(starter.query, latestYear) };
+    editDraft((current) => addWidget(current, widget, defaultSize));
+  };
+
+  const actionsFor = (widget: WidgetConfig) => (
+    <WidgetActions
+      widget={widget}
+      onDuplicate={() => editDraft((current) => duplicateWidget(current, widget.id))}
+      onRemove={() => editDraft((current) => removeWidget(current, widget.id))}
+    />
+  );
 
   return (
     <>
@@ -62,12 +95,14 @@ function Builder({
           </div>
         )}
       </DashboardHeader>
+      {isEditing && <Palette onAdd={addFromPalette} />}
       <FilterBar />
       <DashboardGrid
         widgets={widgets}
         layout={config.layouts.lg}
-        isEditing={draftConfig !== undefined}
+        isEditing={isEditing}
         onLayoutChange={changeLayout}
+        actionsFor={actionsFor}
       />
     </>
   );
