@@ -45,6 +45,11 @@
   border-bottom: 2px solid var(--dk-color-text-muted);
 }
 
+/* With resizing turned off the grid still renders the handles, and marks them to be hidden. */
+.dk-grid .react-resizable-hide > .react-resizable-handle {
+  display: none;
+}
+
 .dk-grid-cell {
   min-width: 0;
   min-height: 0;
