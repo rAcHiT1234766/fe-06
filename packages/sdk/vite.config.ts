@@ -3,8 +3,9 @@ import dts from 'unplugin-dts/vite';
 import { defineConfig } from 'vite';
 import pkg from './package.json' with { type: 'json' };
 
-// The host app provides these; bundling them would load a second copy of React.
-const externalPackages = Object.keys(pkg.peerDependencies);
+// The host's package manager installs these (React as a peer, ECharts as a dependency). Bundling
+// them here would make the host ship a second copy.
+const externalPackages = [...Object.keys(pkg.peerDependencies), ...Object.keys(pkg.dependencies)];
 
 export default defineConfig({
   plugins: [react(), dts({ bundleTypes: true, include: ['src'] })],
