@@ -53,10 +53,15 @@
 }
 
 .dk-widget-header {
+  display: flex;
+  align-items: center;
+  gap: var(--dk-space-2);
   padding: var(--dk-space-3) var(--dk-space-4) 0;
 }
 
 .dk-widget-title {
+  flex: 1;
+  min-width: 0;
   margin: 0;
   font-family: var(--dk-font-family-heading);
   font-size: 1em;

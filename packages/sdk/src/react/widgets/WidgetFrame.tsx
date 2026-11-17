@@ -1,9 +1,9 @@
-import { useId } from 'react';
+import { useId, type ReactNode } from 'react';
 import type { DashKitError, QueryResult, WidgetConfig } from '../../core/types';
 import { useWidgetData } from '../hooks/use-widget-data';
 import { ErrorState } from '../ui/ErrorState';
 import { Skeleton } from '../ui/Skeleton';
-import { widgetViews } from './views';
+import { widgetRegistry } from './registry';
 
 interface WidgetBodyProps {
   widget: WidgetConfig;
@@ -15,11 +15,17 @@ function WidgetBody({ widget, data, error }: WidgetBodyProps) {
   if (error) return <ErrorState error={error} />;
   if (!data) return <Skeleton />;
   if (data.rows.length === 0) return <p className="dk-state">No data for this selection</p>;
-  const View = widgetViews[widget.type];
+  const View = widgetRegistry[widget.type].view;
   return <View widget={widget} result={data} />;
 }
 
-export function WidgetFrame({ widget }: { widget: WidgetConfig }) {
+interface WidgetFrameProps {
+  widget: WidgetConfig;
+  /** Controls shown next to the title, such as the builder's widget actions. */
+  actions?: ReactNode;
+}
+
+export function WidgetFrame({ widget, actions }: WidgetFrameProps) {
   const titleId = useId();
   const { data, error, isFetching } = useWidgetData(widget);
   // A first load shows a skeleton; later loads keep the old result and show a bar instead.
@@ -31,6 +37,7 @@ export function WidgetFrame({ widget }: { widget: WidgetConfig }) {
         <h3 id={titleId} className="dk-widget-title">
           {widget.title}
         </h3>
+        {actions}
       </header>
       <div className="dk-widget-body">
         <WidgetBody widget={widget} data={data} error={error} />

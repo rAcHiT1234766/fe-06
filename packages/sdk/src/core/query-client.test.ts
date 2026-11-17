@@ -86,6 +86,22 @@ describe('QueryClient', () => {
     await expect(client.loadDashboard('missing')).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 
+  it('FR-5.1 reads the role from the token, fetching a token first if there is none', async () => {
+    const asha = new QueryClient({ apiUrl: API_URL, token: await demoToken('asha') });
+    const ravi = new QueryClient({ apiUrl: API_URL, token: await demoToken('ravi') });
+    expect(await asha.loadRole()).toBe('editor');
+    expect(await ravi.loadRole()).toBe('viewer');
+
+    const getToken = vi.fn(() => demoToken('elena'));
+    expect(await clientWithRenewal(undefined, getToken).loadRole()).toBe('editor');
+    expect(getToken).toHaveBeenCalledOnce();
+
+    expect(await new QueryClient({ apiUrl: API_URL, token: 'not-a-token' }).loadRole()).toBe(
+      undefined,
+    );
+    expect(await new QueryClient({ apiUrl: API_URL }).loadRole()).toBe(undefined);
+  });
+
   it('FR-3.1 asks getToken for the first token when none was given', async () => {
     const getToken = vi.fn(() => demoToken('elena'));
     const client = clientWithRenewal(undefined, getToken);

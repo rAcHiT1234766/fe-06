@@ -1,6 +1,6 @@
 import { demoBrands } from '@dashkit/mock-engine/brands';
 import { demoUsers } from '@dashkit/mock-engine/users';
-import { Dashboard, DashKitProvider, type DashKitTheme } from '@dashkit/sdk';
+import { DashboardBuilder, DashKitProvider, type DashKitTheme } from '@dashkit/sdk';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const API_URL = import.meta.env.VITE_DASHKIT_API_URL ?? 'http://localhost:4000';
@@ -118,7 +118,7 @@ export function App() {
             {...(isTampered ? {} : { getToken: renewToken })}
             theme={theme}
           >
-            <Dashboard dashboardId="overview" />
+            <DashboardBuilder dashboardId="overview" />
           </DashKitProvider>
         )}
       </main>

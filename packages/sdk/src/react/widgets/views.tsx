@@ -1,6 +1,6 @@
-import { useMemo, type ComponentType } from 'react';
+import { useMemo } from 'react';
 import { formatValue } from '../../core/format';
-import type { QueryResult, WidgetConfig, WidgetType } from '../../core/types';
+import type { QueryResult, WidgetConfig } from '../../core/types';
 import {
   buildBarOption,
   buildLineOption,
@@ -75,10 +75,13 @@ function KpiView({ result }: WidgetViewProps) {
   );
 }
 
-export const widgetViews: Record<WidgetType, ComponentType<WidgetViewProps>> = {
-  bar: (props) => <ChartView {...props} buildOption={buildBarOption} />,
-  line: (props) => <ChartView {...props} buildOption={buildLineOption} />,
-  pie: (props) => <ChartView {...props} buildOption={buildPieOption} />,
-  table: TableView,
-  kpi: KpiView,
-};
+export const BarView = (props: WidgetViewProps) => (
+  <ChartView {...props} buildOption={buildBarOption} />
+);
+export const LineView = (props: WidgetViewProps) => (
+  <ChartView {...props} buildOption={buildLineOption} />
+);
+export const PieView = (props: WidgetViewProps) => (
+  <ChartView {...props} buildOption={buildPieOption} />
+);
+export { KpiView, TableView, type WidgetViewProps };

@@ -1,0 +1,71 @@
+/* react-grid-layout positions every item inline. These rules stand in for its own stylesheet, which
+   uses fixed colours and always animates. */
+.dk-grid .react-grid-layout {
+  position: relative;
+  transition: height 200ms ease;
+}
+
+.dk-grid .react-grid-item {
+  transition-property: transform, width, height;
+  transition-duration: 200ms;
+}
+
+.dk-grid .react-grid-item.react-draggable-dragging,
+.dk-grid .react-grid-item.resizing {
+  z-index: 2;
+  transition: none;
+}
+
+.dk-grid .react-grid-placeholder {
+  z-index: 1;
+  border-radius: var(--dk-radius);
+  outline: 2px dashed var(--dk-color-primary);
+  outline-offset: -2px;
+  background: color-mix(in srgb, var(--dk-color-primary) 12%, transparent);
+  user-select: none;
+}
+
+.dk-grid .react-resizable-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 20px;
+  height: 20px;
+  cursor: se-resize;
+}
+
+.dk-grid .react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid var(--dk-color-text-muted);
+  border-bottom: 2px solid var(--dk-color-text-muted);
+}
+
+.dk-grid-cell {
+  min-width: 0;
+  min-height: 0;
+}
+
+.dk-drag-handle {
+  flex: none;
+  width: 18px;
+  height: 24px;
+  background-image: radial-gradient(circle, var(--dk-color-text-muted) 1.5px, transparent 2px);
+  background-size: 6px 6px;
+  cursor: grab;
+}
+
+.dk-drag-handle:active {
+  cursor: grabbing;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dk-grid .react-grid-layout,
+  .dk-grid .react-grid-item {
+    transition: none;
+  }
+}

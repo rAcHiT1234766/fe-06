@@ -30,6 +30,21 @@
   outline-offset: 2px;
 }
 
+.dk-button {
+  padding: var(--dk-space-2) var(--dk-space-3);
+  border: 1px solid var(--dk-color-border);
+  border-radius: var(--dk-radius-sm);
+  background: var(--dk-color-surface);
+  color: var(--dk-color-text);
+  font: inherit;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.dk-button:hover {
+  background: var(--dk-color-surface-raised);
+}
+
 .dk-visually-hidden {
   position: absolute;
   width: 1px;

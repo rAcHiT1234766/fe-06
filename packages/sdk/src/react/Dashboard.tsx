@@ -1,53 +1,74 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { applyDefaultFilters } from '../core/merge-query';
 import type { DashboardConfig } from '../core/types';
 import { useDashKit } from './context';
+import { DashboardGrid } from './DashboardGrid';
 import { FilterBar } from './FilterBar';
 import { useDashboardConfig } from './hooks/use-dashboard-config';
 import { ThemeRoot } from './ThemeRoot';
 import { ErrorState } from './ui/ErrorState';
 import { Skeleton } from './ui/Skeleton';
-import { WidgetFrame } from './widgets/WidgetFrame';
 
 /** Props for {@link Dashboard}: the id of a saved dashboard, or a config to show directly. */
 export type DashboardProps =
   | { dashboardId: string; config?: undefined }
   | { config: DashboardConfig; dashboardId?: undefined };
 
-function DashboardContent({ config }: { config: DashboardConfig }) {
+export function DashboardHeader({
+  config,
+  children,
+}: {
+  config: DashboardConfig;
+  children?: ReactNode;
+}) {
   const { brand } = useDashKit().theme;
-  // Each widget's data effect depends on its query, so the widgets must keep their identity.
-  const widgets = useMemo(() => applyDefaultFilters(config), [config]);
-  // Widgets follow the layout's reading order, so keyboard and screen reader order match the screen.
-  const layout = config.layouts.lg.toSorted((a, b) => a.y - b.y || a.x - b.x);
+  return (
+    <header className="dk-dashboard-header">
+      {brand.logoUrl && (
+        <img
+          className="dk-dashboard-logo"
+          src={brand.logoUrl}
+          alt={brand.logoAlt ?? brand.name ?? ''}
+        />
+      )}
+      <div>
+        <h2 className="dk-dashboard-title">{config.title}</h2>
+        {config.description && <p className="dk-dashboard-description">{config.description}</p>}
+      </div>
+      {children}
+    </header>
+  );
+}
+
+/** Each widget's data effect depends on its query, so the widgets must keep their identity. */
+export const useDashboardWidgets = (config: DashboardConfig) =>
+  useMemo(() => applyDefaultFilters(config), [config]);
+
+/** Loads the config, shows the loading and error states, and renders `children` once it is there. */
+export function DashboardLoader({
+  dashboardId,
+  config,
+  children,
+}: DashboardProps & { children: (config: DashboardConfig) => ReactNode }) {
+  const loaded = useDashboardConfig(dashboardId, config);
+  return (
+    <ThemeRoot>
+      <div className="dk-dashboard">
+        {loaded.error && <ErrorState error={loaded.error} />}
+        {!loaded.error && !loaded.config && <Skeleton />}
+        {loaded.config && children(loaded.config)}
+      </div>
+    </ThemeRoot>
+  );
+}
+
+function DashboardContent({ config }: { config: DashboardConfig }) {
+  const widgets = useDashboardWidgets(config);
   return (
     <>
-      <header className="dk-dashboard-header">
-        {brand.logoUrl && (
-          <img
-            className="dk-dashboard-logo"
-            src={brand.logoUrl}
-            alt={brand.logoAlt ?? brand.name ?? ''}
-          />
-        )}
-        <div>
-          <h2 className="dk-dashboard-title">{config.title}</h2>
-          {config.description && <p className="dk-dashboard-description">{config.description}</p>}
-        </div>
-      </header>
+      <DashboardHeader config={config} />
       <FilterBar />
-      <div className="dk-grid">
-        {layout.map(({ i, x, y, w, h }) => {
-          const widget = widgets.find((candidate) => candidate.id === i);
-          if (!widget) return null;
-          const placement = { gridColumn: `${x + 1} / span ${w}`, gridRow: `${y + 1} / span ${h}` };
-          return (
-            <div key={i} className="dk-grid-cell" style={placement}>
-              <WidgetFrame widget={widget} />
-            </div>
-          );
-        })}
-      </div>
+      <DashboardGrid widgets={widgets} layout={config.layouts.lg} />
     </>
   );
 }
@@ -57,15 +78,8 @@ function DashboardContent({ config }: { config: DashboardConfig }) {
  * @example
  * <Dashboard dashboardId="overview" />
  */
-export function Dashboard({ dashboardId, config }: DashboardProps) {
-  const loaded = useDashboardConfig(dashboardId, config);
+export function Dashboard(props: DashboardProps) {
   return (
-    <ThemeRoot>
-      <div className="dk-dashboard">
-        {loaded.error && <ErrorState error={loaded.error} />}
-        {!loaded.error && !loaded.config && <Skeleton />}
-        {loaded.config && <DashboardContent config={loaded.config} />}
-      </div>
-    </ThemeRoot>
+    <DashboardLoader {...props}>{(config) => <DashboardContent config={config} />}</DashboardLoader>
   );
 }

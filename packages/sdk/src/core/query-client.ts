@@ -1,4 +1,4 @@
-import type { DashboardConfig, DashKitError, Query, QueryResult } from './types';
+import type { DashboardConfig, DashKitError, Query, QueryResult, TokenClaims } from './types';
 
 class RequestError extends Error implements DashKitError {
   readonly code: DashKitError['code'];
@@ -24,6 +24,18 @@ export const queryKey = (query: Query) =>
       ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => (a < b ? -1 : 1)))
       : value,
   );
+
+// The SDK cannot check a token's signature, so the role read here only decides which controls to
+// show. The API checks the role again on every write.
+function readRole(token: string): TokenClaims['role'] | undefined {
+  try {
+    const payload = (token.split('.')[1] ?? '').replace(/-/g, '+').replace(/_/g, '/');
+    const { role } = JSON.parse(atob(payload)) as { role?: unknown };
+    return role === 'editor' || role === 'viewer' ? role : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 async function toRequestError(response: Response): Promise<RequestError> {
   const body = (await response.json().catch(() => null)) as {
@@ -86,6 +98,12 @@ export class QueryClient {
       result = request;
     }
     return untilAborted(result, signal);
+  }
+
+  async loadRole(): Promise<TokenClaims['role'] | undefined> {
+    // Without a token every widget already shows the error; here it only means no edit controls.
+    const token = this.#token ?? (await this.#renewToken().catch(() => undefined));
+    return token === undefined ? undefined : readRole(token);
   }
 
   loadDashboard(id: string, signal?: AbortSignal): Promise<DashboardConfig> {
