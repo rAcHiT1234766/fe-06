@@ -1,6 +1,6 @@
 import type { DashKitError, Query, QueryResult } from './types';
 
-export class RequestError extends Error implements DashKitError {
+class RequestError extends Error implements DashKitError {
   readonly code: DashKitError['code'];
 
   constructor(code: DashKitError['code'], message: string, options?: ErrorOptions) {
@@ -10,7 +10,7 @@ export class RequestError extends Error implements DashKitError {
   }
 }
 
-export interface QueryClientOptions {
+interface QueryClientOptions {
   apiUrl: string;
   token?: string | undefined;
   getToken?: (() => Promise<string>) | undefined;
