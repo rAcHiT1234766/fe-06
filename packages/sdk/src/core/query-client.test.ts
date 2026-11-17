@@ -1,22 +1,17 @@
-import { createMockApiHandlers } from '@dashkit/mock-engine/msw';
 import { http, HttpResponse } from 'msw';
-import { setupServer } from 'msw/node';
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { API_URL, demoToken, setupMockApi } from '../testing/mock-api';
 import { QueryClient } from './query-client';
 import type { Query } from './types';
 
-const API_URL = 'http://api.test';
-const server = setupServer(...createMockApiHandlers(API_URL));
+const server = setupMockApi();
 const sentRequests: Request[] = [];
 server.events.on('request:start', ({ request }) => sentRequests.push(request.clone()));
 
-beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
 afterEach(() => {
-  server.resetHandlers();
   sentRequests.length = 0;
   vi.useRealTimers();
 });
-afterAll(() => server.close());
 
 function clientWithRenewal(token: string | undefined, getToken: () => Promise<string>) {
   const client = new QueryClient({ apiUrl: API_URL, token });
@@ -25,14 +20,6 @@ function clientWithRenewal(token: string | undefined, getToken: () => Promise<st
 }
 
 const queriesSent = () => sentRequests.filter((request) => request.url.endsWith('/query'));
-
-async function demoToken(userId: string) {
-  const response = await fetch(`${API_URL}/auth/demo-token`, {
-    method: 'POST',
-    body: JSON.stringify({ userId }),
-  });
-  return ((await response.json()) as { token: string }).token;
-}
 
 const populationByRegion: Query = {
   dataset: 'wdi',

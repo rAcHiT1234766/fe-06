@@ -22,7 +22,9 @@ it('FR-2.6 keeps hardcoded colours, fonts and radii out of every component', () 
   expect(sourceFiles).toContain('react/styles/widget.css');
   const offenders = sourceFiles.flatMap((file) => {
     const text = readFileSync(join(srcDir, file), 'utf8');
-    return hardcodedStyles.filter((pattern) => pattern.test(text)).map((pattern) => `${file} ${pattern}`);
+    return hardcodedStyles
+      .filter((pattern) => pattern.test(text))
+      .map((pattern) => `${file} ${pattern}`);
   });
   expect(offenders).toEqual([]);
 });

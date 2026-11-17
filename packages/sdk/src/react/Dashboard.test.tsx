@@ -1,35 +1,23 @@
-import { createMockApiHandlers } from '@dashkit/mock-engine/msw';
 import { act, render, screen, within } from '@testing-library/react';
-import { setupServer } from 'msw/node';
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { DashboardConfig, MeasureField, ThemeInput } from '../core/types';
+import { API_URL, demoToken, setupMockApi } from '../testing/mock-api';
 import { Dashboard, type DashboardProps } from './Dashboard';
 import { DashKitProvider, type DashKitProviderProps } from './DashKitProvider';
 
-// jsdom cannot draw on a canvas. Chart options are tested on their own, and drawing in a browser.
+// The test DOM cannot draw on a canvas. Chart options are tested on their own, and drawing in a browser.
 vi.mock('./hooks/use-echart', () => ({ useEChart: () => ({ current: null }) }));
 
-const API_URL = 'http://api.test';
-const server = setupServer(...createMockApiHandlers(API_URL));
+const server = setupMockApi();
 let queriesSent = 0;
 server.events.on('request:start', ({ request }) => {
   if (request.url.endsWith('/query')) queriesSent++;
 });
 
-beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
 afterEach(() => {
   queriesSent = 0;
   vi.restoreAllMocks();
 });
-afterAll(() => server.close());
-
-async function demoToken(userId: string) {
-  const response = await fetch(`${API_URL}/auth/demo-token`, {
-    method: 'POST',
-    body: JSON.stringify({ userId }),
-  });
-  return ((await response.json()) as { token: string }).token;
-}
 
 type ProviderProps = Omit<DashKitProviderProps, 'apiUrl' | 'children'>;
 
