@@ -1,0 +1,84 @@
+:where(.dk-root) {
+  --dk-space-1: calc(var(--dk-font-size-base) * 0.25);
+  --dk-space-2: calc(var(--dk-font-size-base) * 0.5);
+  --dk-space-3: calc(var(--dk-font-size-base) * 0.75);
+  --dk-space-4: var(--dk-font-size-base);
+  --dk-radius-sm: calc(var(--dk-radius) / 2);
+}
+
+.dk-root {
+  box-sizing: border-box;
+  color-scheme: var(--dk-color-scheme);
+  background: var(--dk-color-background);
+  color: var(--dk-color-text);
+  font-family: var(--dk-font-family);
+  font-size: var(--dk-font-size-base);
+  font-weight: normal;
+  line-height: 1.4;
+  letter-spacing: normal;
+  text-align: start;
+}
+
+.dk-root *,
+.dk-root *::before,
+.dk-root *::after {
+  box-sizing: inherit;
+}
+
+.dk-root :focus-visible {
+  outline: 2px solid var(--dk-color-primary);
+  outline-offset: 2px;
+}
+
+.dk-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.dk-skeleton {
+  flex: 1;
+  min-height: calc(var(--dk-font-size-base) * 4);
+  border-radius: var(--dk-radius-sm);
+  background: color-mix(in srgb, var(--dk-color-text) 8%, transparent);
+  animation: dk-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes dk-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dk-skeleton {
+    animation: none;
+  }
+}
+
+.dk-state {
+  margin: auto;
+  padding: var(--dk-space-4);
+  text-align: center;
+  color: var(--dk-color-text-muted);
+}
+
+.dk-state-title {
+  margin: 0 0 var(--dk-space-1);
+  font-weight: 600;
+  color: var(--dk-color-text);
+}
+
+.dk-state-detail {
+  margin: 0;
+}
+
+.dk-error .dk-state-title {
+  color: var(--dk-color-danger);
+}
