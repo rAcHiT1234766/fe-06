@@ -200,6 +200,12 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0(@types/node@24.19.2)(msw@3.0.6(@types/node@24.19.2)(supports-color@8.1.1)(typescript@6.0.3)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)))(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2))
 
+  apps/mock-api:
+    dependencies:
+      '@dashkit/mock-engine':
+        specifier: workspace:*
+        version: link:../../packages/mock-engine
+
   packages/mock-engine:
     dependencies:
       jose:

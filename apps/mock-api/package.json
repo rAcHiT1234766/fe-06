@@ -1,0 +1,13 @@
+{
+  "name": "@dashkit/mock-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/main.ts",
+    "start": "node src/main.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dashkit/mock-engine": "workspace:*"
+  }
+}
