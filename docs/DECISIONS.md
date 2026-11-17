@@ -104,3 +104,30 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
   Vitest hands CSS imports to tests as empty strings even with `?raw`, so the earlier version passed without checking any CSS.
 - **Some guide items wait for the phase that uses them.**
   The filter store and chart click handlers (Phase 3); Button, Select, Chip, EmptyState and the registry's default sizes and config fields (Phase 4); `status` and `isFetching` from `useWidgetData`. Nothing reads them yet.
+
+## Phase 3 — Cross-filtering
+
+- **Hosts set filters with a `filters` prop on `DashKitProvider` (awaiting confirmation).**
+  FR-4.9 and step 7 of the guide ask for filters from the host, but `DashKitOptions` defines only `onFilterChange`, and `setFilters()` belongs to the Phase 5 element. Passing a new array replaces the active filters; clicks still change them and are reported to `onFilterChange`.
+- **Each `DashKitProvider` holds one filter store.**
+  Two dashboards on one page each get their own provider, so their filters never mix.
+- **The store keeps an array of filters, and `filtersFor(filters, widget)` is a separate function.**
+  React reads the store with `useSyncExternalStore`, which needs a snapshot that changes only when the filters do, and `filtersFor` needs the widget's `listen` setting as well as its id. The guide sketches a record keyed by field with `filtersFor(widgetId)` on the store; the store is internal and not exported.
+- **Bar and pie widgets emit by default; line and table widgets only with `crossFilter.emit: true`.**
+  A widget emits on its first dimension. For the starter line chart that is the year, and the other widgets already show 2024 only, so a year filter would mostly empty them.
+- **Keyboard users filter through each chart's data table.**
+  Its values become toggle buttons with `aria-pressed`, and the table covers the chart while focus is inside it. The canvas has no focusable items, and the table already carries the same numbers for screen readers.
+- **The selection keeps full opacity and gets a 2 px outline in the theme's text colour; other items drop to 35% opacity.**
+  The text colour contrasts with the surface in every brand and mode, so the outline shows on any series colour, and the selection never rests on colour alone (NFR-A4).
+- **Default filters are added to each widget's own query when the dashboard renders.**
+  They then also narrow widgets with `listen: false`, and they never become chips.
+- **`useWidgetData` now returns `isFetching`, compared by the query client's cache key; `status` is still left out.**
+  Queries are rebuilt on every filter change, and comparing their content keeps a widget whose query did not change, such as the source chart, from being marked busy. Nothing needs `status` yet.
+- **The progress bar appears only after 150 ms.**
+  Answers from the cache, as when a filter is removed, arrive at once and would otherwise make it flash.
+- **The end-to-end tests run in Chromium only for now.**
+  The cross-filter flow does not depend on the browser; Firefox and WebKit projects for NFR-C1 belong with the Phase 6 test pass.
+- **The end-to-end test clicks the bar chart signed in as Ravi.**
+  With only two regions each bar fills half the chart's height, so a click at a fixed position always lands on the top bar without measuring the chart's layout.
+- **Multi-select (FR-4.10) is not implemented.**
+  It is a stretch item.
