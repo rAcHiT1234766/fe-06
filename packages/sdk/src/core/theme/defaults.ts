@@ -1,0 +1,40 @@
+import type { DashKitTheme } from '../types';
+
+export const defaultTheme: DashKitTheme = {
+  mode: 'auto',
+  light: {
+    primary: '#2563eb',
+    primaryContrast: '#ffffff',
+    background: '#f4f6f9',
+    surface: '#ffffff',
+    surfaceRaised: '#ffffff',
+    text: '#1c2533',
+    textMuted: '#4f5b6d',
+    border: '#d5dbe4',
+    success: '#15803d',
+    warning: '#b45309',
+    danger: '#b91c1c',
+    chart: ['#2563eb', '#d97706', '#059669', '#db2777', '#7c3aed', '#0891b2', '#65a30d', '#dc2626'],
+  },
+  dark: {
+    primary: '#60a5fa',
+    primaryContrast: '#0b1220',
+    background: '#0f141b',
+    surface: '#171e28',
+    surfaceRaised: '#202a36',
+    text: '#e6ebf2',
+    textMuted: '#a5afbd',
+    border: '#2e3947',
+    success: '#4ade80',
+    warning: '#fbbf24',
+    danger: '#f87171',
+    chart: ['#60a5fa', '#fbbf24', '#34d399', '#f472b6', '#a78bfa', '#22d3ee', '#a3e635', '#f87171'],
+  },
+  typography: {
+    fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+    headingFontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+    baseFontSize: 14,
+  },
+  shape: { radius: 8 },
+  brand: {},
+};

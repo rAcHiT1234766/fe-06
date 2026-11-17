@@ -4,6 +4,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./brands": "./src/brands.ts",
     "./msw": "./src/msw-handlers.ts"
   },
   "scripts": {
