@@ -1,0 +1,27 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Introduction" />
+
+# DashKit
+
+DashKit is a library that puts analytics dashboards inside another company's product. The dashboards
+take on that product's colours, fonts and logo, show each signed-in user only the data they are
+allowed to see, filter each other when a chart is clicked, and can be rearranged by editors.
+
+## Two ways to install
+
+- **npm:** React apps install `@dashkit/sdk` and render its components. React is a peer dependency.
+- **Script tag:** any web page loads `dashkit.js` and uses the `<dashkit-dashboard>` element. This
+  build bundles its own React.
+
+Both are built from the same source code.
+
+## How the code is organised
+
+| Layer   | Responsibility                                                       |
+| ------- | -------------------------------------------------------------------- |
+| Core    | Types, data requests, filter state and theme tokens. No React.       |
+| React   | Dashboard, builder and widget components built on the core.          |
+| Element | The `<dashkit-dashboard>` custom element that wraps the React layer. |
+
+Dependencies point one way only: element → React → core.
