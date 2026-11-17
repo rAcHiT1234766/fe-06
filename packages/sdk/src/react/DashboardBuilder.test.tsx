@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 import { formatValue } from '../core/format';
 import { QueryClient } from '../core/query-client';
@@ -11,7 +12,7 @@ import { DashKitProvider } from './DashKitProvider';
 // The test DOM cannot draw on a canvas. Chart options are tested on their own, and drawing in a browser.
 vi.mock('./hooks/use-echart', () => ({ useEChart: () => ({ current: null }) }));
 
-setupMockApi();
+const server = setupMockApi();
 
 async function renderBuilder(
   userId: string,
@@ -34,6 +35,19 @@ async function renderEditing(userId: string) {
 const dragHandles = () => screen.queryAllByTitle('Drag to move');
 
 const palette = () => screen.getByRole('group', { name: 'Add a widget' });
+
+const widget = (title: string) => screen.getByRole('region', { name: title });
+
+async function openSettings(title: string) {
+  fireEvent.click(screen.getByRole('button', { name: `Configure ${title}` }));
+  const panel = screen.getByRole('region', { name: 'Widget settings' });
+  // The measure list arrives from the API after the panel opens.
+  await within(panel).findByLabelText('Measure');
+  return panel;
+}
+
+const change = (panel: HTMLElement, label: string, value: string) =>
+  fireEvent.change(within(panel).getByLabelText(label), { target: { value } });
 
 describe('DashboardBuilder', () => {
   it('FR-5.1 lets an editor switch between the dashboard and the builder', async () => {
@@ -81,6 +95,10 @@ describe('DashboardBuilder', () => {
       await within(added).findByText(formatValue(totalGdp.rows[0]!.gdp!, 'currency', 'compact')),
     ).toBeTruthy();
     expect(dragHandles()).toHaveLength(6);
+    // Focus moves to the new widget, which scrolls it into view and announces it.
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: 'Configure Total GDP' }),
+    );
   });
 
   it('FR-5.4 removes widgets, down to an empty dashboard', async () => {
@@ -104,6 +122,109 @@ describe('DashboardBuilder', () => {
     expect(
       await within(copy).findByRole('table', { name: 'Population by region (copy)' }),
     ).toBeTruthy();
+  });
+
+  it('FR-5.5 FR-5.6 configures a widget, which shows each change at once', async () => {
+    await renderEditing('asha');
+    const panel = await openSettings('Population by region');
+    expect(document.activeElement).toBe(within(panel).getByLabelText('Title'));
+
+    change(panel, 'Title', 'Population by income level');
+    expect(widget('Population by income level')).toBeTruthy();
+
+    change(panel, 'Group by', 'incomeLevel');
+    const chart = widget('Population by income level');
+    expect(
+      await within(chart).findByRole('button', { name: 'Filter by High income' }),
+    ).toBeTruthy();
+
+    change(panel, 'Measure', 'gdp');
+    expect(within(panel).getByLabelText<HTMLSelectElement>('Aggregation').value).toBe('sum');
+    expect(await within(chart).findByRole('columnheader', { name: 'GDP (US$)' })).toBeTruthy();
+
+    change(panel, 'Sort', 'desc:gdp');
+    change(panel, 'Row limit', '2');
+    const richest = await new QueryClient({
+      apiUrl: API_URL,
+      token: await demoToken('asha'),
+    }).run({
+      dataset: 'wdi',
+      measures: [{ field: 'gdp', agg: 'sum' }],
+      dimensions: ['incomeLevel'],
+      filters: [{ field: 'year', op: 'eq', value: 2024 }],
+      orderBy: [{ field: 'gdp', direction: 'desc' }],
+      limit: 2,
+    });
+    await vi.waitFor(() =>
+      expect(
+        within(chart)
+          .getAllByRole('button', { name: /^Filter by / })
+          .map(({ textContent }) => textContent),
+      ).toEqual(richest.rows.map(({ incomeLevel }) => incomeLevel)),
+    );
+  });
+
+  it('FR-5.5 changes the type and offers only the settings of the new type', async () => {
+    await renderEditing('asha');
+    const panel = await openSettings('Population by region');
+    expect(within(panel).getByLabelText('Bars')).toBeTruthy();
+
+    change(panel, 'Type', 'table');
+    expect(await screen.findByRole('region', { name: 'Population by region table' })).toBeTruthy();
+    expect(within(panel).queryByLabelText('Bars')).toBeNull();
+    expect(within(panel).getByLabelText<HTMLSelectElement>('Group by').value).toBe('region');
+
+    change(panel, 'Type', 'kpi');
+    expect(within(panel).queryByLabelText('Group by')).toBeNull();
+    expect(within(panel).queryByLabelText('Clicking it filters other widgets')).toBeNull();
+    expect(within(panel).getByLabelText('Follows filters from other widgets')).toBeTruthy();
+  });
+
+  it('FR-5.5 turns cross-filtering on and off', async () => {
+    await renderEditing('asha');
+    const chart = widget('Population by region');
+    expect(await within(chart).findByRole('button', { name: 'Filter by South Asia' })).toBeTruthy();
+
+    const panel = await openSettings('Population by region');
+    fireEvent.click(within(panel).getByLabelText('Clicking it filters other widgets'));
+    expect(within(chart).queryByRole('button', { name: 'Filter by South Asia' })).toBeNull();
+    expect(within(chart).getByRole('cell', { name: 'South Asia' })).toBeTruthy();
+  });
+
+  it('closes the settings with Escape or the close button, and returns focus', async () => {
+    await renderEditing('asha');
+    const configure = screen.getByRole('button', { name: 'Configure Countries' });
+    configure.focus();
+    const panel = await openSettings('Countries');
+    expect(configure.getAttribute('aria-expanded')).toBe('true');
+
+    fireEvent.keyDown(within(panel).getByLabelText('Title'), { key: 'Escape' });
+    expect(screen.queryByRole('region', { name: 'Widget settings' })).toBeNull();
+    expect(document.activeElement).toBe(configure);
+
+    await openSettings('Countries');
+    fireEvent.click(screen.getByRole('button', { name: 'Close widget settings' }));
+    expect(screen.queryByRole('region', { name: 'Widget settings' })).toBeNull();
+    expect(configure.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('still lets the title and type change when the fields cannot be loaded', async () => {
+    server.use(
+      http.get(`${API_URL}/meta`, () =>
+        HttpResponse.json(
+          { error: { code: 'UNKNOWN', message: 'Try again later.' } },
+          { status: 500 },
+        ),
+      ),
+    );
+    await renderEditing('asha');
+    fireEvent.click(screen.getByRole('button', { name: 'Configure Countries' }));
+    const panel = screen.getByRole('region', { name: 'Widget settings' });
+
+    expect((await within(panel).findByRole('alert')).textContent).toContain('Try again later.');
+    expect(within(panel).queryByLabelText('Measure')).toBeNull();
+    change(panel, 'Title', 'Every country');
+    expect(widget('Every country')).toBeTruthy();
   });
 
   it('tells viewers when a dashboard has no widgets', async () => {

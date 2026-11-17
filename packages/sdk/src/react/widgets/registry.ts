@@ -2,6 +2,12 @@ import type { ComponentType } from 'react';
 import type { WidgetConfig, WidgetType } from '../../core/types';
 import { BarView, KpiView, LineView, PieView, TableView, type WidgetViewProps } from './views';
 
+/** A setting the config panel offers, besides the title and the type that every widget has. */
+export type ConfigField =
+  'measure' | 'aggregation' | 'dimension' | 'sort' | 'limit' | 'orientation' | 'emit' | 'listen';
+
+const groupedFields: ConfigField[] = ['measure', 'aggregation', 'dimension', 'sort', 'limit'];
+
 interface WidgetDefinition {
   label: string;
   view: ComponentType<WidgetViewProps>;
@@ -10,9 +16,10 @@ interface WidgetDefinition {
   minSize: { minW: number; minH: number };
   /** What a widget added from the palette shows until it is configured. */
   starter: Pick<WidgetConfig, 'title' | 'query' | 'options'>;
+  configFields: ConfigField[];
 }
 
-/** Everything the dashboard, the palette and the builder need to know about each widget type. */
+/** Everything the dashboard, the palette and the config panel need to know about each widget type. */
 export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
   bar: {
     label: 'Bar chart',
@@ -30,6 +37,7 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
         orderBy: [{ field: 'gdpPerCapita', direction: 'desc' }],
       },
     },
+    configFields: [...groupedFields, 'orientation', 'emit', 'listen'],
   },
   line: {
     label: 'Line chart',
@@ -45,6 +53,7 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
         orderBy: [{ field: 'year', direction: 'asc' }],
       },
     },
+    configFields: [...groupedFields, 'emit', 'listen'],
   },
   pie: {
     label: 'Pie chart',
@@ -59,6 +68,7 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
         dimensions: ['incomeLevel'],
       },
     },
+    configFields: [...groupedFields, 'emit', 'listen'],
   },
   table: {
     label: 'Table',
@@ -74,6 +84,7 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
         orderBy: [{ field: 'lifeExpectancy', direction: 'desc' }],
       },
     },
+    configFields: [...groupedFields, 'emit', 'listen'],
   },
   kpi: {
     label: 'KPI',
@@ -84,5 +95,7 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
       title: 'Total GDP',
       query: { dataset: 'wdi', measures: [{ field: 'gdp', agg: 'sum' }] },
     },
+    // A single number has nothing to click, group or sort.
+    configFields: ['measure', 'aggregation', 'listen'],
   },
 };

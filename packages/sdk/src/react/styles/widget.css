@@ -52,17 +52,20 @@
   }
 }
 
+/* In a narrow widget the builder's buttons move below the title instead of covering it. */
 .dk-widget-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--dk-space-2);
   padding: var(--dk-space-3) var(--dk-space-4) 0;
 }
 
 .dk-widget-title {
-  flex: 1;
+  flex: 1 1 8rem;
   min-width: 0;
   margin: 0;
+  overflow-wrap: anywhere;
   font-family: var(--dk-font-family-heading);
   font-size: 1em;
   font-weight: 600;

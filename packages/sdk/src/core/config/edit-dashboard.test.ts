@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { DashboardConfig, Query, WidgetConfig } from '../types';
-import { addWidget, duplicateWidget, removeWidget, withYearRule } from './edit-dashboard';
+import {
+  addWidget,
+  duplicateWidget,
+  nextWidgetId,
+  removeWidget,
+  updateWidget,
+  withYearRule,
+} from './edit-dashboard';
 
 const gdp: Query = { dataset: 'wdi', measures: [{ field: 'gdp', agg: 'sum' }] };
 const kpi: Omit<WidgetConfig, 'id'> = { type: 'kpi', title: 'Total GDP', query: gdp };
@@ -22,13 +29,26 @@ const dashboard: DashboardConfig = {
 };
 
 describe('editing a dashboard', () => {
-  it('FR-5.4 adds a widget at the left edge below everything else, with a free id', () => {
-    const added = addWidget(dashboard, kpi, { w: 3, h: 2 });
+  it('FR-5.4 adds a widget at the left edge, below everything else', () => {
+    const added = addWidget(dashboard, { ...kpi, id: 'kpi-2' }, { w: 3, h: 2 });
     expect(added.widgets.at(-1)).toEqual({ ...kpi, id: 'kpi-2' });
     expect(added.layouts.lg.at(-1)).toEqual({ i: 'kpi-2', x: 0, y: 5, w: 3, h: 2 });
-    expect(
-      addWidget({ ...dashboard, widgets: [], layouts: { lg: [] } }, kpi, { w: 3, h: 2 }),
-    ).toMatchObject({ layouts: { lg: [{ i: 'kpi-1', x: 0, y: 0 }] } });
+    const empty = { ...dashboard, widgets: [], layouts: { lg: [] } };
+    expect(addWidget(empty, { ...kpi, id: 'kpi-1' }, { w: 3, h: 2 }).layouts.lg).toEqual([
+      { i: 'kpi-1', x: 0, y: 0, w: 3, h: 2 },
+    ]);
+  });
+
+  it('gives each new widget the first free id for its type', () => {
+    expect(nextWidgetId(dashboard, 'kpi')).toBe('kpi-2');
+    expect(nextWidgetId(dashboard, 'bar')).toBe('bar-1');
+  });
+
+  it('FR-5.6 replaces one widget and leaves the others as they were', () => {
+    const renamed = { ...dashboard.widgets[1]!, title: 'GDP' };
+    const updated = updateWidget(dashboard, renamed);
+    expect(updated.widgets).toEqual([dashboard.widgets[0], renamed]);
+    expect(updated.widgets[0]).toBe(dashboard.widgets[0]);
   });
 
   it('FR-5.4 removes a widget together with its place in the layout', () => {

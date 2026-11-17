@@ -1,4 +1,13 @@
-import type { DashboardConfig, DashKitError, Query, QueryResult, TokenClaims } from './types';
+import type {
+  Aggregation,
+  DashboardConfig,
+  DashKitError,
+  DimensionField,
+  MeasureField,
+  Query,
+  QueryResult,
+  TokenClaims,
+} from './types';
 
 class RequestError extends Error implements DashKitError {
   readonly code: DashKitError['code'];
@@ -16,6 +25,15 @@ interface QueryClientOptions {
 }
 
 type GetToken = () => Promise<string>;
+
+type ColumnFormat = QueryResult['columns'][number]['format'];
+
+/** The fields and aggregations the signed-in user may use, as the API's `/meta` route lists them. */
+export interface FieldCatalog {
+  dimensions: { name: DimensionField; label: string; format?: ColumnFormat }[];
+  measures: { name: MeasureField; label: string; format: ColumnFormat; defaultAgg: Aggregation }[];
+  aggregations: Aggregation[];
+}
 
 // Sorted object keys let queries that differ only in key order share one cache entry.
 export const queryKey = (query: Query) =>
@@ -98,6 +116,10 @@ export class QueryClient {
       result = request;
     }
     return untilAborted(result, signal);
+  }
+
+  loadFieldCatalog(signal?: AbortSignal): Promise<FieldCatalog> {
+    return untilAborted(this.#request<FieldCatalog>('/meta', { method: 'GET' }), signal);
   }
 
   async loadRole(): Promise<TokenClaims['role'] | undefined> {

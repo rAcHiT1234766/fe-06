@@ -2,7 +2,8 @@ import type { DashboardConfig, LayoutItem, Query, WidgetConfig, WidgetType } fro
 
 const bottomOf = (layout: LayoutItem[]) => Math.max(0, ...layout.map(({ y, h }) => y + h));
 
-function nextWidgetId({ widgets }: DashboardConfig, type: WidgetType) {
+/** The first free id of the form `bar-1`, `bar-2` and so on. */
+export function nextWidgetId({ widgets }: DashboardConfig, type: WidgetType) {
   const taken = new Set(widgets.map(({ id }) => id));
   let number = 1;
   while (taken.has(`${type}-${number}`)) number++;
@@ -12,15 +13,21 @@ function nextWidgetId({ widgets }: DashboardConfig, type: WidgetType) {
 /** Adds a widget at the left edge, below everything else. */
 export function addWidget(
   config: DashboardConfig,
-  widget: Omit<WidgetConfig, 'id'>,
+  widget: WidgetConfig,
   size: { w: number; h: number },
 ): DashboardConfig {
-  const id = nextWidgetId(config, widget.type);
-  const item = { i: id, x: 0, y: bottomOf(config.layouts.lg), ...size };
+  const item = { i: widget.id, x: 0, y: bottomOf(config.layouts.lg), ...size };
   return {
     ...config,
-    widgets: [...config.widgets, { ...widget, id }],
+    widgets: [...config.widgets, widget],
     layouts: { lg: [...config.layouts.lg, item] },
+  };
+}
+
+export function updateWidget(config: DashboardConfig, widget: WidgetConfig): DashboardConfig {
+  return {
+    ...config,
+    widgets: config.widgets.map((current) => (current.id === widget.id ? widget : current)),
   };
 }
 
@@ -37,7 +44,11 @@ export function duplicateWidget(config: DashboardConfig, widgetId: string): Dash
   const widget = config.widgets.find(({ id }) => id === widgetId);
   const item = config.layouts.lg.find(({ i }) => i === widgetId);
   if (!widget || !item) return config;
-  const copy = { ...structuredClone(widget), title: `${widget.title} (copy)` };
+  const copy = {
+    ...structuredClone(widget),
+    id: nextWidgetId(config, widget.type),
+    title: `${widget.title} (copy)`,
+  };
   return addWidget(config, copy, { w: item.w, h: item.h });
 }
 

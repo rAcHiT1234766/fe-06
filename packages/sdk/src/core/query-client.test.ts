@@ -102,6 +102,19 @@ describe('QueryClient', () => {
     expect(await new QueryClient({ apiUrl: API_URL }).loadRole()).toBe(undefined);
   });
 
+  it('FR-5.5 loads the fields a user may choose from', async () => {
+    const client = new QueryClient({ apiUrl: API_URL, token: await demoToken('elena') });
+    const catalog = await client.loadFieldCatalog();
+    expect(catalog.measures).toContainEqual({
+      name: 'gdp',
+      label: 'GDP (US$)',
+      format: 'currency',
+      defaultAgg: 'sum',
+    });
+    expect(catalog.dimensions.map(({ name }) => name)).toContain('region');
+    expect(catalog.aggregations).toEqual(['sum', 'avg', 'min', 'max', 'count']);
+  });
+
   it('FR-3.1 asks getToken for the first token when none was given', async () => {
     const getToken = vi.fn(() => demoToken('elena'));
     const client = clientWithRenewal(undefined, getToken);
