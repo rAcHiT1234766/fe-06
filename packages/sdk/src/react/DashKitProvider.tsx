@@ -2,6 +2,7 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
@@ -64,13 +65,19 @@ export function DashKitProvider({
 
   // Starting from the host's filters means the first queries are already filtered.
   const [filterStore] = useState(() => createFilterStore(filters));
+  // The store is subscribed once and calls whichever onFilterChange the latest render passed.
+  // Resubscribing for each new callback would miss changes made while it was unsubscribed.
+  const onFilterChangeRef = useRef(onFilterChange);
+  useEffect(() => {
+    onFilterChangeRef.current = onFilterChange;
+  });
   useEffect(() => {
     if (filters) filterStore.set(filters);
   }, [filterStore, filters]);
-  useEffect(() => {
-    if (!onFilterChange) return;
-    return filterStore.subscribe(() => onFilterChange(filterStore.getFilters()));
-  }, [filterStore, onFilterChange]);
+  useEffect(
+    () => filterStore.subscribe(() => onFilterChangeRef.current?.(filterStore.getFilters())),
+    [filterStore],
+  );
 
   const prefersDark = useSyncExternalStore(subscribeToColorScheme, systemPrefersDark);
   const resolvedTheme = useMemo(

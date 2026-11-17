@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { http } from 'msw';
+import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { QueryClient } from '../core/query-client';
 import type { ActiveFilter, DashboardConfig, WidgetConfig } from '../core/types';
@@ -199,6 +200,48 @@ describe('cross-filtering', () => {
     view.rerender({ onFilterChange, filters: highIncome });
     await waitFor(() => expect(column('GDP by income level', 0)).toEqual(['High income']));
     expect(onFilterChange).toHaveBeenLastCalledWith(highIncome);
+  });
+
+  it('FR-4.9 works for a host that keeps the filters in its own state and passes a new callback each render', async () => {
+    const token = await demoToken('asha');
+    const highIncome: ActiveFilter[] = [
+      { field: 'incomeLevel', values: ['High income'], sourceWidgetId: 'host' },
+    ];
+    const reported = vi.fn<(filters: ActiveFilter[]) => void>();
+    function Host() {
+      const [filters, setFilters] = useState<ActiveFilter[]>([]);
+      const report = (next: ActiveFilter[]) => {
+        reported(next);
+        setFilters(next);
+      };
+      return (
+        <DashKitProvider apiUrl={API_URL} token={token} filters={filters} onFilterChange={report}>
+          <button type="button" onClick={() => setFilters(highIncome)}>
+            Show high income
+          </button>
+          <Dashboard dashboardId="overview" />
+        </DashKitProvider>
+      );
+    }
+    render(<Host />);
+    await waitForWidgets();
+
+    select('Population by region', 'South Asia');
+    await waitFor(() => expect(regionsOfCountries()).toEqual(['South Asia']));
+    expect(reported).toHaveBeenLastCalledWith([
+      { field: 'region', values: ['South Asia'], sourceWidgetId: 'population-by-region' },
+    ]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show high income' }));
+    await waitFor(() => expect(column('GDP by income level', 0)).toEqual(['High income']));
+    expect(reported).toHaveBeenLastCalledWith(highIncome);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear all' }));
+    await waitFor(() => expect(regionsOfCountries()).toHaveLength(7));
+    expect(reported).toHaveBeenLastCalledWith([]);
+    // Each change is reported once. Passing the host's own filters back reports nothing, so a
+    // host that stores them cannot loop.
+    expect(reported).toHaveBeenCalledTimes(3);
   });
 
   it('FR-4.11 gets no rows for a cross-filter on a region outside the user’s scope', async () => {
