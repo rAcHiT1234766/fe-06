@@ -4,7 +4,13 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  globalIgnores(['**/dist', '**/storybook-static', '**/coverage']),
+  globalIgnores([
+    '**/dist',
+    '**/storybook-static',
+    '**/coverage',
+    'test-results',
+    'playwright-report',
+  ]),
   js.configs.recommended,
   tseslint.configs.recommendedTypeChecked,
   {

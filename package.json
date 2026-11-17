@@ -12,6 +12,7 @@
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit && pnpm -r typecheck",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "storybook": "pnpm --filter @dashkit/sdk storybook",
     "build-storybook": "pnpm --filter @dashkit/sdk build-storybook",
     "size": "pnpm --filter @dashkit/sdk size",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.1",
     "@types/node": "^24.19.2",
     "eslint": "^10.15.0",
     "eslint-plugin-react-hooks": "^7.1.1",
