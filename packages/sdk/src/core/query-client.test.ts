@@ -102,6 +102,23 @@ describe('QueryClient', () => {
     expect(await new QueryClient({ apiUrl: API_URL }).loadRole()).toBe(undefined);
   });
 
+  it('FR-5.7 saves a dashboard, which then loads exactly as the API stored it', async () => {
+    const client = new QueryClient({ apiUrl: API_URL, token: await demoToken('asha') });
+    const overview = await client.loadDashboard('overview');
+    const copy = { ...overview, id: 'saved-by-client', title: 'Saved by the client' };
+
+    const stored = await client.saveDashboard(copy);
+    expect(stored).toEqual({ ...copy, updatedAt: stored.updatedAt, updatedBy: 'asha' });
+    expect(Date.parse(stored.updatedAt ?? '')).not.toBeNaN();
+    expect(await client.loadDashboard('saved-by-client')).toEqual(stored);
+  });
+
+  it('FR-5.7 passes on the refusal when a viewer tries to save', async () => {
+    const client = new QueryClient({ apiUrl: API_URL, token: await demoToken('ravi') });
+    const overview = await client.loadDashboard('overview');
+    await expect(client.saveDashboard(overview)).rejects.toMatchObject({ code: 'FORBIDDEN' });
+  });
+
   it('FR-5.5 loads the fields a user may choose from', async () => {
     const client = new QueryClient({ apiUrl: API_URL, token: await demoToken('elena') });
     const catalog = await client.loadFieldCatalog();

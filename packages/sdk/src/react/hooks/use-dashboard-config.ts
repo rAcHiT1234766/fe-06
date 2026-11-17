@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { migrate } from '../../core/config/schema';
 import type { QueryClient } from '../../core/query-client';
 import type { DashboardConfig, DashKitError } from '../../core/types';
 import { useDashKit } from '../context';
@@ -6,6 +7,15 @@ import { useDashKit } from '../context';
 interface DashboardConfigState {
   config?: DashboardConfig;
   error?: DashKitError;
+}
+
+function migrated(config: DashboardConfig): DashboardConfigState {
+  try {
+    return { config: migrate(config) };
+  } catch (error) {
+    // migrate throws only a DashKitError.
+    return { error: error as DashKitError };
+  }
 }
 
 export function useDashboardConfig(
@@ -23,7 +33,7 @@ export function useDashboardConfig(
     const { signal } = controller;
     client.loadDashboard(dashboardId, signal).then(
       (loadedConfig) => {
-        if (!signal.aborted) setLoaded({ client, id: dashboardId, config: loadedConfig });
+        if (!signal.aborted) setLoaded({ client, id: dashboardId, ...migrated(loadedConfig) });
       },
       (error: unknown) => {
         // The query client rejects only with a DashKitError, or with the abort reason.
@@ -33,7 +43,8 @@ export function useDashboardConfig(
     return () => controller.abort();
   }, [client, dashboardId, config]);
 
-  if (config) return { config };
+  const given = useMemo(() => config && migrated(config), [config]);
+  if (given) return given;
   // A dashboard loaded by another client may belong to another tenant.
   return loaded?.client === client && loaded.id === dashboardId ? loaded : {};
 }

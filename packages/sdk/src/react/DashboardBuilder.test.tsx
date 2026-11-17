@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 import { formatValue } from '../core/format';
 import { QueryClient } from '../core/query-client';
-import type { WidgetConfig } from '../core/types';
+import type { DashboardConfig, WidgetConfig } from '../core/types';
 import { API_URL, demoToken, setupMockApi } from '../testing/mock-api';
 import { DashboardBuilder, type DashboardBuilderProps } from './DashboardBuilder';
 import { placeWidgets } from './DashboardGrid';
@@ -19,18 +19,39 @@ async function renderBuilder(
   props: DashboardBuilderProps = { dashboardId: 'overview' },
 ) {
   const token = await demoToken(userId);
-  render(
+  const view = render(
     <DashKitProvider apiUrl={API_URL} token={token}>
       <DashboardBuilder {...props} />
     </DashKitProvider>,
   );
   await screen.findByRole('table', { name: 'Countries' });
+  return view;
 }
 
-async function renderEditing(userId: string) {
-  await renderBuilder(userId, { dashboardId: 'overview', mode: 'edit' });
+async function renderEditing(
+  userId: string,
+  props: { dashboardId?: string } & Pick<DashboardBuilderProps, 'onSave'> = {},
+) {
+  const view = await renderBuilder(userId, { dashboardId: 'overview', ...props, mode: 'edit' });
   await screen.findByRole('button', { name: 'Cancel' });
+  return view;
 }
+
+// The mock API keeps its dashboards for the whole file, so tests that save work on a copy and
+// leave the overview as the other tests expect it.
+async function copyOverview(userId: string, id: string) {
+  const client = new QueryClient({ apiUrl: API_URL, token: await demoToken(userId) });
+  await client.saveDashboard({ ...(await client.loadDashboard('overview')), id });
+  return client;
+}
+
+const emptyDashboard = (id: string): DashboardConfig => ({
+  id,
+  schemaVersion: 1,
+  title: 'Empty',
+  widgets: [],
+  layouts: { lg: [] },
+});
 
 const dragHandles = () => screen.queryAllByTitle('Drag to move');
 
@@ -229,19 +250,118 @@ describe('DashboardBuilder', () => {
 
   it('tells viewers when a dashboard has no widgets', async () => {
     const token = await demoToken('ravi');
-    const empty = {
-      id: 'empty',
-      schemaVersion: 1 as const,
-      title: 'Empty',
-      widgets: [],
-      layouts: { lg: [] },
-    };
     render(
       <DashKitProvider apiUrl={API_URL} token={token}>
-        <DashboardBuilder config={empty} />
+        <DashboardBuilder config={emptyDashboard('empty')} />
       </DashKitProvider>,
     );
     expect(await screen.findByText('This dashboard has no widgets yet.')).toBeTruthy();
+  });
+
+  it('refuses a dashboard saved by a newer version of the SDK', async () => {
+    const token = await demoToken('asha');
+    const newer = { ...emptyDashboard('newer'), schemaVersion: 2 } as unknown as DashboardConfig;
+    render(
+      <DashKitProvider apiUrl={API_URL} token={token}>
+        <DashboardBuilder config={newer} />
+      </DashKitProvider>,
+    );
+    expect((await screen.findByRole('alert')).textContent).toContain('schema version 2');
+  });
+});
+
+describe('saving', () => {
+  const leavePage = () => {
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    return event.defaultPrevented;
+  };
+
+  it('FR-5.7 saves the draft and shows the saved dashboard, which loads again exactly', async () => {
+    const client = await copyOverview('asha', 'save-and-reload');
+    const onSave = vi.fn();
+    const view = await renderEditing('asha', { dashboardId: 'save-and-reload', onSave });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Total population' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Duplicate Countries' }));
+    change(await openSettings('Population by region'), 'Title', 'People by region');
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(await screen.findByText('Saved')).toBeTruthy();
+    expect(dragHandles()).toEqual([]);
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Edit dashboard' }));
+    expect(onSave).toHaveBeenCalledOnce();
+    const [stored] = onSave.mock.calls[0] as [DashboardConfig];
+    expect(stored.widgets.map(({ title }) => title)).toEqual([
+      'People by region',
+      'GDP by income level',
+      'Average life expectancy',
+      'Countries',
+      'Countries (copy)',
+    ]);
+    expect(await client.loadDashboard('save-and-reload')).toEqual(stored);
+
+    view.unmount();
+    await renderBuilder('asha', { dashboardId: 'save-and-reload' });
+    expect(screen.getByRole('region', { name: 'People by region' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Countries (copy)' })).toBeTruthy();
+    expect(screen.queryByRole('region', { name: 'Total population' })).toBeNull();
+  });
+
+  it('FR-5.8 Cancel discards the draft and gives the focus back to Edit dashboard', async () => {
+    await renderEditing('asha');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Countries' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.getByRole('region', { name: 'Countries' })).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Edit dashboard' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit dashboard' }));
+    expect(dragHandles()).toHaveLength(5);
+  });
+
+  it('FR-5.8 warns before the page is left with unsaved changes, and only then', async () => {
+    await renderEditing('asha');
+    expect(leavePage()).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Countries' }));
+    expect(leavePage()).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(leavePage()).toBe(false);
+  });
+
+  it('lists the problems and sends nothing while the draft is invalid', async () => {
+    const client = await copyOverview('asha', 'invalid-draft');
+    await renderEditing('asha', { dashboardId: 'invalid-draft' });
+    const panel = await openSettings('Countries');
+    change(panel, 'Title', '');
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect((await screen.findByRole('alert')).textContent).toContain('Every widget needs a title.');
+    expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy();
+    const unchanged = await client.loadDashboard('invalid-draft');
+    expect(unchanged.widgets.map(({ title }) => title)).toContain('Countries');
+
+    change(panel, 'Title', 'All countries');
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('shows why the API refused a save, and keeps the draft', async () => {
+    server.use(
+      http.put(`${API_URL}/dashboards/:id`, () =>
+        HttpResponse.json(
+          { error: { code: 'FORBIDDEN', message: 'Only editors can change dashboards' } },
+          { status: 403 },
+        ),
+      ),
+    );
+    await renderEditing('asha');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Countries' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect((await screen.findByRole('alert')).textContent).toContain(
+      'Only editors can change dashboards',
+    );
+    expect(screen.queryByRole('region', { name: 'Countries' })).toBeNull();
+    expect(leavePage()).toBe(true);
   });
 });
 

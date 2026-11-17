@@ -133,6 +133,12 @@ export class QueryClient {
     return untilAborted(this.#request<DashboardConfig>(path, { method: 'GET' }), signal);
   }
 
+  /** Stores the dashboard under its id. Only editors may; the API answers anyone else with 403. */
+  saveDashboard(config: DashboardConfig): Promise<DashboardConfig> {
+    const path = `/dashboards/${encodeURIComponent(config.id)}`;
+    return this.#request<DashboardConfig>(path, { method: 'PUT', body: JSON.stringify(config) });
+  }
+
   async #request<T>(path: string, init: RequestInit): Promise<T> {
     let response = await this.#send(path, init, this.#token ?? (await this.#renewToken()));
     if (response.status === 401 && this.#getToken) {

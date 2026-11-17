@@ -7,6 +7,7 @@ import {
   setRowLimit,
   setSortOrder,
 } from '../../core/config/edit-widget';
+import { MAX_ROWS } from '../../core/config/schema';
 import { emitsFilters } from '../../core/filter-store';
 import type { FieldCatalog } from '../../core/query-client';
 import type {
@@ -22,9 +23,6 @@ import { widgetRegistry } from '../widgets/registry';
 import { CrossIcon } from './icons';
 
 const widgetTypes = Object.keys(widgetRegistry) as WidgetType[];
-
-// The API returns at most this many rows, so a larger limit would change nothing.
-const MAX_ROWS = 1000;
 
 const aggregationLabels: Record<Aggregation, string> = {
   sum: 'Sum',

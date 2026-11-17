@@ -1,3 +1,26 @@
+.dk-toolbar-status {
+  align-self: center;
+  margin: 0;
+  color: var(--dk-color-text-muted);
+}
+
+.dk-save-problems {
+  padding: var(--dk-space-3) var(--dk-space-4);
+  background: color-mix(in srgb, var(--dk-color-danger) 8%, var(--dk-color-surface));
+  border: 1px solid var(--dk-color-danger);
+  border-radius: var(--dk-radius);
+}
+
+.dk-save-problems > p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.dk-save-problems > ul {
+  margin: var(--dk-space-1) 0 0;
+  padding-inline-start: 1.25em;
+}
+
 /* The grid takes nearly all the width. When the container is too narrow for both, the panel moves
    below the grid and takes the full width. */
 .dk-builder-body {
