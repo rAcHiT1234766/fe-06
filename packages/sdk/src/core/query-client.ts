@@ -18,7 +18,7 @@ interface QueryClientOptions {
 type GetToken = () => Promise<string>;
 
 // Sorted object keys let queries that differ only in key order share one cache entry.
-const cacheKey = (query: Query) =>
+export const queryKey = (query: Query) =>
   JSON.stringify(query, (_key, value: unknown) =>
     value && typeof value === 'object' && !Array.isArray(value)
       ? Object.fromEntries(Object.entries(value).sort(([a], [b]) => (a < b ? -1 : 1)))
@@ -72,7 +72,7 @@ export class QueryClient {
   }
 
   run(query: Query, signal?: AbortSignal): Promise<QueryResult> {
-    const key = cacheKey(query);
+    const key = queryKey(query);
     let result = this.#results.get(key);
     if (!result) {
       const request = this.#request<QueryResult>('/query', {

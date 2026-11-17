@@ -21,9 +21,12 @@ function WidgetBody({ widget, data, error }: WidgetBodyProps) {
 
 export function WidgetFrame({ widget }: { widget: WidgetConfig }) {
   const titleId = useId();
-  const { data, error } = useWidgetData(widget);
+  const { data, error, isFetching } = useWidgetData(widget);
+  // A first load shows a skeleton; later loads keep the old result and show a bar instead.
+  const isUpdating = isFetching && Boolean(data ?? error);
   return (
-    <section className="dk-widget" aria-labelledby={titleId}>
+    <section className="dk-widget" aria-labelledby={titleId} aria-busy={isUpdating}>
+      {isUpdating && <div className="dk-progress" aria-hidden="true" />}
       <header className="dk-widget-header">
         <h3 id={titleId} className="dk-widget-title">
           {widget.title}

@@ -1,12 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
 import { filtersFor } from '../../core/filter-store';
 import { mergeQuery } from '../../core/merge-query';
-import type { QueryClient } from '../../core/query-client';
+import { queryKey, type QueryClient } from '../../core/query-client';
 import type { DashKitError, QueryResult, WidgetConfig } from '../../core/types';
 import { useDashKit } from '../context';
 import { useActiveFilters } from './use-cross-filter';
 
 interface WidgetData {
+  data?: QueryResult | undefined;
+  error?: DashKitError | undefined;
+  /** True while the widget waits for its current query, showing an older result or nothing. */
+  isFetching: boolean;
+}
+
+interface Loaded {
+  client: QueryClient;
+  key: string;
   data?: QueryResult;
   error?: DashKitError;
 }
@@ -19,24 +28,25 @@ export function useWidgetData(widget: WidgetConfig): WidgetData {
     () => mergeQuery(widget.query, filtersFor(activeFilters, widget)),
     [widget, activeFilters],
   );
-  const [loaded, setLoaded] = useState<WidgetData & { client: QueryClient }>();
+  const key = queryKey(query);
+  const [loaded, setLoaded] = useState<Loaded>();
 
   useEffect(() => {
     const controller = new AbortController();
     const { signal } = controller;
+    const settle = (result: Pick<Loaded, 'data' | 'error'>) => {
+      if (!signal.aborted) setLoaded({ client, key, ...result });
+    };
     client.run(query, signal).then(
-      (data) => {
-        if (!signal.aborted) setLoaded({ client, data });
-      },
-      (error: unknown) => {
-        // The query client rejects only with a DashKitError, or with the abort reason.
-        if (!signal.aborted) setLoaded({ client, error: error as DashKitError });
-      },
+      (data) => settle({ data }),
+      // The query client rejects only with a DashKitError, or with the abort reason.
+      (error: unknown) => settle({ error: error as DashKitError }),
     );
     // A newer query, after a filter change, aborts this one, so its late answer is never shown.
     return () => controller.abort();
-  }, [client, query]);
+  }, [client, query, key]);
 
   // A result fetched by another client belongs to another session, possibly another user's.
-  return loaded?.client === client ? loaded : {};
+  if (loaded?.client !== client) return { isFetching: true };
+  return { data: loaded.data, error: loaded.error, isFetching: loaded.key !== key };
 }

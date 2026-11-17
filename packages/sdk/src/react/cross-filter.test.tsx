@@ -106,7 +106,7 @@ describe('cross-filtering', () => {
     await waitFor(() => expect([...CHARTS, 'Countries'].map(tableText)).toEqual(before));
   });
 
-  it('FR-4.6 keeps the previous rows on screen while the filtered rows load', async () => {
+  it('FR-4.6 keeps the previous rows on screen, marked busy, while the filtered rows load', async () => {
     let release = () => {};
     const held = new Promise<void>((resolve) => (release = resolve));
     server.use(
@@ -116,16 +116,21 @@ describe('cross-filtering', () => {
     );
     await renderOverview('asha');
     await waitForWidgets();
+    const countries = screen.getByRole('region', { name: 'Countries' });
     const countriesBefore = tableText('Countries');
+    expect(countries.getAttribute('aria-busy')).toBe('false');
 
     select('Population by region', 'South Asia');
     expect(tableText('Countries')).toBe(countriesBefore);
-    expect(
-      within(screen.getByRole('region', { name: 'Countries' })).queryByRole('status'),
-    ).toBeNull();
+    expect(within(countries).queryByRole('status')).toBeNull();
+    expect(countries.getAttribute('aria-busy')).toBe('true');
+    // The source chart's own query has not changed, so it has nothing to wait for.
+    const source = screen.getByRole('region', { name: 'Population by region' });
+    expect(source.getAttribute('aria-busy')).toBe('false');
 
     release();
     await waitFor(() => expect(regionsOfCountries()).toEqual(['South Asia']));
+    expect(countries.getAttribute('aria-busy')).toBe('false');
   });
 
   it('FR-4.7 shows the newest selection when the answer to an older one arrives late', async () => {
