@@ -69,3 +69,38 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
   The host's `getToken` then runs once per expiry instead of once per widget.
 - **Column-level scope (FR-3.11) is not implemented.**
   It is a stretch item and no demo user needs it.
+
+## Phase 2 — Widgets and theming
+
+- **The demo brands live in mock-engine, as the theme input a host would pass.**
+  A brand belongs to the host, not the SDK; the demo app, Storybook and the tests share the same three.
+- **A new token gets a new query client.**
+  A different user then always starts with an empty cache, and the data hooks drop any result an earlier client fetched.
+- **`getToken` reaches the query client through `setGetToken`, and the public `setToken` is gone.**
+  Hosts often pass a new function on every render; swapping it keeps the client and its cache, and a new token already means a new client.
+- **CSS ships as strings in a `<style>` element; theme variables sit in a zero-specificity `:where()` rule.**
+  The same strings can go into a host page or a shadow root, and host CSS can still override any variable.
+- **Chart colours are not CSS variables.**
+  Charts draw on a canvas, so they get an ECharts theme built from the same resolved theme and switched with `setTheme` on the same chart.
+- **Charts take data arrays directly; `DatasetComponent` and `AriaComponent` are not registered.**
+  An accessible name plus a visually hidden data table covers NFR-A2 and keeps both modules out of the bundle.
+- **Pie slices are labelled directly and the legend is opt-in; the starter dashboard's region chart is horizontal.**
+  Direct labels need no colour matching, and region names are too long to sit under vertical bars.
+- **Widgets fill their container (`height: 100%`).**
+  The same widget then works in a grid cell and in a story without size props.
+- **The contrast check reads hex colours only.**
+  Colours in other formats are skipped rather than guessed at; the defaults and the demo brands are all hex.
+- **Numbers are formatted with a pinned `en-US` locale.**
+  A multi-language UI is out of scope, and a fixed locale keeps tables, charts and tests the same on every machine.
+- **`DashboardProps` takes either `dashboardId` or `config`, never both.**
+  A union type turns the ambiguous case into a compile error.
+- **Component tests run in happy-dom instead of jsdom (awaiting confirmation).**
+  Under jsdom, typed arrays come from another realm and jose rejected the signing key. happy-dom is not named in the guide.
+- **The npm build leaves ECharts external as well as the peers.**
+  The host's package manager installs dependencies, so bundling ECharts would make the host ship a second copy.
+- **The demo runs on port 5173 with `strictPort`.**
+  The mock API accepts browser requests only from that origin, so failing at startup is clearer than CORS errors on another port.
+- **The FR-2.6 test reads source files from disk.**
+  Vitest hands CSS imports to tests as empty strings even with `?raw`, so the earlier version passed without checking any CSS.
+- **Some guide items wait for the phase that uses them.**
+  The filter store and chart click handlers (Phase 3); Button, Select, Chip, EmptyState and the registry's default sizes and config fields (Phase 4); `status` and `isFetching` from `useWidgetData`. Nothing reads them yet.
