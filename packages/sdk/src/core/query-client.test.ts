@@ -18,6 +18,12 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
+function clientWithRenewal(token: string | undefined, getToken: () => Promise<string>) {
+  const client = new QueryClient({ apiUrl: API_URL, token });
+  client.setGetToken(getToken);
+  return client;
+}
+
 const queriesSent = () => sentRequests.filter((request) => request.url.endsWith('/query'));
 
 async function demoToken(userId: string) {
@@ -71,18 +77,22 @@ describe('QueryClient', () => {
     expect(queriesSent()).toHaveLength(1);
   });
 
-  it('FR-3.10 empties the cache when the token changes', async () => {
-    const client = new QueryClient({ apiUrl: API_URL, token: await demoToken('asha') });
+  it('FR-3.10 empties the cache when a renewed token arrives', async () => {
+    const getToken = vi.fn(() => demoToken('ravi'));
+    const client = clientWithRenewal(await demoToken('asha'), getToken);
     expect((await client.run(populationByRegion)).rows).toHaveLength(7);
 
-    client.setToken(await demoToken('ravi'));
+    server.use(
+      http.post(`${API_URL}/query`, () => new HttpResponse(null, { status: 401 }), { once: true }),
+    );
+    await client.run({ ...populationByRegion, dimensions: ['incomeLevel'] });
     expect((await client.run(populationByRegion)).rows).toHaveLength(2);
-    expect(queriesSent()).toHaveLength(2);
+    expect(getToken).toHaveBeenCalledOnce();
   });
 
   it('FR-3.1 asks getToken for the first token when none was given', async () => {
     const getToken = vi.fn(() => demoToken('elena'));
-    const client = new QueryClient({ apiUrl: API_URL, getToken });
+    const client = clientWithRenewal(undefined, getToken);
     expect((await client.run(populationByRegion)).rows).toEqual([
       { region: 'Europe & Central Asia', population: expect.any(Number) as number },
     ]);
@@ -94,7 +104,7 @@ describe('QueryClient', () => {
     const expiredToken = await demoToken('ravi');
     vi.setSystemTime(Date.now() + 16 * 60_000);
     const getToken = vi.fn(() => demoToken('ravi'));
-    const client = new QueryClient({ apiUrl: API_URL, token: expiredToken, getToken });
+    const client = clientWithRenewal(expiredToken, getToken);
 
     expect((await client.run(populationByRegion)).rows).toHaveLength(2);
     expect(getToken).toHaveBeenCalledOnce();
@@ -103,7 +113,7 @@ describe('QueryClient', () => {
 
   it('FR-3.8 renews once for several queries that fail together', async () => {
     const getToken = vi.fn(() => demoToken('asha'));
-    const client = new QueryClient({ apiUrl: API_URL, token: 'not-a-token', getToken });
+    const client = clientWithRenewal('not-a-token', getToken);
     await Promise.all([
       client.run(populationByRegion),
       client.run({ ...populationByRegion, dimensions: ['incomeLevel'] }),
@@ -113,7 +123,7 @@ describe('QueryClient', () => {
 
   it('FR-3.8 reports UNAUTHENTICATED when the renewed token is rejected too', async () => {
     const getToken = vi.fn(() => Promise.resolve('still-not-a-token'));
-    const client = new QueryClient({ apiUrl: API_URL, token: 'not-a-token', getToken });
+    const client = clientWithRenewal('not-a-token', getToken);
     await expect(client.run(populationByRegion)).rejects.toMatchObject({
       code: 'UNAUTHENTICATED',
       message: 'Invalid token',

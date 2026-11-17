@@ -13,8 +13,9 @@ class RequestError extends Error implements DashKitError {
 interface QueryClientOptions {
   apiUrl: string;
   token?: string | undefined;
-  getToken?: (() => Promise<string>) | undefined;
 }
+
+type GetToken = () => Promise<string>;
 
 // Sorted object keys let queries that differ only in key order share one cache entry.
 const cacheKey = (query: Query) =>
@@ -53,22 +54,20 @@ function untilAborted<T>(promise: Promise<T>, signal: AbortSignal | undefined): 
  */
 export class QueryClient {
   readonly #apiUrl: string;
-  readonly #getToken: (() => Promise<string>) | undefined;
+  #getToken: GetToken | undefined;
   #token: string | undefined;
   #tokenRenewal: Promise<string> | undefined;
   readonly #results = new Map<string, Promise<QueryResult>>();
 
-  constructor({ apiUrl, token, getToken }: QueryClientOptions) {
+  constructor({ apiUrl, token }: QueryClientOptions) {
     this.#apiUrl = apiUrl.replace(/\/$/, '');
     this.#token = token;
-    this.#getToken = getToken;
   }
 
-  /** Cached results belong to the previous token's user, so a new token empties the cache. */
-  setToken(token: string) {
-    if (token === this.#token) return;
-    this.#token = token;
-    this.#results.clear();
+  // Hosts often pass a new getToken function on every render, so it can be swapped without
+  // rebuilding the client and losing its cache.
+  setGetToken(getToken: GetToken | undefined) {
+    this.#getToken = getToken;
   }
 
   run(query: Query, signal?: AbortSignal): Promise<QueryResult> {
@@ -117,7 +116,9 @@ export class QueryClient {
     this.#tokenRenewal ??= getToken()
       .then(
         (token) => {
-          this.setToken(token);
+          // Results cached under the old token may belong to a different user.
+          if (token !== this.#token) this.#results.clear();
+          this.#token = token;
           return token;
         },
         (cause: unknown) => {
