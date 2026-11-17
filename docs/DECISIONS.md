@@ -34,3 +34,38 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
   The package's `vite.config.ts` is a library build with declaration bundling that Storybook does not need; usage data should not be sent from developer machines or CI.
 - **Prettier is configured for editors, with no `format` script.**
   None of the required scripts needs it; `.prettierignore` keeps the supplied documents and the lockfile untouched.
+
+## Phase 1 — Data and permissions
+
+- **All seven indicator codes from the requirements are used unchanged.**
+  Each one still resolved on 17 November 2026, so no substitute was needed.
+- **The snapshot covers 2000–2024: a year is kept only if every indicator has values for at least half the countries.**
+  2025 is barely published yet (life expectancy and electricity access 0%, internet users 5%); the rule lives in the fetch script so a later refresh moves the cut-off by itself.
+- **Region and income-level names are trimmed, and rows also store the region's code.**
+  The API returns some names with trailing spaces; tokens scope by code (`SAS`, `EAS`, `ECS`), which stays stable when names change, and the code is not queryable.
+- **The snapshot's type comes from `data/wdi.d.json.ts` instead of being inferred.**
+  Inferring a type for the 1.6 MB file cost 3.8 s and 65,000 types in every program that imports it; the declaration costs 0.06 s.
+- **The API is written once as a fetch-style `handle(Request) → Response`.**
+  The Node server and the MSW handlers both call it, so the browser mock behaves identically to the server by construction rather than by keeping two copies in step.
+- **The signing secret is always passed in; the server falls back to a random secret, and MSW always uses one.**
+  No secret value appears anywhere in the source, and a restart only forces clients to fetch a new token.
+- **mock-engine imports SDK types through a TypeScript `paths` entry, type-only.**
+  The SDK dev-depends on mock-engine for its MSW handlers; a package dependency the other way would be circular.
+- **Code that Node runs directly writes `.ts` in relative imports; the SDK, built by Vite, does not.**
+  Node's type stripping needs real file names, and it lets the server and scripts run without `tsx`.
+- **A query returns at most 1000 rows, which is also the default.**
+  It bounds the work per request; `meta.truncated` tells the caller when rows were cut off.
+- **Missing values never match comparison filters, sort last in both directions, and are skipped by `count`.**
+  A missing figure is unknown, not zero, so it must not pass `gt 0` or count as a reported value.
+- **Request bodies ignore unknown keys but reject unknown values.**
+  A stray `tenantId` in a body is harmless and simply unused, while an unknown field, operator or aggregation is an error.
+- **Saved dashboards are stored exactly as sent, after a structural check; the server adds `updatedAt` and `updatedBy`.**
+  Storing the document unchanged is what makes "reload restores it exactly" hold.
+- **Response shapes the guide leaves open:** `/auth/demo-token` returns `{ token }`, `/dashboards` returns `{ id, title }` summaries, and `/meta` returns `{ dimensions, measures, aggregations }`.
+  These are the smallest shapes the demo and the builder need.
+- **Aborting a query stops that caller waiting but does not cancel the network request.**
+  The request may be shared with other widgets and its result is cached, so discarding the stale answer is enough for FR-4.7.
+- **Several 401s at the same moment share one token renewal.**
+  The host's `getToken` then runs once per expiry instead of once per widget.
+- **Column-level scope (FR-3.11) is not implemented.**
+  It is a stretch item and no demo user needs it.
