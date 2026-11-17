@@ -90,6 +90,15 @@ describe('QueryClient', () => {
     expect(getToken).toHaveBeenCalledOnce();
   });
 
+  it('loads a dashboard of the signed-in tenant', async () => {
+    const client = new QueryClient({ apiUrl: API_URL, token: await demoToken('elena') });
+    expect(await client.loadDashboard('overview')).toMatchObject({
+      id: 'overview',
+      schemaVersion: 1,
+    });
+    await expect(client.loadDashboard('missing')).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+
   it('FR-3.1 asks getToken for the first token when none was given', async () => {
     const getToken = vi.fn(() => demoToken('elena'));
     const client = clientWithRenewal(undefined, getToken);

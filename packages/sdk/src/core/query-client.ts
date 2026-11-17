@@ -1,4 +1,4 @@
-import type { DashKitError, Query, QueryResult } from './types';
+import type { DashboardConfig, DashKitError, Query, QueryResult } from './types';
 
 class RequestError extends Error implements DashKitError {
   readonly code: DashKitError['code'];
@@ -50,7 +50,8 @@ function untilAborted<T>(promise: Promise<T>, signal: AbortSignal | undefined): 
 /**
  * The single path from a dashboard to the data API. It attaches the embed token to every request,
  * renews the token once after a 401, shares identical queries that are in flight, and caches
- * results until the token changes.
+ * results until the token changes. Every rejection is a DashKitError, except the abort reason when
+ * the caller's signal fires.
  */
 export class QueryClient {
   readonly #apiUrl: string;
@@ -87,13 +88,22 @@ export class QueryClient {
     return untilAborted(result, signal);
   }
 
+  loadDashboard(id: string, signal?: AbortSignal): Promise<DashboardConfig> {
+    const path = `/dashboards/${encodeURIComponent(id)}`;
+    return untilAborted(this.#request<DashboardConfig>(path, { method: 'GET' }), signal);
+  }
+
   async #request<T>(path: string, init: RequestInit): Promise<T> {
     let response = await this.#send(path, init, this.#token ?? (await this.#renewToken()));
     if (response.status === 401 && this.#getToken) {
       response = await this.#send(path, init, await this.#renewToken());
     }
     if (!response.ok) throw await toRequestError(response);
-    return (await response.json()) as T;
+    try {
+      return (await response.json()) as T;
+    } catch (cause) {
+      throw new RequestError('UNKNOWN', 'The data API sent a response that is not JSON', { cause });
+    }
   }
 
   async #send(path: string, init: RequestInit, token: string): Promise<Response> {
