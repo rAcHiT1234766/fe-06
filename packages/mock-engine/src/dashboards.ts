@@ -27,6 +27,8 @@ export function createStarterDashboard(latestYear: number): DashboardConfig {
         id: 'population-by-region',
         type: 'bar',
         title: 'Population by region',
+        // Region names are too long to sit side by side under vertical bars.
+        options: { orientation: 'horizontal' },
         query: {
           dataset: 'wdi',
           measures: [{ field: 'population', agg: 'sum' }],
