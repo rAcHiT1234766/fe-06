@@ -26,12 +26,12 @@ sees the pie, line and countries table change to that region, clicks again and s
 the FR-4.11 component test shows that a filter on a region outside Ravi's scope returns zero rows in
 every widget.
 
-### Waiting for a decision
+### Agreed in the Phase 3 review
 
-- Component tests run in happy-dom instead of jsdom (see `DECISIONS.md`). happy-dom is not named in
-  the guide, so it needs confirming.
-- Hosts set filters with a new `filters` prop on `DashKitProvider` (see `DECISIONS.md`). The guide
-  asks for filters from the host but defines no React prop for it, so the addition needs confirming.
+- Component tests keep running in happy-dom instead of jsdom.
+- Hosts set filters with the `filters` prop on `DashKitProvider`. Still to add, early in Phase 4: a
+  test for a host that keeps the filters in its own state and passes them back from
+  `onFilterChange`.
 
 ### Known gaps
 

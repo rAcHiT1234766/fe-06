@@ -1,6 +1,7 @@
 # Decisions
 
-Each entry says what was chosen and why. Entries marked "agreed" were confirmed before work started.
+Each entry says what was chosen and why. Entries marked "agreed" were confirmed before work started;
+"agreed after review" means confirmed in the phase review.
 
 ## Phase 0 — Foundation
 
@@ -94,8 +95,8 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
   A multi-language UI is out of scope, and a fixed locale keeps tables, charts and tests the same on every machine.
 - **`DashboardProps` takes either `dashboardId` or `config`, never both.**
   A union type turns the ambiguous case into a compile error.
-- **Component tests run in happy-dom instead of jsdom (awaiting confirmation).**
-  Under jsdom, typed arrays come from another realm and jose rejected the signing key. happy-dom is not named in the guide.
+- **Component tests run in happy-dom instead of jsdom** (agreed after review).
+  Under jsdom, typed arrays come from another realm and jose rejected the signing key. Neither the requirements nor the guide name a test DOM.
 - **The npm build leaves ECharts external as well as the peers.**
   The host's package manager installs dependencies, so bundling ECharts would make the host ship a second copy.
 - **The demo runs on port 5173 with `strictPort`.**
@@ -107,8 +108,8 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
 
 ## Phase 3 — Cross-filtering
 
-- **Hosts set filters with a `filters` prop on `DashKitProvider` (awaiting confirmation).**
-  FR-4.9 and step 7 of the guide ask for filters from the host, but `DashKitOptions` defines only `onFilterChange`, and `setFilters()` belongs to the Phase 5 element. Passing a new array replaces the active filters; clicks still change them and are reported to `onFilterChange`.
+- **Hosts set filters with a `filters` prop on `DashKitProvider`** (agreed after review).
+  FR-4.9 and step 7 of the guide ask for filters from the host, but `DashKitOptions` defines only `onFilterChange`. Passing a new array replaces the active filters; clicks still change them and are reported to `onFilterChange`. The Phase 5 element's `setFilters()` can pass its filters through the same prop.
 - **Each `DashKitProvider` holds one filter store.**
   Two dashboards on one page each get their own provider, so their filters never mix.
 - **The store keeps an array of filters, and `filtersFor(filters, widget)` is a separate function.**
