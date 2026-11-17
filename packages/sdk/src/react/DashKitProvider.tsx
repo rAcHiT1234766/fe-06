@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -11,13 +12,13 @@ import { createFilterStore } from '../core/filter-store';
 import { QueryClient } from '../core/query-client';
 import { findLowContrastPairs } from '../core/theme/contrast';
 import { createTheme, resolveTheme } from '../core/theme/create-theme';
-import type { ActiveFilter, DashKitOptions } from '../core/types';
+import type { ActiveFilter, DashKitError, DashKitOptions } from '../core/types';
 import { DashKitContext } from './context';
 
 /** Props for {@link DashKitProvider}. Pass `token`, `getToken`, or both. */
 export interface DashKitProviderProps extends Pick<
   DashKitOptions,
-  'apiUrl' | 'token' | 'getToken' | 'theme' | 'onFilterChange'
+  'apiUrl' | 'token' | 'getToken' | 'theme' | 'onFilterChange' | 'onError'
 > {
   /**
    * Replaces the active cross-filters whenever a new array is passed, for example from the host's
@@ -56,12 +57,21 @@ export function DashKitProvider({
   theme,
   filters,
   onFilterChange,
+  onError,
   children,
 }: DashKitProviderProps) {
   // A new token may belong to a different user, so it gets a new client with an empty cache.
   const client = useMemo(() => new QueryClient({ apiUrl, token }), [apiUrl, token]);
   // A layout effect, so getToken is in place before any widget's data effect sends a request.
   useLayoutEffect(() => client.setGetToken(getToken), [client, getToken]);
+
+  // Like onFilterChange below, errors go to whichever onError the latest render passed.
+  const onErrorRef = useRef(onError);
+  useEffect(() => {
+    onErrorRef.current = onError;
+  });
+  const reportError = useCallback((error: DashKitError) => onErrorRef.current?.(error), []);
+  useLayoutEffect(() => client.setOnError(reportError), [client, reportError]);
 
   // Starting from the host's filters means the first queries are already filtered.
   const [filterStore] = useState(() => createFilterStore(filters));
@@ -96,8 +106,8 @@ export function DashKitProvider({
   }, [resolvedTheme]);
 
   const value = useMemo(
-    () => ({ client, filterStore, theme: resolvedTheme }),
-    [client, filterStore, resolvedTheme],
+    () => ({ client, filterStore, theme: resolvedTheme, reportError }),
+    [client, filterStore, resolvedTheme, reportError],
   );
   return <DashKitContext.Provider value={value}>{children}</DashKitContext.Provider>;
 }

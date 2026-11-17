@@ -8,7 +8,7 @@ export default defineConfig({
   build: {
     emptyOutDir: false,
     lib: {
-      entry: 'src/element.tsx',
+      entry: 'src/element.ts',
       formats: ['iife'],
       name: 'DashKit',
       fileName: () => 'dashkit.js',

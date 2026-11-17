@@ -22,7 +22,7 @@ export function useDashboardConfig(
   dashboardId: string | undefined,
   config: DashboardConfig | undefined,
 ): DashboardConfigState {
-  const { client } = useDashKit();
+  const { client, reportError } = useDashKit();
   const [loaded, setLoaded] = useState<
     DashboardConfigState & { client: QueryClient; id: string }
   >();
@@ -33,7 +33,11 @@ export function useDashboardConfig(
     const { signal } = controller;
     client.loadDashboard(dashboardId, signal).then(
       (loadedConfig) => {
-        if (!signal.aborted) setLoaded({ client, id: dashboardId, ...migrated(loadedConfig) });
+        if (signal.aborted) return;
+        const state = migrated(loadedConfig);
+        // A failed request was reported by the client; a config that cannot be shown is not.
+        if (state.error) reportError(state.error);
+        setLoaded({ client, id: dashboardId, ...state });
       },
       (error: unknown) => {
         // The query client rejects only with a DashKitError, or with the abort reason.
@@ -41,9 +45,12 @@ export function useDashboardConfig(
       },
     );
     return () => controller.abort();
-  }, [client, dashboardId, config]);
+  }, [client, dashboardId, config, reportError]);
 
   const given = useMemo(() => config && migrated(config), [config]);
+  useEffect(() => {
+    if (given?.error) reportError(given.error);
+  }, [given, reportError]);
   if (given) return given;
   // A dashboard loaded by another client may belong to another tenant.
   return loaded?.client === client && loaded.id === dashboardId ? loaded : {};

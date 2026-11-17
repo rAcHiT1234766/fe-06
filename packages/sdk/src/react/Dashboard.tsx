@@ -1,10 +1,11 @@
-import { useMemo, type ReactNode } from 'react';
+import { useContext, useEffect, useMemo, type ReactNode } from 'react';
 import { applyDefaultFilters } from '../core/merge-query';
 import type { DashboardConfig } from '../core/types';
 import { useDashKit } from './context';
 import { DashboardGrid } from './DashboardGrid';
 import { FilterBar } from './FilterBar';
 import { useDashboardConfig } from './hooks/use-dashboard-config';
+import { DashboardReadyContext } from './ready-context';
 import { ThemeRoot } from './ThemeRoot';
 import { ErrorState } from './ui/ErrorState';
 import { Skeleton } from './ui/Skeleton';
@@ -51,6 +52,12 @@ export function DashboardLoader({
   children,
 }: DashboardProps & { children: (config: DashboardConfig) => ReactNode }) {
   const loaded = useDashboardConfig(dashboardId, config);
+  const onReady = useContext(DashboardReadyContext);
+  const isSettled = loaded.config !== undefined || loaded.error !== undefined;
+  useEffect(() => {
+    if (isSettled) onReady?.();
+  }, [isSettled, onReady]);
+
   return (
     <ThemeRoot>
       <div className="dk-dashboard">

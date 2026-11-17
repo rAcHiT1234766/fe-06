@@ -1,0 +1,8 @@
+/* The element takes the width it is given, like a div. A page can still size or hide it. */
+:host {
+  display: block;
+}
+
+:host([hidden]) {
+  display: none;
+}

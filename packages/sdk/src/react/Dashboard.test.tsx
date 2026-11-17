@@ -94,6 +94,29 @@ describe('Dashboard', () => {
     expect(alert.className).toContain('dk-error');
   });
 
+  it('passes failures to onError, but not a 401 that getToken recovers from', async () => {
+    const onError = vi.fn();
+    const token = await demoToken('ravi');
+    const view = renderDashboard({ token: `${token.slice(0, -2)}xx`, onError });
+    await screen.findByRole('alert');
+    expect(onError).toHaveBeenCalledWith(expect.objectContaining({ code: 'UNAUTHENTICATED' }));
+    view.unmount();
+
+    onError.mockClear();
+    renderDashboard({ token: 'not-a-token', getToken: () => demoToken('elena'), onError });
+    await regionsInChart('Population by region');
+    expect(onError).not.toHaveBeenCalled();
+  });
+
+  it('passes a config from a newer schema to onError', async () => {
+    const onError = vi.fn();
+    const config = { id: 'future', schemaVersion: 2 } as unknown as DashboardConfig;
+    renderDashboard({ token: await demoToken('asha'), onError }, { config });
+    await screen.findByRole('alert');
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledWith(expect.objectContaining({ code: 'UNKNOWN' }));
+  });
+
   it('FR-3.8 recovers through getToken when the token is rejected', async () => {
     renderDashboard({ token: 'not-a-token', getToken: () => demoToken('elena') });
     expect(await regionsInChart('Population by region')).toEqual(['Europe & Central Asia']);

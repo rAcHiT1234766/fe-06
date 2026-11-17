@@ -6,7 +6,11 @@
   --dk-radius-sm: calc(var(--dk-radius) / 2);
 }
 
+/* `all: initial` stops properties the host page sets on an ancestor, such as text-transform or
+   word-spacing, from being inherited; the declarations after it set what the dashboard needs. */
 .dk-root {
+  all: initial;
+  display: block;
   box-sizing: border-box;
   color-scheme: var(--dk-color-scheme);
   background: var(--dk-color-background);

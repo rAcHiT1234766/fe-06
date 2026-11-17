@@ -26,6 +26,8 @@ interface QueryClientOptions {
 
 type GetToken = () => Promise<string>;
 
+type OnError = (error: DashKitError) => void;
+
 type ColumnFormat = QueryResult['columns'][number]['format'];
 
 /** The fields and aggregations the signed-in user may use, as the API's `/meta` route lists them. */
@@ -86,6 +88,7 @@ function untilAborted<T>(promise: Promise<T>, signal: AbortSignal | undefined): 
 export class QueryClient {
   readonly #apiUrl: string;
   #getToken: GetToken | undefined;
+  #onError: OnError | undefined;
   #token: string | undefined;
   #tokenRenewal: Promise<string> | undefined;
   readonly #results = new Map<string, Promise<QueryResult>>();
@@ -99,6 +102,11 @@ export class QueryClient {
   // rebuilding the client and losing its cache.
   setGetToken(getToken: GetToken | undefined) {
     this.#getToken = getToken;
+  }
+
+  /** Hears about every request that fails for good, after any token renewal. */
+  setOnError(onError: OnError | undefined) {
+    this.#onError = onError;
   }
 
   run(query: Query, signal?: AbortSignal): Promise<QueryResult> {
@@ -140,6 +148,16 @@ export class QueryClient {
   }
 
   async #request<T>(path: string, init: RequestInit): Promise<T> {
+    try {
+      return await this.#fetchJson<T>(path, init);
+    } catch (error) {
+      // #fetchJson rejects only with a RequestError.
+      this.#onError?.(error as RequestError);
+      throw error;
+    }
+  }
+
+  async #fetchJson<T>(path: string, init: RequestInit): Promise<T> {
     let response = await this.#send(path, init, this.#token ?? (await this.#renewToken()));
     if (response.status === 401 && this.#getToken) {
       response = await this.#send(path, init, await this.#renewToken());
