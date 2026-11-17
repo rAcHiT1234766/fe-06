@@ -132,3 +132,44 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
   With only two regions each bar fills half the chart's height, so a click at a fixed position always lands on the top bar without measuring the chart's layout.
 - **Multi-select (FR-4.10) is not implemented.**
   It is a stretch item.
+
+## Phase 4 — Dashboard builder
+
+- **The builder is its own component, `DashboardBuilder`; `Dashboard` stays view-only.**
+  `DashboardBuilder` takes the same props as `Dashboard` plus `mode` and `onSave` from `DashKitOptions`. Hosts that never edit keep using `Dashboard` unchanged.
+- **Edit controls follow the role in the token; the API still checks every write.**
+  The SDK cannot verify a token's signature, so the role it reads only decides which controls to show. A viewer gets no Edit, Save, palette, drag or resize controls even with `mode: 'edit'`, and the API answers a viewer's `PUT` with 403.
+- **A draft remembers the saved config it started from.**
+  The builder edits a copy and writes nothing until Save. If the loaded config changes underneath, after a reload or a change of user, the draft is dropped instead of being shown on top of another user's dashboard. The same applies to the copy kept after a save.
+- **Unsaved changes are any edit since the draft started, compared by identity.**
+  An edit that is undone by hand still counts. Comparing content would need a comparison that ignores key order and layout order, for little gain.
+- **Only the `lg` layout is stored.**
+  The builder edits the 12-column layout; the smaller layouts of Phase 5 are derived from it. Layout changes are recorded when a drag or resize ends.
+- **The SDK's own grid styles replace the grid library's stylesheet.**
+  The rules are scoped under `.dk-grid` and use the theme's tokens, and the SDK ships one stylesheet string that also works inside the Phase 5 shadow root. The library's rule that hides resize handles while resizing is off had to be restated; without it viewers saw a resize corner on every widget, which the builder end-to-end test caught.
+- **The widget registry differs slightly from the guide's sketch.**
+  Each type has a `label`, `view`, `defaultSize`, `minSize`, a `starter` (the guide's `defaultConfig`, as a plain object since edits never change it) and `configFields`. The cross-filter setting is split into `emit` and `listen`, because a KPI can follow filters but has nothing to click. Minimum sizes are applied when the grid renders and are not stored.
+- **New widgets are added at the left edge below everything else, with ids such as `bar-1`.**
+  The id is the first free one for its type. A duplicate keeps the original's size and is titled "(copy)".
+- **New widgets show the latest year, unless they are grouped by year.**
+  The data has 25 years, so a widget without a year filter would add up values such as population across all of them. The latest year comes from a one-row query, asked only while the builder is open, so `/meta` stays as it is. Grouping by year shows every year, and changing the grouping or type applies the same rule.
+- **The config panel edits the first measure and the first grouping.**
+  A table's further measures and groupings stay as they are. A new measure starts with its usual aggregation from `/meta`, and sorting follows a measure or grouping that is swapped.
+- **Changing the type keeps what the new type can use.**
+  Title, measures, grouping, filters, sorting and cross-filter settings stay where they fit. A KPI keeps only its first measure and drops grouping, sorting and limit; a chart keeps one grouping; a widget without a grouping takes the new type's starter grouping. Options such as bar direction belong to one type and are dropped.
+- **The panel sits beside the grid and is not modal.**
+  The grid stays usable, so every change can be watched on the widget. In a container too narrow for both, the panel moves below the grid. It opens with the focus on the title, closes with Escape or its close button, and gives the focus back to the button that opened it.
+- **Builder controls are plain elements with `dk-` classes.**
+  The guide's file tree lists `Button`, `Select` and `Chip` components; the builder's buttons, selects and checkboxes needed nothing beyond their native behaviour and shared classes.
+- **Save checks the draft first and lists every problem at once.**
+  The checks mirror the API's (ids, one place on the grid per widget, measures, row limits) and add one of the SDK's own: every widget needs a title, since the title names the widget's region for screen readers. If the API refuses a save anyway, its message is shown and the draft is kept.
+- **After a save the builder shows the config the API returned, and `onSave` receives it.**
+  It includes `updatedAt` and `updatedBy`, so the host sees exactly what was stored.
+- **Leaving the page with unsaved changes asks for confirmation; Cancel does not.**
+  FR-5.8 asks Cancel to discard the draft, so it does so at once. Browsers show their own wording for the leave warning.
+- **`migrate()` refuses configs from a newer schema with the code `UNKNOWN`.**
+  Version 1 is the only schema, so `migrate()` passes it through unchanged. `DashKitError` has no code for an invalid config, and adding one would change a public type.
+- **The builder end-to-end test uses Elena's tenant.**
+  It empties and rebuilds her dashboard, and no other test reads it.
+- **Undo and redo (FR-5.10) and a keyboard way to move and resize widgets (FR-5.11) are not implemented.**
+  Both are stretch items. Until FR-5.11 exists the drag handle is hidden from screen readers, since it does nothing without a pointer.
