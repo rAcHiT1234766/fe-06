@@ -1,0 +1,48 @@
+# Render Blueprint: the demo API, the demo app and Storybook. docs/DEPLOYMENT.md has the steps.
+#
+# Every service installs pnpm first: the repository pins pnpm 12 in package.json, and the build
+# image may not have it. Node 24 runs the API's TypeScript directly, without a build step.
+
+services:
+  - type: web
+    name: dashkit-api
+    runtime: node
+    plan: free
+    buildCommand: npm install --global pnpm@12.21.0 && pnpm install --frozen-lockfile
+    startCommand: node apps/mock-api/src/main.ts
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      # Signs and verifies the embed tokens. Render generates it; it never leaves the API.
+      - key: DASHKIT_TOKEN_SECRET
+        generateValue: true
+      # The demo app's address, which Render shows only once the service exists, so it is asked for
+      # when the Blueprint is created.
+      - key: DASHKIT_ALLOWED_ORIGINS
+        sync: false
+
+  - type: web
+    name: dashkit-demo
+    runtime: static
+    buildCommand: >-
+      npm install --global pnpm@12.21.0 && pnpm install --frozen-lockfile &&
+      pnpm --filter @dashkit/sdk build && pnpm --filter @dashkit/demo build
+    staticPublishPath: apps/demo/dist
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      # Read at build time, so changing it needs a new deploy.
+      - key: VITE_DASHKIT_API_URL
+        sync: false
+
+  - type: web
+    name: dashkit-storybook
+    runtime: static
+    buildCommand: >-
+      npm install --global pnpm@12.21.0 && pnpm install --frozen-lockfile &&
+      pnpm --filter @dashkit/sdk build-storybook
+    staticPublishPath: packages/sdk/storybook-static
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
