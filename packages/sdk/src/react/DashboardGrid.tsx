@@ -24,17 +24,24 @@ const toLayoutItems = (layout: Layout): LayoutItem[] =>
 
 /**
  * Pairs each layout item with its widget, in reading order so that keyboard and screen reader order
- * match the screen. On the twelve-column grid it adds the widget type's minimum size, so a resize
- * stops there; narrower grids have fewer columns than some of those minimums.
+ * match the screen. On the twelve-column grid, where widgets are resized, each item gets the larger
+ * of its widget type's minimum size and its own, so a resize stops there. Narrower grids are never
+ * edited and have fewer columns than some of those minimums, so they get none.
  */
 export function placeWidgets(layout: LayoutItem[], widgets: WidgetConfig[], withMinSizes = true) {
   return layout
     .toSorted((a, b) => a.y - b.y || a.x - b.x)
-    .flatMap((item) => {
-      const widget = widgets.find(({ id }) => id === item.i);
+    .flatMap(({ minW = 0, minH = 0, ...position }) => {
+      const widget = widgets.find(({ id }) => id === position.i);
       if (!widget) return [];
-      const minSize = withMinSizes ? widgetRegistry[widget.type].minSize : {};
-      return [{ widget, item: { ...item, ...minSize } }];
+      if (!withMinSizes) return [{ widget, item: position }];
+      const typeMinimum = widgetRegistry[widget.type].minSize;
+      const item = {
+        ...position,
+        minW: Math.max(typeMinimum.minW, minW),
+        minH: Math.max(typeMinimum.minH, minH),
+      };
+      return [{ widget, item }];
     });
 }
 

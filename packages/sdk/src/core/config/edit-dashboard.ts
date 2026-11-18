@@ -14,7 +14,7 @@ export function nextWidgetId({ widgets }: DashboardConfig, type: WidgetType) {
 export function addWidget(
   config: DashboardConfig,
   widget: WidgetConfig,
-  size: { w: number; h: number },
+  size: Pick<LayoutItem, 'w' | 'h' | 'minW' | 'minH'>,
 ): DashboardConfig {
   const item = { i: widget.id, x: 0, y: bottomOf(config.layouts.lg), ...size };
   return {
@@ -39,7 +39,7 @@ export function removeWidget(config: DashboardConfig, widgetId: string): Dashboa
   };
 }
 
-/** Copies a widget with its size, and places the copy below everything else. */
+/** Copies a widget with its size and minimum size, and places the copy below everything else. */
 export function duplicateWidget(config: DashboardConfig, widgetId: string): DashboardConfig {
   const widget = config.widgets.find(({ id }) => id === widgetId);
   const item = config.layouts.lg.find(({ i }) => i === widgetId);
@@ -49,7 +49,29 @@ export function duplicateWidget(config: DashboardConfig, widgetId: string): Dash
     id: nextWidgetId(config, widget.type),
     title: `${widget.title} (copy)`,
   };
-  return addWidget(config, copy, { w: item.w, h: item.h });
+  return addWidget(config, copy, { w: item.w, h: item.h, ...minimumOf(item) });
+}
+
+const minimumOf = ({ minW, minH }: Pick<LayoutItem, 'minW' | 'minH'>) => ({
+  ...(minW !== undefined && { minW }),
+  ...(minH !== undefined && { minH }),
+});
+
+/**
+ * Takes the positions and sizes from a layout the grid reports after a drag or resize. The grid
+ * does not report an item's own minimum size, so each item keeps the one it had.
+ */
+export function arrangeWidgets(config: DashboardConfig, arranged: LayoutItem[]): DashboardConfig {
+  const before = new Map(config.layouts.lg.map((item) => [item.i, item]));
+  const lg = arranged.map(({ i, x, y, w, h }) => ({
+    i,
+    x,
+    y,
+    w,
+    h,
+    ...minimumOf(before.get(i) ?? {}),
+  }));
+  return { ...config, layouts: { lg } };
 }
 
 /**

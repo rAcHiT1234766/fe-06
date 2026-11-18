@@ -92,9 +92,15 @@ export interface LayoutItem {
   w: number;
   /** Height in rows. A row is 72 px tall, with the theme's spacing between rows. */
   h: number;
-  /** Accepted for compatibility; the builder applies each widget type's own minimum size instead. */
+  /**
+   * The narrowest the builder lets an editor make this widget, in columns of the twelve-column grid.
+   * It can raise the widget type's own minimum, such as 4 for a chart, but not lower it.
+   */
   minW?: number;
-  /** Accepted for compatibility; the builder applies each widget type's own minimum size instead. */
+  /**
+   * The shortest the builder lets an editor make this widget, in rows. It can raise the widget
+   * type's own minimum, such as 3 for a chart, but not lower it.
+   */
   minH?: number;
 }
 

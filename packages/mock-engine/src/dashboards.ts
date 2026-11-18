@@ -91,7 +91,8 @@ export function createStarterDashboard(latestYear: number): DashboardConfig {
 const isLayoutItem = (value: unknown): value is LayoutItem =>
   isRecord(value) &&
   typeof value.i === 'string' &&
-  ['x', 'y', 'w', 'h'].every((key) => typeof value[key] === 'number');
+  ['x', 'y', 'w', 'h'].every((key) => typeof value[key] === 'number') &&
+  ['minW', 'minH'].every((key) => value[key] === undefined || typeof value[key] === 'number');
 
 /**
  * Checks a dashboard sent for saving. The config is stored as sent, so this rejects anything the

@@ -1,4 +1,5 @@
 import type { DashboardConfig, DashKitError } from '../types';
+import { COLUMNS } from './layout';
 
 /** The schema version this SDK reads and writes. */
 export const SCHEMA_VERSION = 1;
@@ -56,6 +57,15 @@ export function validateDashboard({ title, widgets, layouts }: DashboardConfig):
   }
   for (const i of new Set(placed.filter((i) => !ids.includes(i)))) {
     problems.push(`The grid has a place for ${quoted(i)}, which is not a widget.`);
+  }
+  for (const { i, minW, minH } of layouts.lg) {
+    const name = quoted(widgets.find(({ id }) => id === i)?.title || i);
+    if (minW !== undefined && !(Number.isInteger(minW) && minW >= 1 && minW <= COLUMNS.lg)) {
+      problems.push(`${name} needs a minimum width from 1 to ${COLUMNS.lg} columns, or none.`);
+    }
+    if (minH !== undefined && !(Number.isInteger(minH) && minH >= 1)) {
+      problems.push(`${name} needs a minimum height of at least 1 row, or none.`);
+    }
   }
 
   for (const { id, title: widgetTitle, query } of widgets) {

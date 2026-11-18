@@ -89,4 +89,23 @@ describe('validateDashboard', () => {
       '"GDP by region" needs a row limit from 1 to 1000, or none.',
     ]);
   });
+
+  it('asks for minimum sizes that fit the grid', () => {
+    const [kpi, bar] = dashboard.layouts.lg;
+    const sized = (minimums: [object, object]) => ({
+      ...dashboard,
+      layouts: {
+        lg: [
+          { ...kpi!, ...minimums[0] },
+          { ...bar!, ...minimums[1] },
+        ],
+      },
+    });
+    expect(validateDashboard(sized([{ minW: 12, minH: 1 }, { minW: 4 }]))).toEqual([]);
+    expect(validateDashboard(sized([{ minW: 13 }, { minW: 1.5, minH: 0 }]))).toEqual([
+      '"Total GDP" needs a minimum width from 1 to 12 columns, or none.',
+      '"GDP by region" needs a minimum width from 1 to 12 columns, or none.',
+      '"GDP by region" needs a minimum height of at least 1 row, or none.',
+    ]);
+  });
 });

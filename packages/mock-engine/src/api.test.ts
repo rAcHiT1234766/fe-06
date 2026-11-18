@@ -187,6 +187,14 @@ describe('demo API', () => {
     ],
     ['a widget without a layout item', { ...createStarterDashboard(2024), layouts: { lg: [] } }],
     [
+      'a minimum width that is not a number',
+      (() => {
+        const dashboard = createStarterDashboard(2024);
+        const [first, ...rest] = dashboard.layouts.lg;
+        return { ...dashboard, layouts: { lg: [{ ...first, minW: 'wide' }, ...rest] } };
+      })(),
+    ],
+    [
       'an unknown widget type',
       {
         ...createStarterDashboard(2024),

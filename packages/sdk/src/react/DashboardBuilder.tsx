@@ -1,6 +1,7 @@
 import { useContext, useId, useLayoutEffect, useRef, useState } from 'react';
 import {
   addWidget,
+  arrangeWidgets,
   duplicateWidget,
   nextWidgetId,
   removeWidget,
@@ -138,8 +139,7 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
   };
 
   // Only the lg layout is authored; smaller ones are derived from it.
-  const changeLayout = (lg: LayoutItem[]) =>
-    editDraft((current) => ({ ...current, layouts: { lg } }));
+  const changeLayout = (lg: LayoutItem[]) => editDraft((current) => arrangeWidgets(current, lg));
 
   const addFromPalette = (type: WidgetType) => {
     const { defaultSize, starter } = widgetRegistry[type];

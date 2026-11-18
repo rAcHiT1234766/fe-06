@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { DashboardConfig, Query, WidgetConfig } from '../types';
 import {
   addWidget,
+  arrangeWidgets,
   duplicateWidget,
   nextWidgetId,
   removeWidget,
@@ -67,6 +68,36 @@ describe('editing a dashboard', () => {
     });
     expect(duplicated.widgets.at(-1)?.query).not.toBe(gdp);
     expect(duplicated.layouts.lg.at(-1)).toEqual({ i: 'bar-1', x: 0, y: 5, w: 9, h: 5 });
+  });
+
+  it('FR-5.9 gives a copy the minimum size of the widget it copies', () => {
+    const withMinimum: DashboardConfig = {
+      ...dashboard,
+      layouts: { lg: [dashboard.layouts.lg[0]!, { ...dashboard.layouts.lg[1]!, minW: 6 }] },
+    };
+    const duplicated = duplicateWidget(withMinimum, 'gdp-by-region');
+    expect(duplicated.layouts.lg.at(-1)).toEqual({ i: 'bar-1', x: 0, y: 5, w: 9, h: 5, minW: 6 });
+  });
+
+  it('FR-5.2 FR-5.3 takes moved and resized positions and keeps each widget’s own minimum', () => {
+    const withMinimum: DashboardConfig = {
+      ...dashboard,
+      layouts: {
+        lg: [{ ...dashboard.layouts.lg[0]!, minW: 3, minH: 3 }, dashboard.layouts.lg[1]!],
+      },
+    };
+    // As the grid reports them: swapped, resized, and with the minimums it applied while resizing.
+    const arranged = arrangeWidgets(withMinimum, [
+      { i: 'gdp-by-region', x: 0, y: 0, w: 8, h: 5, minW: 4, minH: 3 },
+      { i: 'kpi-1', x: 8, y: 0, w: 4, h: 3, minW: 3, minH: 3 },
+    ]);
+    expect(arranged.layouts).toEqual({
+      lg: [
+        { i: 'gdp-by-region', x: 0, y: 0, w: 8, h: 5 },
+        { i: 'kpi-1', x: 8, y: 0, w: 4, h: 3, minW: 3, minH: 3 },
+      ],
+    });
+    expect(arranged.widgets).toBe(withMinimum.widgets);
   });
 });
 

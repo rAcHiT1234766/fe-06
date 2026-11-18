@@ -389,4 +389,27 @@ describe('placeWidgets', () => {
       { i: 'table', x: 0, y: 4, w: 12, h: 5, minW: 4, minH: 4 },
     ]);
   });
+
+  it('FR-5.3 lets a widget’s own minimum size raise its type’s, but not lower it', () => {
+    const placed = placeWidgets(
+      [
+        { i: 'bar', x: 0, y: 0, w: 8, h: 4, minW: 6, minH: 2 },
+        { i: 'kpi', x: 8, y: 0, w: 4, h: 4, minH: 4 },
+      ],
+      [widget('bar', 'bar'), widget('kpi', 'kpi')],
+    );
+    expect(placed.map(({ item }) => item)).toEqual([
+      { i: 'bar', x: 0, y: 0, w: 8, h: 4, minW: 6, minH: 3 },
+      { i: 'kpi', x: 8, y: 0, w: 4, h: 4, minW: 2, minH: 4 },
+    ]);
+  });
+
+  it('gives no minimum size on the narrower grids, which are not edited', () => {
+    const placed = placeWidgets(
+      [{ i: 'bar', x: 0, y: 0, w: 4, h: 4, minW: 6 }],
+      [widget('bar', 'bar')],
+      false,
+    );
+    expect(placed.map(({ item }) => item)).toEqual([{ i: 'bar', x: 0, y: 0, w: 4, h: 4 }]);
+  });
 });
