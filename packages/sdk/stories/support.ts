@@ -49,6 +49,7 @@ export const demoUserItems = Object.entries(demoUsers).map(
 export interface HostArgs {
   filters?: ActiveFilter[];
   onFilterChange?: (filters: ActiveFilter[]) => void;
+  allowExport?: boolean;
 }
 
 // Storybook shows these in the Controls table; it cannot read descriptions from an interface.
@@ -60,5 +61,10 @@ export const hostArgTypes = {
   onFilterChange: {
     description:
       'The `onFilterChange` callback. The provider calls it after every change, whether from a click or from the host.',
+  },
+  allowExport: {
+    description:
+      'The `allowExport` the host passes to `DashKitProvider`: a button on each widget downloads its data as a CSV file.',
+    control: 'boolean' as const,
   },
 };

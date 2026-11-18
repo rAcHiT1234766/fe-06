@@ -156,6 +156,7 @@ export function App() {
                 token={token}
                 {...(isTampered ? {} : { getToken: renewToken })}
                 theme={theme}
+                allowExport
               >
                 <DashboardBuilder dashboardId="overview" />
               </DashKitProvider>

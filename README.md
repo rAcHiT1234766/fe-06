@@ -64,6 +64,8 @@ Saved dashboards live in the demo API's memory, so restarting `pnpm dev` resets 
   selects several. The host can set the filters and hears about every change.
 - **A dashboard builder** for editors: drag or use the keyboard to move and resize, add,
   configure, undo, save. Viewers never see it, and the API refuses their writes anyway.
+- **CSV export**, when the host allows it: each widget downloads the rows it shows, only ever
+  inside the user's scope.
 - **Responsive to its container**, from a 360 px phone to a wide screen, with 44 px touch targets
   on touch screens.
 - **Five widget types** (bar, line, pie, table, KPI) on ECharts, each with loading, empty and error

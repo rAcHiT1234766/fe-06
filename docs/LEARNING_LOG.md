@@ -115,3 +115,11 @@
 - **Test DOMs do not model focus loss.** jsdom and happy-dom kept the focus on an element React moved within the page, so only a run in real browsers could show whether code to restore it was needed. It was not, and the code went.
 - **Modifier keys differ between platforms and between pointer and keyboard.** Ctrl-click is a right-click on a Mac, so multi-select takes Ctrl or Cmd. A click made with the keyboard does not reliably carry the modifier keys, or happen at all, so the key itself has to be handled; only the end-to-end run in three browsers showed this.
 - **Column-level security.** Restricting columns is harder than restricting rows: rows can be removed before a query runs, but a column can leak through anything that uses it, so a filter on a forbidden measure has to be refused as well as showing it. Hiding fields in the interface only helps honest users; the server's check is the protection, and a test sends the forbidden query by hand to prove it.
+
+## After Phase 7 — Beyond the requirements
+
+- **CSV is simple until a spreadsheet opens it.** RFC 4180 quoting covers commas, quotes and line breaks, but a cell starting with `=`, `+`, `-` or `@` is run as a formula, so exported text needs a guard, and Excel reads a file without a byte order mark in the system's code page rather than UTF-8.
+- **Exporting what is on screen needs no new request.** The widget already holds its filtered, scoped result, so a download from it can never hold more than the user may see, and the server's checks stay the only protection.
+- **Downloads from a shadow root.** A temporary link with a `download` attribute works when it is placed inside the shadow root, and stays out of reach of a host's handler for link clicks there.
+- **Boolean attributes across React versions.** React 19 adds or removes a custom element's boolean attribute, while React 18 writes `false` as the text "false"; an element that reads only whether the attribute is present would take that as true.
+- **Test DOMs differ in small ways too.** happy-dom's `Blob.text()` keeps a byte order mark that browsers drop, so the test strips it itself rather than depending on either.

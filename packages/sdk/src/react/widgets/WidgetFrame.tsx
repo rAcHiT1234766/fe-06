@@ -4,6 +4,7 @@ import { useDashKit } from '../context';
 import { useWidgetData } from '../hooks/use-widget-data';
 import { ErrorState } from '../ui/ErrorState';
 import { Skeleton } from '../ui/Skeleton';
+import { ExportButton } from './ExportButton';
 import { widgetRegistry } from './registry';
 
 interface WidgetBodyProps {
@@ -24,9 +25,11 @@ interface WidgetFrameProps {
   widget: WidgetConfig;
   /** Controls shown next to the title, such as the builder's widget actions. */
   actions?: ReactNode;
+  /** Offers the widget's data as a CSV download once there is some. */
+  canExport?: boolean;
 }
 
-export function WidgetFrame({ widget, actions }: WidgetFrameProps) {
+export function WidgetFrame({ widget, actions, canExport = false }: WidgetFrameProps) {
   const titleId = useId();
   const { data, error, isFetching } = useWidgetData(widget);
   // A first load shows a skeleton; later loads keep the old result and show a bar instead.
@@ -48,6 +51,11 @@ export function WidgetFrame({ widget, actions }: WidgetFrameProps) {
         <h3 id={titleId} className="dk-widget-title">
           {widget.title}
         </h3>
+        {canExport && hasView && data && (
+          <div className="dk-widget-actions">
+            <ExportButton title={widget.title} result={data} />
+          </div>
+        )}
         {actions}
       </header>
       <div className="dk-widget-body">

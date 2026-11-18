@@ -231,6 +231,21 @@ describe('<dashkit-dashboard>', () => {
     expect(themeStyle).toContain('--dk-color-scheme: dark');
   });
 
+  it('offers CSV downloads with the allow-export attribute, and none without it or when "false"', async () => {
+    const downloads = (element: Element) =>
+      inside(element).queryAllByRole('button', { name: /as CSV$/ });
+    const element = await addDashboard('asha', { 'allow-export': '' });
+    await showsCountries(element);
+    expect(await inside(element).findAllByRole('button', { name: /as CSV$/ })).toHaveLength(5);
+
+    act(() => element.setAttribute('allow-export', 'false'));
+    expect(downloads(element)).toEqual([]);
+    act(() => element.setAttribute('allow-export', 'true'));
+    expect(downloads(element)).toHaveLength(5);
+    act(() => element.removeAttribute('allow-export'));
+    expect(downloads(element)).toEqual([]);
+  });
+
   it('shows nothing until it knows the API and the dashboard', () => {
     const element = addElement({ 'api-url': API_URL, token: 'any' });
     expect(element.shadowRoot?.querySelector('.dk-root')).toBeNull();

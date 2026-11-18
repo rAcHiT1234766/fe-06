@@ -47,6 +47,16 @@ export const WithFilters: Story = {
 };
 
 /**
+ * The host passes `allowExport`, so each widget has a button that downloads its data as a CSV
+ * file: the rows the widget holds, after the cross-filters and only inside the user's scope.
+ * Values are written unformatted, so a spreadsheet can calculate with them.
+ */
+export const WithCsvExport: Story = {
+  name: 'With CSV export',
+  args: { allowExport: true },
+};
+
+/**
  * In a container 360 px wide, the grid uses its `xs` layout: one column, with the widgets in
  * reading order. The breakpoints follow the container's width, not the window's.
  */

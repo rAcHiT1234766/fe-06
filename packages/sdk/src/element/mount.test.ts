@@ -78,6 +78,16 @@ describe('DashKit.mount()', () => {
     expect(handle.element.getAttribute('dashboard-id')).toBe('overview');
   });
 
+  it('turns CSV downloads on and off with allowExport', async () => {
+    const { handle } = await mountDashboard({ allowExport: true });
+    expect(handle.element.hasAttribute('allow-export')).toBe(true);
+    expect(await inside(handle).findAllByRole('button', { name: /as CSV$/ })).toHaveLength(5);
+
+    act(() => handle.update({ allowExport: false }));
+    expect(handle.element.hasAttribute('allow-export')).toBe(false);
+    expect(inside(handle).queryAllByRole('button', { name: /as CSV$/ })).toEqual([]);
+  });
+
   it('NFR-C4 unmount() removes the dashboard and tears it down', async () => {
     const { container, handle } = await mountDashboard();
     await inside(handle).findByRole('table', { name: 'Countries' });

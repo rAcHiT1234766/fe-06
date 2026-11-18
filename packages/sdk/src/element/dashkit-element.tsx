@@ -37,6 +37,12 @@ export interface DashKitElementAttributes {
   mode?: 'view' | 'edit' | undefined;
   /** Overrides the `mode` of the `theme` property. */
   'color-scheme'?: 'light' | 'dark' | 'auto' | undefined;
+  /**
+   * Present, it shows a button on each widget that downloads its data as a CSV file, as the
+   * `allowExport` option does. Absent or `"false"`, there is none: React 18 writes `false` on a
+   * custom element as that text.
+   */
+  'allow-export'?: boolean | '' | 'false' | undefined;
 }
 
 /**
@@ -61,13 +67,21 @@ type Listener<K extends keyof DashKitElementEventMap> = (
 
 /**
  * `<dashkit-dashboard>`: a dashboard in one tag, for pages without React. Strings go in
- * attributes (`api-url`, `dashboard-id`, `token`, `mode`, `color-scheme`); objects and functions
- * go in properties (`theme`, `config`, `getToken`). It reports through the `dashkit:ready`,
+ * attributes (`api-url`, `dashboard-id`, `token`, `mode`, `color-scheme`, and the boolean
+ * `allow-export`); objects and functions go in properties (`theme`, `config`, `getToken`). It
+ * reports through the `dashkit:ready`,
  * `dashkit:filterchange`, `dashkit:save` and `dashkit:error` events, which bubble out of its
  * shadow root.
  */
 export class DashKitElement extends HTMLElement {
-  static observedAttributes = ['api-url', 'dashboard-id', 'token', 'mode', 'color-scheme'];
+  static observedAttributes = [
+    'api-url',
+    'dashboard-id',
+    'token',
+    'mode',
+    'color-scheme',
+    'allow-export',
+  ];
 
   #root: Root | undefined;
   #theme: ThemeInput | undefined;
@@ -269,6 +283,7 @@ export class DashKitElement extends HTMLElement {
         {...(token ? { token } : {})}
         {...(this.#getToken ? { getToken: this.#getToken } : {})}
         {...(theme ? { theme } : {})}
+        allowExport={![null, 'false'].includes(this.getAttribute('allow-export'))}
         {...(this.#hostFilters ? { filters: this.#hostFilters } : {})}
         onFilterChange={this.#onFilterChange}
         onError={this.#onError}

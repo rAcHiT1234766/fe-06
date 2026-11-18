@@ -336,3 +336,24 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
   A Ctrl-click on a field another widget, or the host, has selected starts a new selection, as a plain click does. Adding to it would make the clicked widget the selection's owner, so the other widget would switch from highlighting the values to being filtered by them.
 - **In a data table, Ctrl+Enter or Cmd+Enter adds the value.**
   Keyboard users filter through each chart's data table, so they need the same choice. Browsers disagree on Ctrl+Enter: Chromium and WebKit do not click the button, and Firefox clicks it without saying Ctrl was held, so the button handles the key itself and stops the browser's own click.
+
+## After Phase 7 — Beyond the requirements
+
+The author asked for five features the requirements do not list. Each is recorded here.
+
+- **CSV export goes beyond the brief** (agreed).
+  Section 5.2 of the requirements lists PDF and CSV export as out of scope; it was built at the author's request. It is off unless the host sets `allowExport`, because some products must not let data leave them, and a host that upgrades should not find a new button it did not ask for.
+- **The file holds what the widget holds, and nothing is fetched for it.**
+  It is the widget's current result: after the cross-filters, inside the user's scope, every page of a paged table, and no more than the query's `limit`. Since no new request is made, the API's scope protects the file as it protects the screen.
+- **Values are raw; the headings are the column labels.**
+  Numbers are written unformatted, so the world's population in 2024, "8.1B" on the KPI, is 8117484624 in the file and a spreadsheet can calculate with it. A missing value stays empty rather than becoming 0, as on screen.
+- **Text that would run as a formula is written as text.**
+  A spreadsheet runs a cell starting with `=`, `+`, `-`, `@`, a tab or a carriage return, so text cells that do get a leading apostrophe. Numbers are left alone, since a negative number is no formula. No country or region name starts that way, but a host's own labels could.
+- **UTF-8 with a byte order mark.**
+  Without it, Excel reads the file in the system's code page and garbles names such as Côte d'Ivoire and Curaçao.
+- **The download link is made beside the button.**
+  Inside a shadow root it stays inside, so the script-tag build downloads the same way and a host's handler for link clicks never sees it. Its address is released after 40 seconds, since the browser reads the file after the click returns.
+- **No download while editing.**
+  The header then holds the editor's controls, and the data belongs to an unsaved draft.
+- **`allow-export="false"` counts as absent.**
+  It is a boolean attribute, but React 18 writes `false` on a custom element as the text "false", which would otherwise turn the downloads on.

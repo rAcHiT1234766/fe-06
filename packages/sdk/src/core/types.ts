@@ -286,6 +286,12 @@ export interface DashKitOptions {
   mode?: 'view' | 'edit';
   /** The host's brand. Anything left out comes from the default theme. */
   theme?: ThemeInput;
+  /**
+   * Shows a button on each widget that downloads its data as a CSV file: every row the widget
+   * holds, including the other pages of a paged table, after the cross-filters and only ever inside
+   * the user's scope. Off unless set, since some products must not let data leave them.
+   */
+  allowExport?: boolean;
   /** Called with the new filters after every change, whether from a click or from the host. */
   onFilterChange?: (filters: ActiveFilter[]) => void;
   /** Called with the config as stored after an editor saves. */

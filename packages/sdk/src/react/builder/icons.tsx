@@ -54,3 +54,11 @@ export const SettingsIcon = () =>
       <circle cx="10" cy="11.5" r="1.75" fill="currentColor" />
     </>,
   );
+
+export const DownloadIcon = () =>
+  icon(
+    <>
+      <path d="M8 2.5v7.5M4.75 6.75 8 10l3.25-3.25" />
+      <path d="M3 13.5h10" />
+    </>,
+  );

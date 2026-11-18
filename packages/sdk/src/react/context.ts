@@ -12,6 +12,8 @@ interface DashKitContextValue {
   /** Passes an error to the host's `onError`. Failed requests are passed on by the client itself. */
   reportError: (error: DashKitError) => void;
   timing: RenderTiming;
+  /** Whether widgets offer their data as a CSV download. */
+  allowExport: boolean;
 }
 
 export const DashKitContext = createContext<DashKitContextValue | null>(null);

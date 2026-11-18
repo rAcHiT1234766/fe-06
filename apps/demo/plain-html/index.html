@@ -22,7 +22,11 @@
     <p id="filters" aria-live="polite">Filters: none</p>
 
     <!-- Vite fills in the demo API's address when it serves or builds this page. -->
-    <dashkit-dashboard api-url="%VITE_DASHKIT_API_URL%" dashboard-id="overview"></dashkit-dashboard>
+    <dashkit-dashboard
+      api-url="%VITE_DASHKIT_API_URL%"
+      dashboard-id="overview"
+      allow-export
+    ></dashkit-dashboard>
 
     <script src="/dashkit.js"></script>
     <script>

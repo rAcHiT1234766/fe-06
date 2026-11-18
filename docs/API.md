@@ -56,6 +56,7 @@ cross-filters. Nothing is shared between providers, so each dashboard on a page 
 | `token`          | `string`                            | An embed token minted by your backend. It is kept in memory only.                                                                           |
 | `getToken`       | `() => Promise<string>`             | Called on start if there is no `token`, and once after a 401 response to get a fresh token. Widgets that get a 401 together share one call. |
 | `theme`          | `ThemeInput`                        | The host's brand. Anything left out comes from the default theme.                                                                           |
+| `allowExport`    | `boolean`                           | Shows a button on each widget that downloads its data as a CSV file. Off unless set.                                                        |
 | `filters`        | `ActiveFilter[]`                    | Replaces the active cross-filters whenever a new array is passed. Clicks still change them.                                                 |
 | `onFilterChange` | `(filters: ActiveFilter[]) => void` | Called with the new filters after every change, whether from a click or from the host.                                                      |
 | `onError`        | `(error: DashKitError) => void`     | Called when a request fails for good or a dashboard cannot be read.                                                                         |
@@ -63,6 +64,14 @@ cross-filters. Nothing is shared between providers, so each dashboard on a page 
 
 Pass `token`, `getToken`, or both. A new `token` gets a new query client with an empty cache,
 because it may belong to another user.
+
+With `allowExport`, each widget that has data shows a download button beside its title. The CSV
+file holds the rows the widget holds: after the cross-filters, only inside the user's scope, and
+every page of a paged table, up to the query's `limit`. It has one heading row of column labels,
+values unformatted so a spreadsheet can calculate with them, and empty cells for missing values.
+Text that a spreadsheet would run as a formula is written with a leading apostrophe. The file is
+UTF-8 with a byte order mark, so spreadsheet apps keep accented names. There is no button while an
+editor is in the builder.
 
 ### `Dashboard`
 
@@ -116,6 +125,7 @@ change the page. The element loads nothing until it has an API URL, a dashboard 
 | Attribute | `token`                | string                         | An embed token, for pages that do not set `getToken`.                                    |
 | Attribute | `mode`                 | `view` \| `edit`               | `edit` opens the builder when the token's role is `editor`.                              |
 | Attribute | `color-scheme`         | `light` \| `dark` \| `auto`    | Overrides the theme's `mode`.                                                            |
+| Attribute | `allow-export`         | boolean                        | Present, each widget offers its data as a CSV download. `"false"` counts as absent.      |
 | Property  | `theme`                | `ThemeInput`                   | The theme, as `DashKitProvider` takes it.                                                |
 | Property  | `config`               | `DashboardConfig`              | A dashboard to show directly, in place of `dashboard-id`.                                |
 | Property  | `getToken`             | `() => Promise<string>`        | Called on start and once after a 401 response to get a fresh token.                      |
@@ -135,8 +145,8 @@ hears it. With the element entry imported, TypeScript knows each event's `detail
 
 For pages that would rather call a function than write the tag. It adds a `<dashkit-dashboard>`
 to `container`, applies `options` (a `DashKitOptions`: `apiUrl`, `token` or `getToken`,
-`dashboardId` or `config`, `mode`, `theme`, and the `onFilterChange`, `onSave` and `onError`
-callbacks), and returns a handle:
+`dashboardId` or `config`, `mode`, `theme`, `allowExport`, and the `onFilterChange`, `onSave`
+and `onError` callbacks), and returns a handle:
 
 | Member                                               | Description                                                             |
 | ---------------------------------------------------- | ----------------------------------------------------------------------- |

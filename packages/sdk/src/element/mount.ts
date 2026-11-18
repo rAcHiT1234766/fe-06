@@ -31,6 +31,7 @@ function apply(element: DashKitElement, options: DashKitOptions) {
     if (value === undefined) element.removeAttribute(attribute);
     else if (element.getAttribute(attribute) !== value) element.setAttribute(attribute, value);
   }
+  element.toggleAttribute('allow-export', options.allowExport === true);
   if (element.theme !== options.theme) element.theme = options.theme;
   if (element.config !== options.config) element.config = options.config;
   if (element.getToken !== options.getToken) element.getToken = options.getToken;

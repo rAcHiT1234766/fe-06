@@ -19,13 +19,19 @@ const worker = setupWorker(
   http.all(`${OFFLINE_API_URL}/*`, () => HttpResponse.error()),
 );
 
-// Stories that play the host set the filters through their args and receive every change.
+// Stories that play the host set the filters and CSV export through their args, and receive every
+// filter change.
 function hostProps({
   filters,
   onFilterChange,
-}: Record<string, unknown>): Pick<DashKitProviderProps, 'filters' | 'onFilterChange'> {
+  allowExport,
+}: Record<string, unknown>): Pick<
+  DashKitProviderProps,
+  'filters' | 'onFilterChange' | 'allowExport'
+> {
   return {
     ...(Array.isArray(filters) && { filters: filters as ActiveFilter[] }),
+    ...(allowExport === true && { allowExport }),
     ...(typeof onFilterChange === 'function' && {
       onFilterChange: onFilterChange as (filters: ActiveFilter[]) => void,
     }),

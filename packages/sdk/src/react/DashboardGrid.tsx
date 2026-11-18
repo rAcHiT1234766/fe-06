@@ -66,7 +66,8 @@ export function DashboardGrid({
   onLayoutChange,
   actionsFor,
 }: DashboardGridProps) {
-  const { typography } = useDashKit().theme;
+  const { theme, allowExport } = useDashKit();
+  const { typography } = theme;
   const { width, containerRef } = useContainerWidth();
   const containerBreakpoint = useContext(BreakpointContext);
   const breakpoint = isEditing ? 'lg' : containerBreakpoint;
@@ -136,6 +137,8 @@ export function DashboardGrid({
           <div key={widget.id} className="dk-grid-cell">
             <WidgetFrame
               widget={widget}
+              // While editing, the data is a draft's, and the header is full of the editor's controls.
+              canExport={allowExport && !isEditing}
               actions={
                 isEditing && (
                   <div className="dk-widget-actions">

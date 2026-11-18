@@ -19,7 +19,7 @@ import { DashKitContext } from './context';
 /** Props for {@link DashKitProvider}. Pass `token`, `getToken`, or both. */
 export interface DashKitProviderProps extends Pick<
   DashKitOptions,
-  'apiUrl' | 'token' | 'getToken' | 'theme' | 'onFilterChange' | 'onError'
+  'apiUrl' | 'token' | 'getToken' | 'theme' | 'allowExport' | 'onFilterChange' | 'onError'
 > {
   /**
    * Replaces the active cross-filters whenever a new array is passed, for example from the host's
@@ -57,6 +57,7 @@ export function DashKitProvider({
   token,
   getToken,
   theme,
+  allowExport = false,
   filters,
   onFilterChange,
   onError,
@@ -110,8 +111,8 @@ export function DashKitProvider({
   }, [resolvedTheme]);
 
   const value = useMemo(
-    () => ({ client, filterStore, theme: resolvedTheme, reportError, timing }),
-    [client, filterStore, resolvedTheme, reportError, timing],
+    () => ({ client, filterStore, theme: resolvedTheme, reportError, timing, allowExport }),
+    [client, filterStore, resolvedTheme, reportError, timing, allowExport],
   );
   return <DashKitContext.Provider value={value}>{children}</DashKitContext.Provider>;
 }
