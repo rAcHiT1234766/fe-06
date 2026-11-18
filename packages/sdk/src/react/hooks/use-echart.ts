@@ -50,7 +50,8 @@ function withBriefAnimation(option: ChartOption, isAnimated: boolean): ChartOpti
 export function useEChart(
   option: ChartOption,
   theme: object,
-  onItemClick?: (dataIndex: number) => void,
+  /** Told which item was clicked, and whether Ctrl or Cmd was held to add it to a selection. */
+  onItemClick?: (dataIndex: number, isAdditive: boolean) => void,
   onFinished?: () => void,
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -68,7 +69,11 @@ export function useEChart(
     if (!container) return;
     const chart = init(container);
     chartRef.current = chart;
-    chart.on('click', (event: ECElementEvent) => onItemClickRef.current?.(event.dataIndex));
+    chart.on('click', (event: ECElementEvent) => {
+      const pointer = event.event?.event;
+      const isAdditive = pointer instanceof MouseEvent && (pointer.ctrlKey || pointer.metaKey);
+      onItemClickRef.current?.(event.dataIndex, isAdditive);
+    });
     // Fired once a render, and any animation it started, is complete.
     chart.on('finished', () => onFinishedRef.current?.());
     const resizeObserver = new ResizeObserver(() => chart.resize());

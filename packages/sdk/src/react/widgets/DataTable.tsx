@@ -37,7 +37,15 @@ export function DataTable({ result, caption, selection }: DataTableProps) {
                       className="dk-select"
                       aria-label={`Filter by ${text}`}
                       aria-pressed={selection.values?.includes(value) ?? false}
-                      onClick={() => selection.toggle(value)}
+                      // Cmd on a Mac, where Ctrl-click opens the context menu.
+                      onClick={(event) => selection.toggle(value, event.ctrlKey || event.metaKey)}
+                      onKeyDown={(event) => {
+                        // Browsers differ on whether Ctrl+Enter clicks a button, and on whether
+                        // that click says Ctrl was held, so the key is handled here instead.
+                        if (event.key !== 'Enter' || !(event.ctrlKey || event.metaKey)) return;
+                        event.preventDefault();
+                        selection.toggle(value, true);
+                      }}
                     >
                       {text}
                     </button>

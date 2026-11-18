@@ -13,7 +13,8 @@ export interface Selection {
   field: DimensionField;
   /** `undefined` while the widget has selected nothing. */
   values: Scalar[] | undefined;
-  toggle: (value: Scalar) => void;
+  /** With `additive`, from a Ctrl- or Cmd-click, the value joins the selection or leaves it. */
+  toggle: (value: Scalar, additive?: boolean) => void;
 }
 
 export function useSelection(widget: WidgetConfig): Selection | undefined {
@@ -24,6 +25,6 @@ export function useSelection(widget: WidgetConfig): Selection | undefined {
   return {
     field,
     values: activeFilters.find((filter) => filter.sourceWidgetId === widget.id)?.values,
-    toggle: (value) => filterStore.toggle(field, value, widget.id),
+    toggle: (value, additive) => filterStore.toggle(field, value, widget.id, additive),
   };
 }

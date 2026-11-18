@@ -128,8 +128,27 @@ describe('useEChart', () => {
     const clickHandlers = handlersFor('click');
     expect(clickHandlers).toHaveLength(1);
     clickHandlers[0]!({ dataIndex: 3 });
-    expect(latest).toHaveBeenCalledWith(3);
+    expect(latest).toHaveBeenCalledWith(3, false);
     expect(first).not.toHaveBeenCalled();
+  });
+
+  it('FR-4.10 tells the handler when Ctrl or Cmd was held, so the item joins a selection', () => {
+    const onItemClick = vi.fn();
+    render(<Chart option={{}} theme={{}} onItemClick={onItemClick} />);
+    const [click] = handlersFor('click');
+    // ECharts passes the browser's event inside its own.
+    const withKeys = (keys: MouseEventInit) => ({
+      dataIndex: 1,
+      event: { event: new MouseEvent('click', keys) },
+    });
+    click!(withKeys({ ctrlKey: true }));
+    click!(withKeys({ metaKey: true }));
+    click!(withKeys({ shiftKey: true }));
+    expect(onItemClick.mock.calls).toEqual([
+      [1, true],
+      [1, true],
+      [1, false],
+    ]);
   });
 
   it('NFR-P3 tells the handler from the latest render when a render has finished', () => {

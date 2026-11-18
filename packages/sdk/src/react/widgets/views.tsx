@@ -57,7 +57,9 @@ function ChartView({
   const chartRef = useEChart(
     option,
     chartTheme,
-    selection && ((rowIndex) => selection.toggle(result.rows[rowIndex]?.[selection.field] ?? null)),
+    selection &&
+      ((rowIndex, isAdditive) =>
+        selection.toggle(result.rows[rowIndex]?.[selection.field] ?? null, isAdditive)),
     () => timing.finished(widget.id, 'chart'),
   );
   return (

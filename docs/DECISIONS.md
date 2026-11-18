@@ -131,7 +131,7 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
 - **The end-to-end test clicks the bar chart signed in as Ravi.**
   With only two regions each bar fills half the chart's height, so a click at a fixed position always lands on the top bar without measuring the chart's layout.
 - **Multi-select (FR-4.10) is not implemented.**
-  It is a stretch item.
+  It is a stretch item. (Since built: see "After Phase 7".)
 
 ## Phase 4 — Dashboard builder
 
@@ -330,3 +330,9 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
   A move can put the widget's element after others in the page. Code to return the focus to the handle was written, and removed when the end-to-end test passed without it in Chromium, Firefox and WebKit; the test still checks that the focus stays.
 - **Screen readers in browse mode keep the arrow keys for reading.**
   A screen reader user switches to focus mode, as for any control that takes arrow keys; the handle's description names the keys. A menu of move and resize commands would avoid the switch, at the cost of many more controls on every widget.
+- **Ctrl-click, or Cmd-click on a Mac, adds a value to the selection or takes it out.**
+  A plain click still replaces the selection, and clicking the only selected value still clears it. Cmd is the Mac's key because Ctrl-click there opens the context menu. Taking out the last value removes the filter, as a second plain click does.
+- **A widget adds only to its own selection.**
+  A Ctrl-click on a field another widget, or the host, has selected starts a new selection, as a plain click does. Adding to it would make the clicked widget the selection's owner, so the other widget would switch from highlighting the values to being filtered by them.
+- **In a data table, Ctrl+Enter or Cmd+Enter adds the value.**
+  Keyboard users filter through each chart's data table, so they need the same choice. Browsers disagree on Ctrl+Enter: Chromium and WebKit do not click the button, and Firefox clicks it without saying Ctrl was held, so the button handles the key itself and stops the browser's own click.

@@ -147,17 +147,16 @@ and resizing drops a few frames. Both are in the performance report with the rea
 
 **On the slide:**
 
-- Built after the must-haves: column-level scope, the stretch item that completes the security
-  model, and in the builder undo and redo, and moving and resizing widgets from the keyboard.
-- Not built (stretch items): multi-select.
+- Built after the must-haves: all four stretch items. Column-level scope, selecting several values
+  with Ctrl- or Cmd-click, undo and redo, and moving and resizing widgets from the keyboard.
 - The demo API keeps dashboards in memory and signs its own demo tokens.
 - Next: persistent storage, and cross-filtering within 300 ms on slow devices.
 
-**Say:** "Everything the brief marked as must-have is built and tested, and so are column-level
-scope, the stretch item that completes the security model, undo and redo in the builder, and a
-keyboard way to move and resize widgets. Selecting several values in one chart is not, and the
-demo API is a stand-in: a real deployment would store dashboards in a database and let the host's
-backend sign tokens."
+**Say:** "Everything the brief marked as must-have is built and tested, and so are the four
+stretch items: column-level scope, which completes the security model; selecting several values
+with Ctrl- or Cmd-click; undo and redo; and a keyboard way to move and resize widgets. What is
+missing is the production back end: the demo API is a stand-in, and a real deployment would store
+dashboards in a database and let the host's backend sign tokens."
 
 ## 10. Thank you (9:45–10:00)
 

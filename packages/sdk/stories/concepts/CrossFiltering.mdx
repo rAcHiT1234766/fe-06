@@ -18,12 +18,13 @@ receives.
 | Which widgets filter the others? | Bar and pie charts, unless their config sets `crossFilter.emit: false`. Line charts and tables do when it sets `crossFilter.emit: true`. KPIs never do.                                                        |
 | On which field?                  | The widget's first dimension, such as `region` for "Population by region".                                                                                                                                     |
 | What does a click do?            | It selects that value. A click on the selected value removes the filter; a click on another value replaces it.                                                                                                 |
+| Can I select several values?     | Yes. Ctrl-click, or Cmd-click on a Mac, adds a value to the widget's selection or takes it out. In a data table, Ctrl+Enter or Cmd+Enter does the same.                                                        |
 | Which widgets are filtered?      | Every widget except the one the selection came from, which keeps all its items, dims the others and outlines the selection. A widget whose config sets `crossFilter.listen: false` ignores every cross-filter. |
 | How do several filters combine?  | There is at most one filter per field. Filters on different fields all apply; the values within one filter are alternatives.                                                                                   |
 | How does the host take part?     | `filters` on `DashKitProvider`, or `setFilters` on the element, replaces the filters. `onFilterChange`, or the `dashkit:filterchange` event, reports every change.                                             |
 | How is a filter removed?         | A second click, the × on its chip above the grid, **Clear all**, or the host.                                                                                                                                  |
 | Can a filter show more data?     | No. The API applies the user's row scope first, so a filter can only narrow it.                                                                                                                                |
-| Can keyboard users filter?       | Yes. Tab reaches each chart's data table, which then covers the chart, and Enter on a value selects it.                                                                                                        |
+| Can keyboard users filter?       | Yes. Tab reaches each chart's data table, which then covers the chart, and Enter on a value selects it. Ctrl+Enter or Cmd+Enter adds it to the selection.                                                      |
 
 A dashboard's `defaultFilters` are not cross-filters. They are part of the config, narrow every
 widget, including those that ignore cross-filters, and never show as chips.

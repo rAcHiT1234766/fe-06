@@ -44,6 +44,30 @@ describe('createFilterStore', () => {
     ]);
   });
 
+  it('FR-4.10 adds a value to the widget’s selection with additive, and takes one out again', () => {
+    const store = createFilterStore();
+    store.toggle('region', 'South Asia', 'by-region', true);
+    store.toggle('region', 'North America', 'by-region', true);
+    expect(store.getFilters()).toEqual([{ ...southAsia, values: ['South Asia', 'North America'] }]);
+    store.toggle('region', 'South Asia', 'by-region', true);
+    expect(store.getFilters()).toEqual([{ ...southAsia, values: ['North America'] }]);
+    store.toggle('region', 'North America', 'by-region', true);
+    expect(store.getFilters()).toEqual([]);
+  });
+
+  it('FR-4.10 lets a plain click replace several selected values with one', () => {
+    const store = createFilterStore([{ ...southAsia, values: ['South Asia', 'North America'] }]);
+    store.toggle('region', 'South Asia', 'by-region');
+    expect(store.getFilters()).toEqual([southAsia]);
+  });
+
+  it('FR-4.10 starts a new selection, as a click does, rather than add to another widget’s', () => {
+    const fromHost: ActiveFilter = { ...southAsia, sourceWidgetId: 'host' };
+    const store = createFilterStore([fromHost]);
+    store.toggle('region', 'North America', 'by-region', true);
+    expect(store.getFilters()).toEqual([{ ...southAsia, values: ['North America'] }]);
+  });
+
   it('removes one field or every filter', () => {
     const store = createFilterStore([southAsia]);
     store.toggle('year', 2024, 'trend');

@@ -79,3 +79,37 @@ test('NFR-A1 keyboard users filter through a chart’s data table, which shows w
   await expect(activeFilters(page)).toContainText(`Region: ${region}`);
   await expect(firstRegion).toHaveAttribute('aria-pressed', 'true');
 });
+
+test('FR-4.10 Ctrl-click, or Cmd-click on a Mac, adds a bar to the selection and takes it out again', async ({
+  page,
+}) => {
+  await showDashboardFor(page, 'ravi');
+  const barData = dataOf(page, 'Population by region');
+  const [topRegion, otherRegion] = await barData.getByRole('button').allTextContents();
+  const chip = activeFilters(page).locator('.dk-chip > span');
+  const sorted = (regions: string[]) => regions.toSorted();
+
+  // The smaller region from its data table, which then stops covering the chart.
+  await barData.getByRole('button', { name: `Filter by ${otherRegion}` }).focus();
+  await page.keyboard.press('Enter');
+  await expect(chip).toHaveText(`Region: ${otherRegion}`);
+  await page.evaluate(() => (document.activeElement as HTMLElement).blur());
+
+  const chart = page.getByRole('img', { name: 'Population by region chart' });
+  const box = (await chart.boundingBox())!;
+  const topBar = { x: box.width / 2, y: box.height * 0.3 };
+  await chart.click({ position: topBar, modifiers: ['ControlOrMeta'] });
+  await expect(chip).toHaveText(`Region: ${otherRegion}, ${topRegion}`);
+  await expect
+    .poll(async () => sorted(await regionsOfCountries(page)))
+    .toEqual(sorted([otherRegion!, topRegion!]));
+
+  await chart.click({ position: topBar, modifiers: ['ControlOrMeta'] });
+  await expect(chip).toHaveText(`Region: ${otherRegion}`);
+  await expect.poll(() => regionsOfCountries(page)).toEqual([otherRegion]);
+
+  // From the keyboard, the same keys with Enter on a region in the data table.
+  await barData.getByRole('button', { name: `Filter by ${topRegion}` }).focus();
+  await page.keyboard.press('ControlOrMeta+Enter');
+  await expect(chip).toHaveText(`Region: ${otherRegion}, ${topRegion}`);
+});

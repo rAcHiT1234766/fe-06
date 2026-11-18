@@ -23,20 +23,30 @@ export function createFilterStore(initialFilters: ActiveFilter[] = []) {
       };
     },
     set,
-    // Clicking the selected value again clears the filter; clicking another value replaces it.
-    toggle(field: DimensionField, value: Scalar, sourceWidgetId: string) {
+    /**
+     * A click selects the value, replacing any selection on its field, and clicking the only
+     * selected value again clears it. With `additive`, as for a Ctrl- or Cmd-click, the value joins
+     * the widget's own selection on the field or leaves it. A selection made in another widget, or
+     * by the host, is replaced as by a click, so a widget never takes over another's selection.
+     */
+    toggle(field: DimensionField, value: Scalar, sourceWidgetId: string, additive = false) {
       const current = filters.find((filter) => filter.field === field);
-      const selection: ActiveFilter = { field, values: [value], sourceWidgetId };
+      const own = current?.sourceWidgetId === sourceWidgetId ? current.values : undefined;
+      let values = [value];
+      if (additive && own) {
+        values = own.includes(value)
+          ? own.filter((selected) => selected !== value)
+          : [...own, value];
+      } else if (own?.length === 1 && own[0] === value) {
+        values = [];
+      }
+      const selection: ActiveFilter = { field, values, sourceWidgetId };
       if (!current) {
         set([...filters, selection]);
         return;
       }
-      const isSameSelection =
-        current.sourceWidgetId === sourceWidgetId &&
-        current.values.length === 1 &&
-        current.values[0] === value;
       set(
-        isSameSelection
+        values.length === 0
           ? filters.filter((filter) => filter !== current)
           : filters.map((filter) => (filter === current ? selection : filter)),
       );

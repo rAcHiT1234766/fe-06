@@ -60,8 +60,8 @@ Saved dashboards live in the demo API's memory, so restarting `pnpm dev` resets 
   palette, with a contrast warning while developing.
 - **Row-level security.** The data API applies each user's scope, from a token signed by the host's
   backend, before anything else. Filters can only narrow what a user sees.
-- **Cross-filtering.** Clicking a bar or slice filters every other widget. The host can set the
-  filters and hears about every change.
+- **Cross-filtering.** Clicking a bar or slice filters every other widget, and Ctrl- or Cmd-click
+  selects several. The host can set the filters and hears about every change.
 - **A dashboard builder** for editors: drag or use the keyboard to move and resize, add,
   configure, undo, save. Viewers never see it, and the API refuses their writes anyway.
 - **Responsive to its container**, from a 360 px phone to a wide screen, with 44 px touch targets
@@ -208,6 +208,5 @@ Details, including the two targets missed on a CPU slowed four times, are in
 ## Roadmap
 
 - Deploy the API, the demo and Storybook, and run Lighthouse on the deployed demo.
-- Select several values in one chart.
 - Measure test coverage in `core` and `mock-engine`.
 - Keep cross-filtering within 300 ms on slow devices.

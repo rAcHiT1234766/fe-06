@@ -107,6 +107,69 @@ describe('cross-filtering', () => {
     await waitFor(() => expect([...CHARTS, 'Countries'].map(tableText)).toEqual(before));
   });
 
+  it('FR-4.10 selects several regions with Ctrl- or Cmd-click, and shows them in one chip', async () => {
+    const onFilterChange = vi.fn();
+    await renderOverview('asha', { onFilterChange });
+    await waitForWidgets();
+
+    select('Population by region', 'South Asia');
+    fireEvent.click(filterButton('Population by region', 'North America'), { ctrlKey: true });
+    fireEvent.click(filterButton('Population by region', 'Latin America & Caribbean'), {
+      metaKey: true,
+    });
+
+    await waitFor(() =>
+      expect(regionsOfCountries().toSorted()).toEqual([
+        'Latin America & Caribbean',
+        'North America',
+        'South Asia',
+      ]),
+    );
+    expect(onFilterChange).toHaveBeenLastCalledWith([
+      {
+        field: 'region',
+        values: ['South Asia', 'North America', 'Latin America & Caribbean'],
+        sourceWidgetId: 'population-by-region',
+      },
+    ]);
+    const pressed = within(screen.getByRole('table', { name: 'Population by region' }))
+      .getAllByRole('button', { pressed: true })
+      .map((button) => button.textContent);
+    expect(pressed.toSorted()).toEqual([
+      'Latin America & Caribbean',
+      'North America',
+      'South Asia',
+    ]);
+    expect(
+      screen.getByRole('button', {
+        name: 'Remove filter Region: South Asia, North America, Latin America & Caribbean',
+      }),
+    ).toBeTruthy();
+
+    // Ctrl-click on a selected region takes it out again.
+    fireEvent.click(filterButton('Population by region', 'South Asia'), { ctrlKey: true });
+    await waitFor(() =>
+      expect(regionsOfCountries().toSorted()).toEqual([
+        'Latin America & Caribbean',
+        'North America',
+      ]),
+    );
+
+    // Ctrl+Enter, from the keyboard, adds one back, and the browser does not click as well.
+    const isClicked = fireEvent.keyDown(filterButton('Population by region', 'South Asia'), {
+      key: 'Enter',
+      ctrlKey: true,
+    });
+    expect(isClicked).toBe(false);
+    await waitFor(() =>
+      expect(regionsOfCountries().toSorted()).toEqual([
+        'Latin America & Caribbean',
+        'North America',
+        'South Asia',
+      ]),
+    );
+  });
+
   it('FR-4.6 keeps the previous rows on screen, marked busy, while the filtered rows load', async () => {
     let release = () => {};
     const held = new Promise<void>((resolve) => (release = resolve));
