@@ -173,3 +173,44 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
   It empties and rebuilds her dashboard, and no other test reads it.
 - **Undo and redo (FR-5.10) and a keyboard way to move and resize widgets (FR-5.11) are not implemented.**
   Both are stretch items. Until FR-5.11 exists the drag handle is hidden from screen readers, since it does nothing without a pointer.
+
+## Phase 5 — Embedding and responsive
+
+- **`<dashkit-dashboard>` renders `DashboardBuilder`.**
+  `mode="edit"` therefore opens the builder for an editor, while a viewer sees the dashboard only, as with the React component. The element is a thin layer over the provider: attributes and properties become props, and its four events are the provider's callbacks dispatched with `bubbles` and `composed`.
+- **The SDK's styles travel with the React tree, not as an adopted stylesheet.**
+  The dashboard already renders its stylesheet, including the grid's own rules, in a `<style>` inside its root, so the same text reaches the shadow root without a second mechanism. The element adds only `:host` rules. A page with many dashboards parses the stylesheet once per dashboard, which is small next to the charts.
+- **The dashboard root resets inherited properties with `all: initial`.**
+  A shadow root stops selectors but not inheritance, so a host's `text-transform`, `letter-spacing` or `line-height` on `body` would still reach the dashboard. The reset applies in the npm build too, so both builds look the same on the same page. Custom properties are not affected by `all`, so theme variables still work.
+- **The element waits for a token or `getToken` before loading anything.**
+  The script defines the element as soon as it runs, which is usually before the page's next script sets `getToken`. Without the wait, the first request went out without a token and the dashboard showed "Session invalid". The API always needs a token, so there is nothing to show before one exists.
+- **`refresh()` renders a new provider and keeps the filters.**
+  A new provider brings a new query client, so every cached result is gone, and the filters the user had are passed in again. Each rendered dashboard announces `dashkit:ready` once, when it first shows its content or its error, so a refresh, or adding a removed element back, announces it again.
+- **`dashkit:filterchange` also reports filters set by the page.**
+  The provider reports every change to the filter store, whoever made it, so a page that calls `setFilters` hears the result like any other change.
+- **Moving the element does not tear it down; removing it does.**
+  Moving an element disconnects and reconnects it at once, so the element unmounts its React root only if it is still disconnected a microtask later.
+- **`onError` is now called, with the existing error codes.**
+  `DashKitOptions.onError` was declared but nothing called it. The provider now passes it every request that fails for good, after any token renewal, and any config from a newer schema. A 401 that `getToken` recovers from is not reported, and neither are requests abandoned because the widget went away. No error code was added.
+- **`DashKit.mount()` adds a `<dashkit-dashboard>` to the container.**
+  It takes `DashKitOptions` and returns a handle with `element`, `update`, `setFilters`, `clearFilters`, `refresh` and `unmount`. Building on the element gives it the same isolation, teardown and token handling without a second code path. It is a property of the `DashKit` global from the script build; npm users render the React components.
+- **The element is not yet typed for TypeScript and JSX users (FR-6.3, a should item).**
+  Typing it means exporting the element's class type and a `HTMLElementTagNameMap` entry from the npm entry, which adds to the public types, so it waits for the Phase 6 types pass and approval.
+- **Breakpoints follow the dashboard's own width.**
+  The dashboard measures its root with a `ResizeObserver` before the first paint, so a narrow container never flashes the wide layout. A width of zero, as in a hidden tab, keeps the last real width, and a width not yet measured counts as `lg`.
+- **Smaller layouts are derived from `lg` unless the dashboard provides them.**
+  `deriveLayout` scales each widget's left and right edges into the smaller grid, keeps at least two columns at `md` and `sm`, flows widgets in reading order, and widens the last widget in each row to fill it. At `xs` everything is one column, and widgets taller than three rows get one more row. A config may still supply its own `md`, `sm` or `xs` layout, which is used as given.
+- **Editing always works on the `lg` layout and needs an `md` container.**
+  Dragging on a derived layout would produce a layout that is never saved. Below `md` an editor sees the dashboard and a short notice; a draft is kept, the leave warning still applies, and the builder returns when there is room.
+- **Touch targets grow only for coarse pointers.**
+  With `any-pointer: coarse`, every button, select and input inside the dashboard is at least 44 px square. Mouse users keep the compact controls. These rules sit in a stylesheet loaded last, because a media query does not raise specificity over each control's own size.
+- **Charts adapt to the breakpoint, not to their own width.**
+  Option builders stay pure functions of the data and the widget, plus an `isCompact` flag that is set at `xs`. There, long category names beside horizontal bars are cut to 110 px; the full names stay in the tooltip and the chart's data table.
+- **Widgets are size containers; the dashboard root is not.**
+  A widget's size is set by the grid, so `container-type: inline-size` is safe there and lets its content adapt to the widget. On the root it would collapse a dashboard placed in a container that sizes to its content, such as a flex row.
+- **The plain HTML example lives in the demo app.**
+  The mock API accepts browser requests only from the demo's origin, and the demo's Vite server serves the script build at `/dashkit.js` and copies it into its own build. The page names the API at `http://localhost:4000` and signs in as Asha, like the demo.
+- **The hostile-CSS test compares pixels with a small tolerance.**
+  Screenshots taken at another scroll position differ by one or two levels on the widgets' rounded corners. A channel difference of up to 8 counts as equal; a leaked font changed about 39,000 pixels and one leaked button colour about 3,400, so the test still fails on any real leak.
+- **The mock engine has a version, `0.0.0`.**
+  `pnpm pack` rewrites every workspace range in the SDK's manifest, including dev dependencies, and needs a version to write. The engine stays private.
