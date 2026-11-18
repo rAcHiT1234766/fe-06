@@ -29,5 +29,13 @@ export default defineConfig({
       reuseExistingServer: !isCI,
       timeout: 120_000,
     },
+    {
+      // Storybook as it is deployed: the static build, served without Storybook's dev server.
+      command:
+        'pnpm --filter @dashkit/sdk build-storybook && pnpm --filter @dashkit/sdk exec vite preview --outDir storybook-static --port 6007 --strictPort',
+      url: 'http://localhost:6007',
+      reuseExistingServer: !isCI,
+      timeout: 180_000,
+    },
   ],
 });
