@@ -1,4 +1,4 @@
-import { useContext, useEffect, useId, useRef, useState } from 'react';
+import { useContext, useId, useLayoutEffect, useRef, useState } from 'react';
 import {
   addWidget,
   duplicateWidget,
@@ -84,10 +84,11 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
   const selected = draftConfig?.widgets.find(({ id }) => id === selectedId);
   useUnsavedChangesWarning(hasUnsavedChanges);
 
-  // Cancel and Save disappear with the builder, so the focus moves to Edit dashboard.
+  // Cancel and Save disappear with the builder, so the focus moves to Edit dashboard. A layout
+  // effect moves it in the same update that removes them, so it never rests on the page body.
   const editButtonRef = useRef<HTMLButtonElement>(null);
   const isLeavingRef = useRef(false);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isLeavingRef.current || isEditing) return;
     isLeavingRef.current = false;
     editButtonRef.current?.focus();
