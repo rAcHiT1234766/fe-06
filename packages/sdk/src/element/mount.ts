@@ -1,5 +1,5 @@
-import type { ActiveFilter, DashboardConfig, DashKitError, DashKitOptions } from '../core/types';
-import type { DashKitElement } from './dashkit-element';
+import type { ActiveFilter, DashKitOptions } from '../core/types';
+import { TAG_NAME, type DashKitElement } from './dashkit-element';
 
 /** What `DashKit.mount()` returns: the mounted dashboard and the means to change or remove it. */
 export interface DashKitHandle {
@@ -41,18 +41,14 @@ function apply(element: DashKitElement, options: DashKitOptions) {
  */
 export function mount(container: Element, options: DashKitOptions): DashKitHandle {
   let current = options;
-  const element = container.ownerDocument.createElement('dashkit-dashboard') as DashKitElement;
+  const element = container.ownerDocument.createElement(TAG_NAME) as DashKitElement;
 
   // The listeners read the latest options, so update() can also change the callbacks.
   element.addEventListener('dashkit:filterchange', (event) =>
-    current.onFilterChange?.((event as CustomEvent<ActiveFilter[]>).detail),
+    current.onFilterChange?.(event.detail),
   );
-  element.addEventListener('dashkit:save', (event) =>
-    current.onSave?.((event as CustomEvent<DashboardConfig>).detail),
-  );
-  element.addEventListener('dashkit:error', (event) =>
-    current.onError?.((event as CustomEvent<DashKitError>).detail),
-  );
+  element.addEventListener('dashkit:save', (event) => current.onSave?.(event.detail));
+  element.addEventListener('dashkit:error', (event) => current.onError?.(event.detail));
 
   apply(element, current);
   container.append(element);

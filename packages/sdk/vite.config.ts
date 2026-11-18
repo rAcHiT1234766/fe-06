@@ -8,7 +8,7 @@ import pkg from './package.json' with { type: 'json' };
 const externalPackages = [...Object.keys(pkg.peerDependencies), ...Object.keys(pkg.dependencies)];
 
 export default defineConfig({
-  plugins: [react(), dts({ bundleTypes: true, include: ['src'] })],
+  plugins: [react(), dts({ bundleTypes: true, tsconfigPath: './tsconfig.build.json' })],
   build: {
     lib: { entry: 'src/index.ts', formats: ['es'], fileName: 'index' },
     rolldownOptions: {

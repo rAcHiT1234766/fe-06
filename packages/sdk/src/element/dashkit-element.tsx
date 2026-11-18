@@ -16,8 +16,48 @@ type ColorScheme = NonNullable<ThemeInput['mode']>;
 const readColorScheme = (value: string | null): ColorScheme | undefined =>
   value === 'light' || value === 'dark' || value === 'auto' ? value : undefined;
 
+/**
+ * The element's tag name. It is typed as a plain string so that this code never depends on the
+ * tag-name map, which only the types of the element entry extend.
+ */
+export const TAG_NAME: string = 'dashkit-dashboard';
+
 // Properties a page may set before this script has loaded and defined the element.
 const UPGRADED_PROPERTIES = ['theme', 'config', 'getToken'] as const;
+
+/** The attributes `<dashkit-dashboard>` reads. Objects and functions are set as properties. */
+export interface DashKitElementAttributes {
+  /** Base URL of the data API. */
+  'api-url'?: string | undefined;
+  /** The saved dashboard to show, unless the `config` property supplies one. */
+  'dashboard-id'?: string | undefined;
+  /** An embed token minted by your backend, for pages that do not set `getToken`. */
+  token?: string | undefined;
+  /** `edit` opens the builder when the token's role is `editor`. */
+  mode?: 'view' | 'edit' | undefined;
+  /** Overrides the `mode` of the `theme` property. */
+  'color-scheme'?: 'light' | 'dark' | 'auto' | undefined;
+}
+
+/**
+ * The events `<dashkit-dashboard>` dispatches. All of them bubble and cross its shadow root, so a
+ * listener on the element or on `document` hears them.
+ */
+export interface DashKitElementEventMap extends HTMLElementEventMap {
+  /** The dashboard first shows its content or its error. Again after `refresh()`. */
+  'dashkit:ready': CustomEvent<undefined>;
+  /** The active cross-filters changed, by a click or through `setFilters`. */
+  'dashkit:filterchange': CustomEvent<ActiveFilter[]>;
+  /** An editor saved the dashboard; the detail is the config as stored. */
+  'dashkit:save': CustomEvent<DashboardConfig>;
+  /** A request failed for good, or the dashboard could not be read. */
+  'dashkit:error': CustomEvent<DashKitError>;
+}
+
+type Listener<K extends keyof DashKitElementEventMap> = (
+  this: DashKitElement,
+  event: DashKitElementEventMap[K],
+) => unknown;
 
 /**
  * `<dashkit-dashboard>`: a dashboard in one tag, for pages without React. Strings go in
@@ -69,6 +109,43 @@ export class DashKitElement extends HTMLElement {
   set getToken(getToken: DashKitOptions['getToken']) {
     this.#getToken = getToken;
     this.#render();
+  }
+
+  // Typed overloads, so `event.detail` has the right type for each `dashkit:*` event.
+  override addEventListener<K extends keyof DashKitElementEventMap>(
+    type: K,
+    listener: Listener<K>,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  override addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ): void;
+  override addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions,
+  ) {
+    super.addEventListener(type, listener, options);
+  }
+
+  override removeEventListener<K extends keyof DashKitElementEventMap>(
+    type: K,
+    listener: Listener<K>,
+    options?: boolean | EventListenerOptions,
+  ): void;
+  override removeEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | EventListenerOptions,
+  ): void;
+  override removeEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | EventListenerOptions,
+  ) {
+    super.removeEventListener(type, listener, options);
   }
 
   /** Replaces the active cross-filters, as a click on a chart would. */

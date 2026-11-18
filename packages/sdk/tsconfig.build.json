@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["src"],
+  // The element entry's declarations are published on their own, and every global they declare
+  // would otherwise be copied into index.d.ts. Tests are not part of the package.
+  "exclude": ["src/element-types.ts", "src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.test-d.ts"]
+}

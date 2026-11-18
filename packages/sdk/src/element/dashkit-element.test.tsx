@@ -17,7 +17,7 @@ afterEach(() => {
 });
 
 function addElement(attributes: Record<string, string>) {
-  const element = document.createElement('dashkit-dashboard') as DashKitElement;
+  const element = document.createElement('dashkit-dashboard');
   for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, value);
   act(() => {
     document.body.append(element);
