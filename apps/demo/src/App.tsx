@@ -3,7 +3,7 @@ import { demoUsers } from '@dashkit/mock-engine/users';
 import { DashboardBuilder, DashKitProvider, type DashKitTheme } from '@dashkit/sdk';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-const API_URL = import.meta.env.VITE_DASHKIT_API_URL ?? 'http://localhost:4000';
+const API_URL = import.meta.env.VITE_DASHKIT_API_URL;
 
 type Mode = DashKitTheme['mode'];
 

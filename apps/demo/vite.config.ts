@@ -24,6 +24,10 @@ function elementScript(): Plugin {
   };
 }
 
+// The deployed demo is built with this set to the deployed API's address. Both pages read it: the
+// app through import.meta.env, the plain HTML page through %VITE_DASHKIT_API_URL%.
+process.env.VITE_DASHKIT_API_URL ??= 'http://localhost:4000';
+
 export default defineConfig({
   plugins: [react(), elementScript()],
   // The mock API only accepts browser requests from this origin, so another free port would fail
