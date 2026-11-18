@@ -148,15 +148,15 @@ and resizing drops a few frames. Both are in the performance report with the rea
 **On the slide:**
 
 - Built after the must-haves: column-level scope, the stretch item that completes the security
-  model.
-- Not built (stretch items): multi-select, undo and redo, keyboard moving and resizing of widgets.
+  model, and undo and redo in the builder.
+- Not built (stretch items): multi-select, keyboard moving and resizing of widgets.
 - The demo API keeps dashboards in memory and signs its own demo tokens.
 - Next: persistent storage, and cross-filtering within 300 ms on slow devices.
 
-**Say:** "Everything the brief marked as must-have is built and tested, and so is column-level
-scope, the stretch item that completes the security model. The other stretch items are not, and the
-demo API is a stand-in: a real deployment would store dashboards in a database and let the host's
-backend sign tokens."
+**Say:** "Everything the brief marked as must-have is built and tested, and so are column-level
+scope, the stretch item that completes the security model, and undo and redo in the builder. The
+other stretch items are not, and the demo API is a stand-in: a real deployment would store
+dashboards in a database and let the host's backend sign tokens."
 
 ## 10. Thank you (9:45–10:00)
 

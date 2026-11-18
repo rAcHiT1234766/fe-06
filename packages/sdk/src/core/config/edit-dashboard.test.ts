@@ -99,6 +99,11 @@ describe('editing a dashboard', () => {
     });
     expect(arranged.widgets).toBe(withMinimum.widgets);
   });
+
+  it('returns the same dashboard when the grid reports the layout unchanged', () => {
+    const unmoved = dashboard.layouts.lg.map((item) => ({ ...item, minW: 2, minH: 2 }));
+    expect(arrangeWidgets(dashboard, unmoved)).toBe(dashboard);
+  });
 });
 
 describe('withYearRule', () => {

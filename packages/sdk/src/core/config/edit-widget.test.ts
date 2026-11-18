@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Query, WidgetConfig } from '../types';
 import {
+  changedSetting,
   changeWidgetType,
   fitToCatalog,
   setAggregation,
@@ -192,5 +193,24 @@ describe('fitToCatalog', () => {
     const lifeByRegion = setMeasure(gdpByRegion, 'lifeExpectancy', 'avg');
     expect(fitToCatalog(lifeByRegion, withoutGdp)).toBe(lifeByRegion);
     expect(fitToCatalog(gdpByRegion, { ...withoutGdp, measures: [] })).toBe(gdpByRegion);
+  });
+});
+
+describe('changedSetting', () => {
+  it('FR-5.10 names the one setting an edit changed, so that a run of them is one undo step', () => {
+    expect(changedSetting(gdpByRegion, { ...gdpByRegion, title: 'GDP' })).toBe('title');
+    expect(changedSetting(gdpByRegion, setRowLimit(gdpByRegion, 3))).toBe('query.limit');
+    expect(changedSetting(countries, setPageSize(countries, 10))).toBe('options.pageSize');
+    expect(changedSetting(gdpByRegion, { ...gdpByRegion, crossFilter: { emit: true } })).toBe(
+      'crossFilter.emit',
+    );
+  });
+
+  it('FR-5.10 names none when an edit changed several settings, or nothing', () => {
+    // A new measure renames the sort that used the old one.
+    expect(changedSetting(gdpByRegion, setMeasure(gdpByRegion, 'population', 'sum'))).toBe(
+      undefined,
+    );
+    expect(changedSetting(gdpByRegion, { ...gdpByRegion })).toBe(undefined);
   });
 });

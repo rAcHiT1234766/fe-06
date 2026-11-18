@@ -86,6 +86,30 @@ export function fitToCatalog(
   return { ...setMeasure(widget, replacement.name, replacement.defaultAgg), title };
 }
 
+const differs = (a: unknown, b: unknown) => JSON.stringify(a) !== JSON.stringify(b);
+
+function changedKeys(before: object, after: object, prefix = ''): string[] {
+  const a = before as Record<string, unknown>;
+  const b = after as Record<string, unknown>;
+  return [...new Set([...Object.keys(a), ...Object.keys(b)])].flatMap((key) => {
+    const [from, to] = [a[key], b[key]];
+    if (key === 'query' || key === 'options' || key === 'crossFilter') {
+      return changedKeys(from ?? {}, to ?? {}, `${prefix}${key}.`);
+    }
+    return differs(from, to) ? [`${prefix}${key}`] : [];
+  });
+}
+
+/**
+ * Names the one setting an edit changed, such as `title` or `query.limit`, or gives `undefined`
+ * when it changed several or none. The builder makes a run of edits to one setting a single undo
+ * step, so a title typed letter by letter is undone in one go.
+ */
+export function changedSetting(before: WidgetConfig, after: WidgetConfig): string | undefined {
+  const changed = changedKeys(before, after);
+  return changed.length === 1 ? changed[0] : undefined;
+}
+
 export function setAggregation(widget: WidgetConfig, agg: Aggregation) {
   const [first, ...others] = widget.query.measures;
   if (!first) return widget;

@@ -7,6 +7,12 @@
   color: var(--dk-color-text-muted);
 }
 
+/* Edits, undo and redo happen inside the dashboard, so its shortcuts listen there; the wrapper
+   itself takes no space. */
+.dk-builder {
+  display: contents;
+}
+
 .dk-toolbar-status[data-dk-status='saved'] {
   color: var(--dk-color-success);
 }

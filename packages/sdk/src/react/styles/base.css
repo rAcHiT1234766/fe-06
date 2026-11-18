@@ -49,6 +49,14 @@
   background: var(--dk-color-surface-raised);
 }
 
+/* A toolbar button that shows only its icon; its aria-label names it. */
+.dk-button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--dk-space-2);
+}
+
 .dk-button-primary {
   border-color: var(--dk-color-primary);
   background: var(--dk-color-primary);

@@ -120,6 +120,40 @@ test('FR-5.1 to FR-5.7 an editor builds a dashboard from empty, saves it, and a 
   expect(await describeDashboard(page)).toEqual(saved);
 });
 
+test('FR-5.10 an editor undoes a resize and a removal from the keyboard, and redoes them', async ({
+  page,
+}) => {
+  await signIn(page, 'asha');
+  await page.getByRole('button', { name: 'Edit dashboard' }).click();
+  const before = await describeDashboard(page);
+
+  const kpiCell = page.locator('.react-grid-item', { has: widgetTitled(page, 'Total population') });
+  const kpiWidth = (await kpiCell.boundingBox())!.width;
+  const resizeHandle = await centreOf(kpiCell.locator('.react-resizable-handle'));
+  await drag(page, resizeHandle, { x: resizeHandle.x + kpiWidth, y: resizeHandle.y });
+  await expect
+    .poll(async () => (await kpiCell.boundingBox())!.width)
+    .toBeGreaterThan(kpiWidth * 1.5);
+  await page.getByRole('button', { name: 'Remove GDP by income level' }).click();
+  await expect(widgets(page)).toHaveCount(4);
+
+  // Ctrl+Z, or Cmd+Z on a Mac, from anywhere in the dashboard.
+  await page.getByRole('button', { name: 'Undo' }).focus();
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(widgets(page)).toHaveCount(5);
+  await page.keyboard.press('ControlOrMeta+z');
+  expect(await describeDashboard(page)).toEqual(before);
+  await expect(page.getByText('Unsaved changes')).toHaveCount(0);
+
+  await page.keyboard.press('ControlOrMeta+Shift+z');
+  await expect
+    .poll(async () => (await kpiCell.boundingBox())!.width)
+    .toBeGreaterThan(kpiWidth * 1.5);
+  await page.getByRole('button', { name: 'Redo' }).click();
+  await expect(widgets(page)).toHaveCount(4);
+  await page.getByRole('button', { name: 'Cancel' }).click();
+});
+
 test('FR-5.1 a viewer sees no edit controls, and the API refuses their save', async ({
   page,
   request,

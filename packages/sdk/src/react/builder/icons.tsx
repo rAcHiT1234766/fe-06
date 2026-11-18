@@ -18,6 +18,22 @@ const icon = (shape: ReactNode) => (
 
 export const CrossIcon = () => icon(<path d="M4 4l8 8M12 4l-8 8" />);
 
+export const UndoIcon = () =>
+  icon(
+    <>
+      <path d="M5.5 3.5 2.5 6.5l3 3" />
+      <path d="M2.5 6.5H10a3.5 3.5 0 0 1 0 7H7" />
+    </>,
+  );
+
+export const RedoIcon = () =>
+  icon(
+    <>
+      <path d="M10.5 3.5l3 3-3 3" />
+      <path d="M13.5 6.5H6a3.5 3.5 0 0 0 0 7h3" />
+    </>,
+  );
+
 export const CheckIcon = () => icon(<path d="M3 8.5l3.25 3.25L13 5" />);
 
 export const ChangedIcon = () => icon(<circle cx="8" cy="8" r="3.5" fill="currentColor" />);

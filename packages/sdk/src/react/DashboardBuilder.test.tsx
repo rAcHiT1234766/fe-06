@@ -319,6 +319,69 @@ describe('DashboardBuilder', () => {
   });
 });
 
+describe('undo and redo', () => {
+  const button = (name: string) => screen.getByRole('button', { name });
+  const isOff = (name: string) => button(name).getAttribute('aria-disabled') === 'true';
+  const saveStatus = () => document.querySelector('.dk-toolbar-status')!.textContent;
+  const historyNote = () =>
+    screen.getAllByRole('status').find((status) => status.textContent?.includes('more to'))
+      ?.textContent;
+  const press = (key: string, modifiers: { shiftKey?: boolean } = {}) =>
+    fireEvent.keyDown(button('Undo'), { key, ctrlKey: true, ...modifiers });
+
+  it('FR-5.10 steps back and forward through edits with the toolbar and the keyboard', async () => {
+    await renderEditing('asha');
+    expect(isOff('Undo')).toBe(true);
+    expect(isOff('Redo')).toBe(true);
+
+    fireEvent.click(button('Remove Total population'));
+    fireEvent.click(button('Duplicate Countries'));
+    expect(dragHandles()).toHaveLength(5);
+    expect(saveStatus()).toBe('Unsaved changes');
+
+    fireEvent.click(button('Undo'));
+    expect(dragHandles()).toHaveLength(4);
+    expect(historyNote()).toBe('Undid a change. 1 more to undo.');
+    press('z');
+    expect(dragHandles()).toHaveLength(5);
+    expect(widget('Total population')).toBeTruthy();
+    // Back to the saved dashboard itself, so nothing is unsaved.
+    expect(saveStatus()).toBe('');
+    expect(isOff('Undo')).toBe(true);
+    // Still focusable at the end of the history, so the focus stays on the button.
+    expect(button('Undo').hasAttribute('disabled')).toBe(false);
+
+    press('z', { shiftKey: true });
+    expect(screen.queryByRole('region', { name: 'Total population' })).toBeNull();
+    press('y');
+    expect(dragHandles()).toHaveLength(5);
+    expect(historyNote()).toBe('Redid a change. No more to redo.');
+    expect(isOff('Redo')).toBe(true);
+
+    // A new edit forgets what could have been redone.
+    fireEvent.click(button('Undo'));
+    fireEvent.click(button('Duplicate Population by region'));
+    expect(isOff('Redo')).toBe(true);
+    fireEvent.click(button('Cancel'));
+  });
+
+  it('FR-5.10 undoes a typed title in one step, and leaves Ctrl+Z in a text field to the browser', async () => {
+    await renderEditing('asha');
+    const panel = await openSettings('Population by region');
+    for (const typed of ['P', 'Pe', 'People']) change(panel, 'Title', typed);
+    expect(widget('People')).toBeTruthy();
+
+    const title = within(panel).getByLabelText('Title');
+    expect(fireEvent.keyDown(title, { key: 'z', ctrlKey: true })).toBe(true);
+    expect(widget('People')).toBeTruthy();
+
+    fireEvent.click(button('Undo'));
+    expect(widget('Population by region')).toBeTruthy();
+    expect(isOff('Undo')).toBe(true);
+    fireEvent.click(button('Cancel'));
+  });
+});
+
 describe('saving', () => {
   const leavePage = () => {
     const event = new Event('beforeunload', { cancelable: true });

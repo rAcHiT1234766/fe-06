@@ -1,4 +1,4 @@
-import { useContext, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useContext, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 import {
   addWidget,
   arrangeWidgets,
@@ -8,7 +8,16 @@ import {
   updateWidget,
   withYearRule,
 } from '../core/config/edit-dashboard';
-import { fitToCatalog } from '../core/config/edit-widget';
+import { changedSetting, fitToCatalog } from '../core/config/edit-widget';
+import {
+  canRedo,
+  canUndo,
+  record,
+  redo,
+  startHistory,
+  undo,
+  type History,
+} from '../core/config/history';
 import { canEditAt } from '../core/config/layout';
 import { validateDashboard } from '../core/config/schema';
 import type {
@@ -20,7 +29,7 @@ import type {
   WidgetType,
 } from '../core/types';
 import { ConfigPanel } from './builder/ConfigPanel';
-import { ChangedIcon, CheckIcon } from './builder/icons';
+import { ChangedIcon, CheckIcon, RedoIcon, UndoIcon } from './builder/icons';
 import { loadFieldCatalog, loadLatestYear, loadRole } from './builder/loaders';
 import { Palette } from './builder/Palette';
 import { useUnsavedChangesWarning } from './builder/use-unsaved-changes-warning';
@@ -51,6 +60,21 @@ interface Replacement {
   config: DashboardConfig;
 }
 
+// The builder's working copy of a dashboard, with every version since editing began.
+interface Draft {
+  base: DashboardConfig;
+  history: History<DashboardConfig>;
+}
+
+const startDraft = (config: DashboardConfig): Draft => ({
+  base: config,
+  history: startHistory(config),
+});
+
+// Typing in a field undoes its own text, as everywhere else on the page.
+const isTextField = (target: EventTarget) =>
+  target instanceof Element && target.closest('input, textarea, [contenteditable="true"]') !== null;
+
 interface BuilderProps {
   loadedConfig: DashboardConfig;
   isStartingInEdit: boolean;
@@ -61,9 +85,11 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
   const { client } = useDashKit();
   const isEditor = useClientValue(loadRole).value === 'editor';
   const [saved, setSaved] = useState<Replacement>();
-  const [draft, setDraft] = useState<Replacement | undefined>(
-    isStartingInEdit ? { base: loadedConfig, config: loadedConfig } : undefined,
+  const [draft, setDraft] = useState<Draft | undefined>(
+    isStartingInEdit ? startDraft(loadedConfig) : undefined,
   );
+  // Read by screen readers after an undo or redo, which otherwise changes the page silently.
+  const [historyNote, setHistoryNote] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saveProblems, setSaveProblems] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string>();
@@ -74,7 +100,8 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
 
   // The dashboard as the API holds it: as loaded, or as this builder last saved it.
   const savedConfig = saved?.base === loadedConfig ? saved.config : loadedConfig;
-  const pendingDraft = isEditor && draft?.base === savedConfig ? draft.config : undefined;
+  const pendingHistory = isEditor && draft?.base === savedConfig ? draft.history : undefined;
+  const pendingDraft = pendingHistory?.present;
   const hasUnsavedChanges = pendingDraft !== undefined && pendingDraft !== savedConfig;
   // In a narrow container the dashboard is only shown; a draft waits until there is room again.
   const isRoomy = canEditAt(useContext(BreakpointContext));
@@ -98,7 +125,8 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
   });
 
   const startEditing = () => {
-    setDraft({ base: savedConfig, config: savedConfig });
+    setDraft(startDraft(savedConfig));
+    setHistoryNote('');
     setSaveProblems([]);
     setSelectedId(undefined);
     setAddedId(undefined);
@@ -121,8 +149,8 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
       setSaved({ base: loadedConfig, config: stored });
       // Changes made while the save was on its way stay in the builder, on top of what was saved.
       setDraft((current) =>
-        current && current.config !== draftConfig
-          ? { base: stored, config: current.config }
+        current && current.history.present !== draftConfig
+          ? { base: stored, history: startHistory(current.history.present) }
           : undefined,
       );
       onSave?.(stored);
@@ -134,10 +162,39 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
     }
   };
 
-  const editDraft = (edit: (current: DashboardConfig) => DashboardConfig) => {
-    setDraft((current) => current && { ...current, config: edit(current.config) });
+  /** Applies an edit as one undo step, or as part of the last one when both share a `group`. */
+  const editDraft = (edit: (current: DashboardConfig) => DashboardConfig, group?: string) => {
+    setDraft(
+      (current) =>
+        current && {
+          ...current,
+          history: record(current.history, edit(current.history.present), group),
+        },
+    );
     // Any problems listed were about the dashboard before this change.
     setSaveProblems((current) => (current.length > 0 ? [] : current));
+  };
+
+  const travel = (step: 'undo' | 'redo') => {
+    if (!pendingHistory) return;
+    const moved = step === 'undo' ? undo(pendingHistory) : redo(pendingHistory);
+    if (moved === pendingHistory) return;
+    setDraft((current) => current && { ...current, history: moved });
+    setSaveProblems([]);
+    const left = step === 'undo' ? moved.past.length : moved.future.length;
+    setHistoryNote(
+      `${step === 'undo' ? 'Undid' : 'Redid'} a change. ${left === 0 ? 'No' : left} more to ${step}.`,
+    );
+  };
+
+  // Ctrl or Cmd with Z undoes; with Shift+Z or Y it redoes. Only while the focus is inside the
+  // dashboard, so the host page's own shortcuts are untouched.
+  const handleShortcut = (event: KeyboardEvent) => {
+    if (!isEditing || !(event.ctrlKey || event.metaKey) || event.altKey) return;
+    const key = event.key.toLowerCase();
+    if ((key !== 'z' && key !== 'y') || isTextField(event.target)) return;
+    event.preventDefault();
+    travel(key === 'y' || event.shiftKey ? 'redo' : 'undo');
   };
 
   // Only the lg layout is authored; smaller ones are derived from it.
@@ -192,7 +249,7 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
         : undefined;
 
   return (
-    <>
+    <div className="dk-builder" onKeyDown={handleShortcut}>
       <DashboardHeader config={config}>
         {isEditor && !isRoomy && (
           <p className="dk-toolbar-note">
@@ -219,6 +276,32 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
             </p>
             {isEditing ? (
               <>
+                <p className="dk-visually-hidden" role="status">
+                  {historyNote}
+                </p>
+                <button
+                  type="button"
+                  className="dk-button dk-button-icon"
+                  aria-label="Undo"
+                  title="Undo (Ctrl+Z)"
+                  aria-keyshortcuts="Control+Z Meta+Z"
+                  // Still focusable when there is nothing left, so the focus stays put.
+                  aria-disabled={!pendingHistory || !canUndo(pendingHistory)}
+                  onClick={() => travel('undo')}
+                >
+                  <UndoIcon />
+                </button>
+                <button
+                  type="button"
+                  className="dk-button dk-button-icon"
+                  aria-label="Redo"
+                  title="Redo (Ctrl+Y)"
+                  aria-keyshortcuts="Control+Y Control+Shift+Z Meta+Shift+Z"
+                  aria-disabled={!pendingHistory || !canRedo(pendingHistory)}
+                  onClick={() => travel('redo')}
+                >
+                  <RedoIcon />
+                </button>
                 <button type="button" className="dk-button" disabled={isSaving} onClick={cancel}>
                   Cancel
                 </button>
@@ -272,19 +355,26 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
             widget={selected}
             catalog={fieldCatalog}
             latestYear={latestYear}
-            onChange={(widget) => editDraft((current) => updateWidget(current, widget))}
+            onChange={(widget) => {
+              const setting = changedSetting(selected, widget);
+              editDraft(
+                (current) => updateWidget(current, widget),
+                setting && `${widget.id} ${setting}`,
+              );
+            }}
             onClose={closeSettings}
           />
         )}
       </div>
-    </>
+    </div>
   );
 }
 
 /**
  * A {@link Dashboard} that editors can change: they open the builder, arrange and configure widgets,
- * and save. Nothing is stored until Save, and Cancel restores the saved dashboard. Viewers only
- * see the dashboard, and the API refuses their changes in any case.
+ * and save. Nothing is stored until Save, and Cancel restores the saved dashboard. Undo and Redo,
+ * in the toolbar or as Ctrl+Z and Ctrl+Y (Cmd on a Mac), step through the edits made since editing
+ * began. Viewers only see the dashboard, and the API refuses their changes in any case.
  * @example
  * <DashboardBuilder dashboardId="overview" onSave={(config) => console.log(config.updatedAt)} />
  */

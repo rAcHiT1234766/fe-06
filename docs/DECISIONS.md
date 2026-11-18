@@ -142,7 +142,7 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
 - **A draft remembers the saved config it started from.**
   The builder edits a copy and writes nothing until Save. If the loaded config changes underneath, after a reload or a change of user, the draft is dropped instead of being shown on top of another user's dashboard. The same applies to the copy kept after a save.
 - **Unsaved changes are any edit since the draft started, compared by identity.**
-  An edit that is undone by hand still counts. Comparing content would need a comparison that ignores key order and layout order, for little gain.
+  An edit that is undone by hand still counts. Comparing content would need a comparison that ignores key order and layout order, for little gain. Undo, built later, gives back the very config the draft started from, so undoing every edit does clear it.
 - **Only the `lg` layout is stored.**
   The builder edits the 12-column layout; the smaller layouts of Phase 5 are derived from it. Layout changes are recorded when a drag or resize ends.
 - **The SDK's own grid styles replace the grid library's stylesheet.**
@@ -172,7 +172,7 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
 - **The builder end-to-end test uses Elena's tenant.**
   It empties and rebuilds her dashboard, and no other test reads it.
 - **Undo and redo (FR-5.10) and a keyboard way to move and resize widgets (FR-5.11) are not implemented.**
-  Both are stretch items. Until FR-5.11 exists the drag handle is hidden from screen readers, since it does nothing without a pointer.
+  Both are stretch items. Until FR-5.11 exists the drag handle is hidden from screen readers, since it does nothing without a pointer. (Undo and redo since built: see "After Phase 7".)
 
 ## Phase 5 — Embedding and responsive
 
@@ -313,3 +313,9 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
   Two widget starters use a GDP measure; for a user without it, they switch to the first measure `/meta` lists and take a title naming it, so a new widget never starts out refused. A widget already on a forbidden measure says "Not available to you" in its settings rather than quietly showing another measure as selected.
 - **Saving a dashboard that uses measures the editor may not query is allowed.**
   A config holds no data, and every query is checked when it runs, so other users of the dashboard keep their widgets.
+- **Undo keeps whole versions of the draft, not a way to reverse each kind of edit.**
+  Configs are never changed in place, so each version shares everything it did not change with the one before and costs little to keep. Undoing to the start gives back the very config editing began from, so "Unsaved changes" clears and leaving the page asks nothing. The last 100 steps are kept, and Save or Cancel ends the history.
+- **A run of edits to one setting is one step.**
+  Typing a title would otherwise take one undo per letter. `changedSetting` names the one setting an edit changed, and edits to the same setting of the same widget merge until another edit or an undo comes between. A drag that ends where it began is not an edit at all.
+- **The shortcuts work while the focus is in the dashboard, and not in a text field.**
+  Ctrl+Z undoes and Ctrl+Y or Ctrl+Shift+Z redoes, with Cmd on a Mac. A text field keeps Ctrl+Z for its own typing, as everywhere else on the page, and the host page's shortcuts are untouched elsewhere. The toolbar buttons use `aria-disabled`, so the focus stays on them at the end of the history, and a visually hidden status says what was undone and how many steps are left.

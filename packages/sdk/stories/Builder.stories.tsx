@@ -4,8 +4,9 @@ import { DashboardBuilder, type DashboardConfig } from '../src';
 
 /**
  * Editors arrange widgets by their handle, resize them from the bottom-right corner, add widgets
- * from the palette, and change each one in its settings panel. Every change shows at once, and
- * nothing is stored until Save. The Actions panel shows the config `onSave` receives.
+ * from the palette, and change each one in its settings panel. Every change shows at once, Undo and
+ * Redo (or Ctrl+Z and Ctrl+Y) step through them, and nothing is stored until Save. The Actions panel
+ * shows the config `onSave` receives.
  *
  * Saved dashboards live in the browser's mock API until the page reloads.
  */

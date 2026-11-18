@@ -62,8 +62,8 @@ Saved dashboards live in the demo API's memory, so restarting `pnpm dev` resets 
   backend, before anything else. Filters can only narrow what a user sees.
 - **Cross-filtering.** Clicking a bar or slice filters every other widget. The host can set the
   filters and hears about every change.
-- **A dashboard builder** for editors: drag, resize, add, configure, save. Viewers never see it,
-  and the API refuses their writes anyway.
+- **A dashboard builder** for editors: drag, resize, add, configure, undo, save. Viewers never see
+  it, and the API refuses their writes anyway.
 - **Responsive to its container**, from a 360 px phone to a wide screen, with 44 px touch targets
   on touch screens.
 - **Five widget types** (bar, line, pie, table, KPI) on ECharts, each with loading, empty and error
@@ -208,7 +208,7 @@ Details, including the two targets missed on a CPU slowed four times, are in
 ## Roadmap
 
 - Deploy the API, the demo and Storybook, and run Lighthouse on the deployed demo.
-- Undo and redo in the builder, and a keyboard way to move and resize widgets.
+- A keyboard way to move and resize widgets.
 - Select several values in one chart.
 - Measure test coverage in `core` and `mock-engine`.
 - Keep cross-filtering within 300 ms on slow devices.

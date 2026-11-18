@@ -63,6 +63,14 @@ const minimumOf = ({ minW, minH }: Pick<LayoutItem, 'minW' | 'minH'>) => ({
  */
 export function arrangeWidgets(config: DashboardConfig, arranged: LayoutItem[]): DashboardConfig {
   const before = new Map(config.layouts.lg.map((item) => [item.i, item]));
+  // The grid also reports a drag that ended where it began; that is not an edit.
+  const isUnmoved =
+    arranged.length === before.size &&
+    arranged.every(({ i, x, y, w, h }) => {
+      const item = before.get(i);
+      return item?.x === x && item.y === y && item.w === w && item.h === h;
+    });
+  if (isUnmoved) return config;
   const lg = arranged.map(({ i, x, y, w, h }) => ({
     i,
     x,
