@@ -1,5 +1,5 @@
 import type { DashboardConfig, LayoutItem, WidgetConfig } from '@dashkit/sdk';
-import { parseQuery } from './parse-query.ts';
+import { MAX_ROWS, parseQuery } from './parse-query.ts';
 import { invalidRequest, isOneOf, isRecord } from './validation.ts';
 
 const WIDGET_TYPES: WidgetConfig['type'][] = ['bar', 'line', 'pie', 'table', 'kpi'];
@@ -88,11 +88,16 @@ export function createStarterDashboard(latestYear: number): DashboardConfig {
   };
 }
 
+const isWholeNumber = (value: unknown, min: number, max = Infinity) =>
+  typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max;
+
+// The same limits the builder checks: a minimum width fits the twelve-column grid.
 const isLayoutItem = (value: unknown): value is LayoutItem =>
   isRecord(value) &&
   typeof value.i === 'string' &&
   ['x', 'y', 'w', 'h'].every((key) => typeof value[key] === 'number') &&
-  ['minW', 'minH'].every((key) => value[key] === undefined || typeof value[key] === 'number');
+  (value.minW === undefined || isWholeNumber(value.minW, 1, 12)) &&
+  (value.minH === undefined || isWholeNumber(value.minH, 1));
 
 /**
  * Checks a dashboard sent for saving. The config is stored as sent, so this rejects anything the
@@ -114,6 +119,10 @@ export function parseDashboardConfig(body: unknown, id: string): DashboardConfig
       throw invalidRequest(`Unknown widget type ${JSON.stringify(widget.type)}`);
     }
     parseQuery(widget.query);
+    const pageSize = isRecord(widget.options) ? widget.options.pageSize : undefined;
+    if (pageSize !== undefined && !isWholeNumber(pageSize, 1, MAX_ROWS)) {
+      throw invalidRequest(`"pageSize" must be a whole number from 1 to ${MAX_ROWS}`);
+    }
     return widget.id;
   });
   if (new Set(widgetIds).size !== widgetIds.length) {

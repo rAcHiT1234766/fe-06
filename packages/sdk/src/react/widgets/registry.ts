@@ -4,7 +4,15 @@ import { BarView, KpiView, LineView, PieView, TableView, type WidgetViewProps } 
 
 /** A setting the config panel offers, besides the title and the type that every widget has. */
 export type ConfigField =
-  'measure' | 'aggregation' | 'dimension' | 'sort' | 'limit' | 'orientation' | 'emit' | 'listen';
+  | 'measure'
+  | 'aggregation'
+  | 'dimension'
+  | 'sort'
+  | 'limit'
+  | 'pageSize'
+  | 'orientation'
+  | 'emit'
+  | 'listen';
 
 const groupedFields: ConfigField[] = ['measure', 'aggregation', 'dimension', 'sort', 'limit'];
 
@@ -84,7 +92,7 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
         orderBy: [{ field: 'lifeExpectancy', direction: 'desc' }],
       },
     },
-    configFields: [...groupedFields, 'emit', 'listen'],
+    configFields: [...groupedFields, 'pageSize', 'emit', 'listen'],
   },
   kpi: {
     label: 'KPI',

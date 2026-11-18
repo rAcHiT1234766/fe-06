@@ -68,12 +68,15 @@ export function validateDashboard({ title, widgets, layouts }: DashboardConfig):
     }
   }
 
-  for (const { id, title: widgetTitle, query } of widgets) {
+  const isRowCount = (count: number) => Number.isInteger(count) && count >= 1 && count <= MAX_ROWS;
+  for (const { id, title: widgetTitle, query, options } of widgets) {
     const name = quoted(widgetTitle || id);
     if (query.measures.length === 0) problems.push(`${name} needs a measure.`);
-    const { limit } = query;
-    if (limit !== undefined && !(Number.isInteger(limit) && limit >= 1 && limit <= MAX_ROWS)) {
+    if (query.limit !== undefined && !isRowCount(query.limit)) {
       problems.push(`${name} needs a row limit from 1 to ${MAX_ROWS}, or none.`);
+    }
+    if (options?.pageSize !== undefined && !isRowCount(options.pageSize)) {
+      problems.push(`${name} needs a page size from 1 to ${MAX_ROWS} rows, or none.`);
     }
   }
   return problems;

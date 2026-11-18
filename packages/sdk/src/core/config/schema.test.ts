@@ -75,18 +75,19 @@ describe('validateDashboard', () => {
     expect(validateDashboard(twice)).toEqual(['"Total GDP" has more than one place on the grid.']);
   });
 
-  it('asks for a measure and a row limit the API accepts', () => {
+  it('asks for a measure, a row limit the API accepts, and a page size', () => {
     const [kpi, bar] = dashboard.widgets;
     const broken = {
       ...dashboard,
       widgets: [
         { ...kpi!, query: { ...gdp, measures: [] } },
-        { ...bar!, query: { ...gdp, limit: 1001 } },
+        { ...bar!, query: { ...gdp, limit: 1001 }, options: { pageSize: 0 } },
       ],
     };
     expect(validateDashboard(broken)).toEqual([
       '"Total GDP" needs a measure.',
       '"GDP by region" needs a row limit from 1 to 1000, or none.',
+      '"GDP by region" needs a page size from 1 to 1000 rows, or none.',
     ]);
   });
 

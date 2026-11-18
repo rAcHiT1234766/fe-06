@@ -5,6 +5,7 @@ import {
   setAggregation,
   setDimension,
   setMeasure,
+  setPageSize,
   setRowLimit,
   setSortOrder,
 } from './edit-widget';
@@ -132,5 +133,14 @@ describe('editing one setting', () => {
     expect(setSortOrder(gdpByRegion, undefined).query).not.toHaveProperty('orderBy');
     expect(setRowLimit(gdpByRegion, 10).query.limit).toBe(10);
     expect(setRowLimit(gdpByRegion, undefined).query).not.toHaveProperty('limit');
+  });
+
+  it('FR-5.5 sets and clears the rows a table shows a page, keeping its other options', () => {
+    const paged = setPageSize(gdpByRegion, 10);
+    expect(paged.options).toEqual({ ...gdpByRegion.options, pageSize: 10 });
+    expect(setPageSize(paged, undefined).options).toEqual(gdpByRegion.options);
+    const plain: WidgetConfig = { ...gdpByRegion };
+    delete plain.options;
+    expect(setPageSize(setPageSize(plain, 5), undefined)).not.toHaveProperty('options');
   });
 });

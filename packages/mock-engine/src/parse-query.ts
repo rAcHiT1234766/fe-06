@@ -8,7 +8,7 @@ import {
 } from './schema.ts';
 import { invalidRequest, isOneOf, isRecord } from './validation.ts';
 
-const MAX_ROWS = 1000;
+export const MAX_ROWS = 1000;
 
 type FilterField = DimensionField | MeasureField;
 

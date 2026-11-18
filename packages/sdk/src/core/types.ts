@@ -118,8 +118,9 @@ export interface WidgetConfig {
   query: Query;
   /**
    * Drawing options. `orientation` and `stacked` apply to bar charts, `showLegend` to charts with
-   * several series and pies, and `donut` to pies. `pageSize` is accepted but not applied: tables
-   * show every row the query returns, in a scrolling body.
+   * several series and pies, and `donut` to pies. `pageSize` splits a table's rows into pages of
+   * that many, with Previous and Next buttons; without it, a table shows every row in a scrolling
+   * body. The query's `limit` still caps how many rows there are to page through.
    */
   options?: {
     orientation?: 'vertical' | 'horizontal';

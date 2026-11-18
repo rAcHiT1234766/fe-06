@@ -4,6 +4,7 @@ import {
   setAggregation,
   setDimension,
   setMeasure,
+  setPageSize,
   setRowLimit,
   setSortOrder,
 } from '../../core/config/edit-widget';
@@ -256,6 +257,24 @@ export function ConfigPanel({
             onChange={(event) => {
               const limit = Number.parseInt(event.currentTarget.value, 10);
               onChange(setRowLimit(widget, limit >= 1 ? Math.min(limit, MAX_ROWS) : undefined));
+            }}
+          />
+        </Field>
+      )}
+
+      {fields.has('pageSize') && (
+        <Field label="Rows per page">
+          <input
+            className="dk-input"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={MAX_ROWS}
+            placeholder="All"
+            value={widget.options?.pageSize ?? ''}
+            onChange={(event) => {
+              const size = Number.parseInt(event.currentTarget.value, 10);
+              onChange(setPageSize(widget, size >= 1 ? Math.min(size, MAX_ROWS) : undefined));
             }}
           />
         </Field>

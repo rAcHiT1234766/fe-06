@@ -8,6 +8,8 @@ export interface WidgetStoryArgs extends HostArgs {
   widgetId: string;
   year?: number;
   emit?: boolean;
+  /** Tables only: sets the widget's `options.pageSize`. */
+  pageSize?: number;
 }
 
 export const widgetArgTypes = {
@@ -31,7 +33,7 @@ export type WidgetStory = StoryObj<WidgetStoryArgs>;
 
 /** Draws one widget of the signed-in user's saved dashboard on its own. */
 export const renderWidget: NonNullable<Meta<WidgetStoryArgs>['render']> = (
-  { widgetId, year, emit },
+  { widgetId, year, emit, pageSize },
   { loaded },
 ) => {
   const { widgets } = loaded.dashboard as DashboardConfig;
@@ -45,6 +47,7 @@ export const renderWidget: NonNullable<Meta<WidgetStoryArgs>['render']> = (
       },
     }),
     ...(emit !== undefined && { crossFilter: { ...saved.crossFilter, emit } }),
+    ...(pageSize !== undefined && { options: { ...saved.options, pageSize } }),
   };
   return (
     <ThemeRoot>

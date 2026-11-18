@@ -11,7 +11,13 @@ const meta = {
   title: 'Widgets/Table',
   tags: ['autodocs'],
   args: { widgetId: 'countries', onFilterChange: fn() },
-  argTypes: states.widgetArgTypes,
+  argTypes: {
+    ...states.widgetArgTypes,
+    pageSize: {
+      description: "Sets the table's `options.pageSize`: how many rows it shows at a time.",
+      control: { type: 'number', min: 1, max: 1000 },
+    },
+  },
   render: states.renderWidget,
 } satisfies Meta<states.WidgetStoryArgs>;
 
@@ -32,3 +38,9 @@ export const Selected: states.WidgetStory = {
   args: { ...selectedIndia.args, emit: true },
 };
 export const Dark = states.dark;
+
+/**
+ * With `options.pageSize` set to 8, the table shows eight countries at a time, with Previous and
+ * Next buttons and the rows shown between them. A filter takes it back to the first page.
+ */
+export const Paged: states.WidgetStory = { args: { pageSize: 8 } };

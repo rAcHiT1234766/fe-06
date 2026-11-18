@@ -90,6 +90,16 @@ export function setSortOrder(widget: WidgetConfig, order: SortOrder | undefined)
   return withQuery(widget, query);
 }
 
+/** Sets how many rows a table shows at a time; with none it shows every row, scrolling. */
+export function setPageSize(widget: WidgetConfig, pageSize: number | undefined): WidgetConfig {
+  const options = { ...widget.options };
+  if (pageSize) options.pageSize = pageSize;
+  else delete options.pageSize;
+  const changed: WidgetConfig = { ...widget, options };
+  if (Object.keys(options).length === 0) delete changed.options;
+  return changed;
+}
+
 export function setRowLimit(widget: WidgetConfig, limit: number | undefined) {
   const query = { ...widget.query };
   if (limit) query.limit = limit;

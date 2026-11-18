@@ -212,6 +212,21 @@ describe('DashboardBuilder', () => {
     expect(within(chart).getByRole('cell', { name: 'South Asia' })).toBeTruthy();
   });
 
+  it('FR-5.5 splits a table into pages of the size an editor chooses', async () => {
+    await renderEditing('asha');
+    const panel = await openSettings('Countries');
+    expect(within(widget('Countries')).queryByRole('navigation')).toBeNull();
+
+    change(panel, 'Rows per page', '10');
+    const pages = within(widget('Countries')).getByRole('navigation', {
+      name: 'Pages of Countries',
+    });
+    expect(within(pages).getByRole('status').textContent).toMatch(/^Rows 1–10 of \d+$/);
+
+    change(panel, 'Rows per page', '');
+    expect(within(widget('Countries')).queryByRole('navigation')).toBeNull();
+  });
+
   it('closes the settings with Escape or the close button, and returns focus', async () => {
     await renderEditing('asha');
     const configure = screen.getByRole('button', { name: 'Configure Countries' });

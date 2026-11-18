@@ -47,6 +47,15 @@ for (const widget of Object.keys(populated)) {
   });
 }
 
+test('the paged table story moves between pages', async ({ page }) => {
+  await openStory(page, 'widgets-table--paged');
+  const pager = page.getByRole('navigation', { name: 'Pages of Countries' });
+  await expect(pager.getByRole('status')).toHaveText(/^Rows 1–8 of \d+$/);
+  await expect(page.getByRole('table', { name: 'Countries' }).locator('tbody tr')).toHaveCount(8);
+  await pager.getByRole('button', { name: 'Next' }).click();
+  await expect(pager.getByRole('status')).toHaveText(/^Rows 9–16 of \d+$/);
+});
+
 test('FR-6.5 the theming playground applies its controls', async ({ page }) => {
   await openStory(page, 'concepts-theming--playground', '&args=radius:0');
   await expect(page.locator('.dk-widget').first()).toHaveCSS('border-top-left-radius', '0px');

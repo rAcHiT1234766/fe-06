@@ -1,4 +1,4 @@
-import { useContext, useLayoutEffect, useMemo } from 'react';
+import { useContext, useLayoutEffect, useMemo, useRef } from 'react';
 import { formatValue } from '../../core/format';
 import type { QueryResult, WidgetConfig } from '../../core/types';
 import {
@@ -13,6 +13,7 @@ import { useDashKit } from '../context';
 import { useSelection } from '../hooks/use-cross-filter';
 import { useEChart } from '../hooks/use-echart';
 import { DataTable } from './DataTable';
+import { Pager, usePagedResult } from './Pager';
 
 interface WidgetViewProps {
   widget: WidgetConfig;
@@ -73,17 +74,32 @@ function ChartView({
 
 function TableView({ widget, result }: WidgetViewProps) {
   const selection = useSelection(widget);
-  useDrawnInNextFrame(widget.id, selection?.values ?? result);
+  const paged = usePagedResult(result, widget.options?.pageSize);
+  useDrawnInNextFrame(widget.id, selection?.values ?? paged.result);
+  const scrollRef = useRef<HTMLDivElement>(null);
   return (
-    // Focusable so keyboard users can scroll a table taller or wider than its widget.
-    <div
-      className="dk-table-scroll"
-      tabIndex={0}
-      role="region"
-      aria-label={`${widget.title} table`}
-    >
-      <DataTable result={result} caption={widget.title} selection={selection} />
-    </div>
+    <>
+      {/* Focusable so keyboard users can scroll a table taller or wider than its widget. */}
+      <div
+        ref={scrollRef}
+        className="dk-table-scroll"
+        tabIndex={0}
+        role="region"
+        aria-label={`${widget.title} table`}
+      >
+        <DataTable result={paged.result} caption={widget.title} selection={selection} />
+      </div>
+      {paged.page && (
+        <Pager
+          label={`Pages of ${widget.title}`}
+          page={paged.page}
+          onPage={(index) => {
+            paged.showPage(index);
+            if (scrollRef.current) scrollRef.current.scrollTop = 0;
+          }}
+        />
+      )}
+    </>
   );
 }
 

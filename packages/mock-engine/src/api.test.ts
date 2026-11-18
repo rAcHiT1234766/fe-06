@@ -50,6 +50,13 @@ const dashboardNamed = (id: string, title: string): DashboardConfig => ({
   title,
 });
 
+// The starter dashboard with extra fields on its first layout item.
+function withFirstItem(fields: Record<string, unknown>) {
+  const dashboard = createStarterDashboard(2024);
+  const [first, ...rest] = dashboard.layouts.lg;
+  return { ...dashboard, layouts: { lg: [{ ...first, ...fields }, ...rest] } };
+}
+
 describe('demo API', () => {
   it('serves /health without a token', async () => {
     expect(await call('GET', '/health')).toEqual({ status: 200, body: { status: 'ok' } });
@@ -186,12 +193,17 @@ describe('demo API', () => {
       },
     ],
     ['a widget without a layout item', { ...createStarterDashboard(2024), layouts: { lg: [] } }],
+    ['a minimum width that is not a number', withFirstItem({ minW: 'wide' })],
+    ['a minimum width wider than the grid', withFirstItem({ minW: 13 })],
+    ['a minimum height below one row', withFirstItem({ minH: 0 })],
     [
-      'a minimum width that is not a number',
+      'a table page size of no rows',
       (() => {
         const dashboard = createStarterDashboard(2024);
-        const [first, ...rest] = dashboard.layouts.lg;
-        return { ...dashboard, layouts: { lg: [{ ...first, minW: 'wide' }, ...rest] } };
+        const widgets = dashboard.widgets.map((widget) =>
+          widget.type === 'table' ? { ...widget, options: { pageSize: 0 } } : widget,
+        );
+        return { ...dashboard, widgets };
       })(),
     ],
     [

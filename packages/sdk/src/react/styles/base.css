@@ -59,9 +59,14 @@
   background: color-mix(in srgb, var(--dk-color-primary) 85%, var(--dk-color-text));
 }
 
-.dk-button:disabled {
+.dk-button:disabled,
+.dk-button[aria-disabled='true'] {
   cursor: default;
   opacity: 0.6;
+}
+
+.dk-button[aria-disabled='true']:hover {
+  background: var(--dk-color-surface);
 }
 
 .dk-visually-hidden {
