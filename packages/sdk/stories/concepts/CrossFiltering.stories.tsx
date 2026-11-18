@@ -1,13 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import { Dashboard, type ActiveFilter } from '../src';
-
-interface HostArgs {
-  /** Filters the host passes to `DashKitProvider`. Editing them here applies them at once. */
-  filters: ActiveFilter[];
-  /** The provider calls it after every change, whether from a click or from the host. */
-  onFilterChange: (filters: ActiveFilter[]) => void;
-}
+import { Dashboard } from '../../src';
+import { hostArgTypes, type HostArgs } from '../support';
 
 /**
  * Click a bar or a pie slice to filter every other widget, and click it again to remove the
@@ -18,19 +12,22 @@ interface HostArgs {
  * control sets filters the way a host would.
  */
 const meta = {
-  title: 'Cross-filtering',
+  title: 'Concepts/Cross-filtering',
   // The preview's DashKitProvider receives these args, as a host would pass them.
   args: { filters: [], onFilterChange: fn() },
+  argTypes: hostArgTypes,
   render: () => <Dashboard dashboardId="overview" />,
 } satisfies Meta<HostArgs>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const ClickToFilter: Story = {};
+/** Click a bar or a slice. */
+export const ClickToFilter: Story = { name: 'Click to filter' };
 
 /** The host passes a filter on high-income countries, so the dashboard opens already filtered. */
 export const SetByHost: Story = {
+  name: 'Set by the host',
   args: { filters: [{ field: 'incomeLevel', values: ['High income'], sourceWidgetId: 'host' }] },
 };
 
@@ -40,8 +37,9 @@ export const SetByHost: Story = {
  * any filter, so every widget is empty.
  */
 export const PermissionsStillApply: Story = {
+  name: 'Permissions still apply',
   args: {
     filters: [{ field: 'region', values: ['Europe & Central Asia'], sourceWidgetId: 'host' }],
   },
-  parameters: { user: 'ravi' },
+  globals: { user: 'ravi' },
 };

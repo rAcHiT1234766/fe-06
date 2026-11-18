@@ -1,0 +1,73 @@
+import { Canvas, Controls, Meta, Source } from '@storybook/addon-docs/blocks';
+import propertyDocs from '../generated/property-docs.json';
+import { defaultTheme } from '../../src/core/theme/defaults';
+import { TokenTable } from './TokenTable';
+import * as ThemingStories from './Theming.stories';
+
+<Meta of={ThemingStories} />
+
+# Theming
+
+A dashboard takes its look from the `theme` the host passes to `DashKitProvider`, or sets as the
+`theme` property of `<dashkit-dashboard>`. Every field is optional: whatever the host leaves out
+comes from the default theme, so `{ light: { primary: '#4f46e5' } }` is a complete theme.
+
+```tsx
+<DashKitProvider
+  apiUrl="https://analytics.example.com"
+  getToken={getToken}
+  theme={{
+    mode: 'auto',
+    light: { primary: '#0f766e', chart: ['#0f766e', '#b45309', '#7c3aed', '#be123c', '#0369a1', '#4d7c0f'] },
+    dark: { primary: '#2dd4bf' },
+    typography: { fontFamily: '"Inter", sans-serif' },
+    shape: { radius: 12 },
+    brand: { name: 'Acme Analytics', logoUrl: '/logo.svg' },
+  }}
+>
+```
+
+## Modes
+
+`mode` is `light`, `dark` or `auto`. With `auto` the dashboard follows the operating system's
+setting and changes with it while open. Each mode has its own set of colour tokens, so dark mode is
+designed rather than inverted. On `<dashkit-dashboard>`, the `color-scheme` attribute overrides the
+theme's mode, which lets a page switch modes without touching the theme object.
+
+## Colour tokens
+
+<TokenTable descriptions={propertyDocs.ColorTokens} />
+
+The chart palette is replaced as a whole: a theme that sets `chart` gives the full list, which is
+never mixed with the default one. Charts use the colours in order, so the first series always gets
+the first colour.
+
+## Typography, shape and brand
+
+- `typography.fontFamily` and `typography.headingFontFamily` are CSS font stacks, and
+  `typography.baseFontSize` is in px. **The page must load any web font the theme names**, with
+  `@font-face` or a font service's stylesheet. The dashboard renders in a shadow root when it comes
+  from `<dashkit-dashboard>`, and a shadow root does not load fonts on its own.
+- `shape.radius` is the corner radius in px; `0` gives square corners.
+- `brand.name` and `brand.logoUrl` appear in the dashboard's header. `brand.logoAlt` describes the
+  logo and falls back to the name.
+
+## Contrast
+
+While a host develops, the SDK checks the text colours of the mode in use against their
+backgrounds and warns in the console when a pair falls below the WCAG AA contrast of 4.5:1. The
+playground below shows the same check for both modes.
+
+## Playground
+
+<Canvas of={ThemingStories.Playground} />
+
+<Controls of={ThemingStories.Playground} />
+
+The three demo brands, each in light and dark mode, are in
+[Brands and modes](?path=/story/concepts-theming--brands-and-modes). The **Brand** and **Mode**
+toolbar controls apply any of them to every other story.
+
+## The default theme
+
+<Source language="json" code={JSON.stringify(defaultTheme, null, 2)} />

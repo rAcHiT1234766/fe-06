@@ -1,0 +1,68 @@
+import { Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as SecurityStories from './SecurityModel.stories';
+
+<Meta of={SecurityStories} />
+
+# Security model
+
+The browser never decides what a user may see. The data API decides, on every request, from an
+embed token that the host's backend signed. Nothing the page or the SDK sends can widen it.
+
+## How a token travels
+
+1. The user signs in to the host product, as they already do.
+2. The host's backend mints an **embed token** for that user: a JSON Web Token signed with HS256,
+   using a secret that only the backend and the data API know. The demo's tokens last 15 minutes.
+3. The page gives the token to the SDK, as `token` or through `getToken`. The SDK keeps it in
+   memory only (never in `localStorage`, a cookie or a URL) and sends it as
+   `Authorization: Bearer <token>` with each request.
+4. The API verifies the signature and the expiry on every request, and takes the tenant, role and
+   scopes from the verified token only, never from anything else in the request.
+5. When the API answers 401, the SDK calls `getToken` once for a new token and repeats the request;
+   widgets that get a 401 at the same moment share that one call. If there is no `getToken`, or the
+   new token fails too, the dashboard says the session is not valid.
+
+| Claim             | Meaning                                                                       |
+| ----------------- | ----------------------------------------------------------------------------- |
+| `sub`             | The user's id in the host product. Saved dashboards record it as `updatedBy`. |
+| `tenantId`        | The customer the user belongs to.                                             |
+| `role`            | `editor` may change and save dashboards; `viewer` may only look.              |
+| `scopes.regions`  | The region codes whose rows the user may see, or `'*'` for all.               |
+| `scopes.measures` | Reserved for limiting the measures a user may query. The demo API ignores it. |
+| `iat`, `exp`      | When the token was issued and when it expires, in seconds since 1970.         |
+
+## What the API enforces
+
+| Rule                        | How                                                                                     | When it is broken                               |
+| --------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| A valid token on every call | Signature and expiry checked before any other work                                      | 401 `UNAUTHENTICATED`                           |
+| Customers stay apart        | Dashboards are stored under the token's tenant and looked up there only                 | 404 `NOT_FOUND`, as for one that does not exist |
+| Row-level security          | Rows outside the token's regions are removed before the query's own filters are applied | The rows are simply not in the result           |
+| Only editors change things  | Saving and deleting a dashboard need the `editor` role                                  | 403 `FORBIDDEN`                                 |
+| Queries are well formed     | Fields, operators and values are checked; a result holds at most 1000 rows              | 400 `INVALID_QUERY`                             |
+| Only known pages call it    | The server answers browsers only from the origins in `DASHKIT_ALLOWED_ORIGINS`          | The browser blocks the response                 |
+
+Because row-level security comes first, filters can only narrow what a user sees. A cross-filter on
+a region the user may not see, or one the host passes in, returns no rows rather than leaking any:
+[Permissions still apply](?path=/story/concepts-cross-filtering--permissions-still-apply) shows it.
+
+## What the SDK does, and what it leaves to the API
+
+- It never signs a token and never contains a secret.
+- It hides the builder's controls from viewers. That is a courtesy, not a protection: the API
+  refuses a viewer's save in any case.
+- Every error reaches the host's `onError`, as a code and a message.
+
+## In this Storybook
+
+The data API runs inside the browser, where a page can read everything, so here it signs tokens
+with a random secret created when the page loads. Its `POST /auth/demo-token` route, which hands a
+token to anyone who names a demo user, stands in for the host's backend in the demo only. A real
+deployment has no such route, and its secret never reaches a browser.
+
+The **User** toolbar control signs in as a different demo user. These stories show two of the
+rules above:
+
+<Canvas of={SecurityStories.RowLevelSecurity} />
+
+<Canvas of={SecurityStories.SessionInvalid} />

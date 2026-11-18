@@ -18,7 +18,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Signed in as Asha, an editor, starting in the builder. */
+/**
+ * Starting in the builder. Asha, the default user, and Elena are editors; switch to Ravi in the
+ * toolbar to see what a viewer gets instead.
+ */
 export const Editing: Story = {};
 
 const emptyDashboard: DashboardConfig = {
@@ -34,6 +37,8 @@ export const Empty: Story = { args: { dashboardId: undefined, config: emptyDashb
 
 /** The settings panel of "Population by region", opened as an editor would open it. */
 export const ConfigPanel: Story = {
+  name: 'Config panel',
+  globals: { user: 'asha' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
@@ -47,4 +52,4 @@ export const ConfigPanel: Story = {
  * Signed in as Ravi, a viewer. The story asks for the builder, but a viewer gets the dashboard
  * without any edit controls, and the API would refuse a save from him in any case.
  */
-export const Viewer: Story = { parameters: { user: 'ravi' } };
+export const Viewer: Story = { globals: { user: 'ravi' } };

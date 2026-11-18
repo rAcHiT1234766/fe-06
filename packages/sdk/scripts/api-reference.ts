@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 
 const packageDir = fileURLToPath(new URL('..', import.meta.url));
-const output = new URL('../stories/generated/api-reference.md', import.meta.url);
+const outputDir = new URL('../stories/generated/', import.meta.url);
 
 const configFile = ts.readConfigFile(`${packageDir}tsconfig.build.json`, (path) =>
   ts.sys.readFile(path),
@@ -22,6 +22,8 @@ const checker = program.getTypeChecker();
 
 const missingDocs: string[] = [];
 let documenting = '';
+// The same descriptions as data, so that docs pages such as the theme's token table reuse them.
+const propertyDocs: Record<string, Record<string, string>> = {};
 
 // `{@link Name}` reads as a code name on the page.
 const docOf = (symbol: ts.Symbol) =>
@@ -66,6 +68,8 @@ function propertiesTable(type: ts.Type, location: ts.Node) {
         : undefined;
     const isOptional = (property.flags & ts.SymbolFlags.Optional) !== 0;
     if (!docOf(property)) missingDocs.push(`${documenting}.${property.name}`);
+    const owner = documenting.slice(documenting.indexOf(': ') + 2);
+    (propertyDocs[owner] ??= {})[property.name] = docOf(property);
     return `| ${code(property.name)}${isOptional ? '' : ' (required)'} | ${code(typeText(typeNode, propertyType))} | ${cell(docOf(property))} |`;
   });
   if (rows.length === 0) return '';
@@ -158,7 +162,9 @@ sections.push(
 );
 
 if (missingDocs.length > 0) {
-  console.error(`These public exports, properties or methods have no JSDoc comment:\n${missingDocs.join('\n')}`);
+  console.error(
+    `These public exports, properties or methods have no JSDoc comment:\n${missingDocs.join('\n')}`,
+  );
   process.exitCode = 1;
 } else {
   const page = [
@@ -166,7 +172,11 @@ if (missingDocs.length > 0) {
     'Every public export of `@dashkit/sdk`, with the same descriptions an editor shows on hover.',
     ...sections,
   ].join('\n\n');
-  mkdirSync(new URL('.', output), { recursive: true });
-  writeFileSync(output, `${page}\n`);
+  mkdirSync(outputDir, { recursive: true });
+  writeFileSync(new URL('api-reference.md', outputDir), `${page}\n`);
+  writeFileSync(
+    new URL('property-docs.json', outputDir),
+    `${JSON.stringify(propertyDocs, null, 2)}\n`,
+  );
   console.log(`API reference: ${npmExports.length + elementOnly.length} exports documented.`);
 }

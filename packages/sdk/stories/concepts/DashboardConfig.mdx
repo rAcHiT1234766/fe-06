@@ -1,0 +1,91 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Concepts/Dashboard config" />
+
+# Dashboard config
+
+A dashboard is one plain JSON object, a `DashboardConfig`. The viewer renders it, the builder edits
+a copy of it, and the API stores what the builder saves without changing it, apart from recording
+who saved it and when. A host can also build one in code and pass it as `config`, in place of a
+`dashboardId`.
+
+This is part of the "World development overview" dashboard every demo customer starts with, with
+notes on each field. The full list of fields and their types is in the
+[API reference](?path=/docs/api-reference--docs) under `DashboardConfig` and `WidgetConfig`.
+
+{/* prettier-ignore */}
+```jsonc
+{
+  "id": "overview", // what dashboardId and the dashboard-id attribute refer to
+  "schemaVersion": 1, // the format's version; a newer one is refused, not misread
+  "title": "World development overview",
+  "description": "World Bank indicators for 2024, with life expectancy since 2000.",
+
+  "widgets": [
+    {
+      "id": "population-by-region", // unique within the dashboard; layout items refer to it
+      "type": "bar", // bar, line, pie, table or kpi
+      "title": "Population by region",
+      "options": { "orientation": "horizontal" },
+      "query": {
+        "dataset": "wdi",
+        // agg is optional: each measure has a default aggregation
+        "measures": [{ "field": "population", "agg": "sum" }],
+        // one row per region; a bar or pie filters the others by its first dimension
+        "dimensions": ["region"],
+        "filters": [{ "field": "year", "op": "eq", "value": 2024 }],
+        "orderBy": [{ "field": "population", "direction": "desc" }]
+      }
+      // no crossFilter: a bar emits and listens by default
+    },
+    {
+      "id": "total-population",
+      "type": "kpi", // one number; it listens to cross-filters but never emits
+      "title": "Total population",
+      "query": {
+        "dataset": "wdi",
+        "measures": [{ "field": "population", "agg": "sum" }],
+        "filters": [{ "field": "year", "op": "eq", "value": 2024 }]
+      }
+    }
+    // … "GDP by income level" (pie), "Average life expectancy" (line), "Countries" (table)
+  ],
+
+  "layouts": {
+    // grid positions at the lg breakpoint, 12 columns wide; x, y, w and h count columns and rows
+    "lg": [
+      { "i": "total-population", "x": 0, "y": 0, "w": 3, "h": 3 },
+      { "i": "population-by-region", "x": 3, "y": 0, "w": 9, "h": 3 }
+      // …
+    ]
+    // md, sm and xs are optional: missing ones are derived from lg, in reading order
+  }
+
+  // Also allowed:
+  // "defaultFilters": [{ "field": "incomeLevel", "op": "neq", "value": "High income" }],
+  //   applied to every widget, and not shown as removable chips
+  // "updatedAt", "updatedBy": set by the API when an editor saves
+}
+```
+
+## Rules the API checks on save
+
+The API refuses a config that the viewer could not render, with a 400 `INVALID_QUERY` that names the
+problem. The builder checks the same rules before it sends anything, lists every problem it finds,
+and keeps the draft.
+
+- `id` must match the dashboard's address, `schemaVersion` must be `1`, and the title must not be
+  empty.
+- Every widget needs a unique `id`, a known `type`, a `title` and a valid query: known fields and
+  operators, and values of the right kind for each operator.
+- Every widget needs exactly one item in the `lg` layout.
+
+The SDK also refuses to show a config with a newer `schemaVersion` than it knows, and says so,
+rather than guess at fields it does not understand.
+
+## Where configs come from
+
+- **Saved by an editor** in the [builder](?path=/story/builder--editing), stored per customer.
+- **Written by the host**, passed as `config` to `Dashboard` or `DashboardBuilder`, or set as the
+  `config` property of `<dashkit-dashboard>`. If an editor then saves it from the builder, the API
+  stores it under its `id` like any other, and `onSave` receives the stored version.

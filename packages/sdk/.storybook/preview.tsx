@@ -3,15 +3,15 @@ import { createMockApiHandlers } from '@dashkit/mock-engine/msw';
 import type { Preview } from '@storybook/react-vite';
 import { delay, http, HttpResponse } from 'msw';
 import { setupWorker } from 'msw/browser';
+import { DashKitProvider, type ActiveFilter, type DashKitProviderProps } from '../src';
 import {
-  DashKitProvider,
-  type ActiveFilter,
-  type DashKitProviderProps,
-  type DashKitTheme,
-  type ThemeInput,
-} from '../src';
-import { QueryClient } from '../src/core/query-client';
-import { API_URL, LOADING_API_URL, OFFLINE_API_URL } from '../stories/mock-api';
+  API_URL,
+  demoUserItems,
+  LOADING_API_URL,
+  OFFLINE_API_URL,
+  signIn,
+  themeFor,
+} from '../stories/support';
 
 const worker = setupWorker(
   ...createMockApiHandlers(API_URL),
@@ -19,17 +19,7 @@ const worker = setupWorker(
   http.all(`${OFFLINE_API_URL}/*`, () => HttpResponse.error()),
 );
 
-async function signIn(userId: string) {
-  const response = await fetch(`${API_URL}/auth/demo-token`, {
-    method: 'POST',
-    body: JSON.stringify({ userId }),
-  });
-  const { token } = (await response.json()) as { token: string };
-  const dashboard = await new QueryClient({ apiUrl: API_URL, token }).loadDashboard('overview');
-  return { token, dashboard };
-}
-
-// Cross-filtering stories play the host: their args set the filters and receive every change.
+// Stories that play the host set the filters through their args and receive every change.
 function hostProps({
   filters,
   onFilterChange,
@@ -42,13 +32,26 @@ function hostProps({
   };
 }
 
-function themeFor(brandId: string, mode: string): ThemeInput {
-  const brand = demoBrands[brandId] ?? {};
-  return mode === 'brand' ? brand : { ...brand, mode: mode as DashKitTheme['mode'] };
-}
-
 const preview: Preview = {
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+    options: {
+      storySort: {
+        order: [
+          'Introduction',
+          'Getting started',
+          'Concepts',
+          ['Theming', 'Security model', 'Cross-filtering', 'Dashboard config'],
+          'Widgets',
+          ['Bar chart', 'Line chart', 'Pie chart', 'Table', 'KPI'],
+          'Dashboard',
+          'Builder',
+          'Embedding',
+          'API reference',
+        ],
+      },
+    },
+  },
   globalTypes: {
     brand: {
       description: 'Brand theme',
@@ -79,8 +82,12 @@ const preview: Preview = {
         ],
       },
     },
+    user: {
+      description: 'Signed-in user. Each one gets their own embed token from the mock API.',
+      toolbar: { title: 'User', icon: 'user', dynamicTitle: true, items: demoUserItems },
+    },
   },
-  initialGlobals: { brand: 'default', mode: 'brand' },
+  initialGlobals: { brand: 'default', mode: 'brand', user: 'asha' },
   async beforeAll() {
     await worker.start({
       serviceWorker: { url: 'mockServiceWorker.js' },
@@ -88,7 +95,8 @@ const preview: Preview = {
       onUnhandledFrame: 'bypass',
     });
   },
-  loaders: [({ parameters }) => signIn((parameters.user as string | undefined) ?? 'asha')],
+  // Loaders run again on every change of the toolbar, so switching user signs in again.
+  loaders: [({ globals }) => signIn(globals.user as string)],
   decorators: [
     (Story, { args, globals, parameters, loaded }) => (
       <DashKitProvider

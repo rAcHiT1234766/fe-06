@@ -8,6 +8,38 @@ DashKit is a library that puts analytics dashboards inside another company's pro
 take on that product's colours, fonts and logo, show each signed-in user only the data they are
 allowed to see, filter each other when a chart is clicked, and can be rearranged by editors.
 
+## Using this Storybook
+
+Every story is live. It runs the SDK against the demo data API, which here answers inside the
+browser through a service worker, using a snapshot of World Bank indicators for 2000 to 2024. Saved
+changes last until the page reloads.
+
+The toolbar applies to every story unless the story says otherwise:
+
+| Control | What it changes                                                                                     |
+| ------- | --------------------------------------------------------------------------------------------------- |
+| Brand   | The theme: DashKit's default or one of the three demo customers' brands.                            |
+| Mode    | Light, dark, following the system, or the brand's own choice.                                       |
+| User    | Who is signed in. Each user gets their own embed token, and the API shows them only their own data. |
+
+| User  | Customer     | Role   | Regions they may see            |
+| ----- | ------------ | ------ | ------------------------------- |
+| Asha  | Acme Global  | editor | all                             |
+| Ravi  | AsiaInsights | viewer | South Asia, East Asia & Pacific |
+| Elena | EuroStat Co  | editor | Europe & Central Asia           |
+
+## Where to go next
+
+- [Getting started](?path=/docs/getting-started--docs): install the SDK and show a first dashboard.
+- Concepts: [Theming](?path=/docs/concepts-theming--docs),
+  [Security model](?path=/docs/concepts-security-model--docs),
+  [Cross-filtering](?path=/docs/concepts-cross-filtering--docs) and
+  [Dashboard config](?path=/docs/concepts-dashboard-config--docs).
+- Widgets: each of the five widget types loading, empty, failed, selected and in dark mode.
+- [Dashboard](?path=/story/dashboard--view-mode), [Builder](?path=/story/builder--editing) and
+  [the `<dashkit-dashboard>` element](?path=/docs/embedding-web-component--docs).
+- [API reference](?path=/docs/api-reference--docs): every public export, with its types.
+
 ## Two ways to install
 
 - **npm:** React apps install `@dashkit/sdk` and render its components. React is a peer dependency.

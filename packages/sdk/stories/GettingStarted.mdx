@@ -1,0 +1,96 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Getting started" />
+
+# Getting started
+
+Showing a dashboard takes three things: an embed token from your backend, the SDK on the page, and
+the address of the data API.
+
+## 1. Mint embed tokens on your backend
+
+The data API only answers requests that carry a valid embed token. Your backend already knows who is
+signed in, so it signs a short-lived token for that user and hands it to the page. The token says
+which customer the user belongs to (`tenantId`), whether they may edit (`role`), and which rows they
+may see (`scopes`); see [`TokenClaims`](?path=/docs/api-reference--docs) and the
+[Security model](?path=/docs/concepts-security-model--docs).
+
+The SDK never signs a token and never holds a secret. It keeps the token in memory, sends it with
+each request, and calls your `getToken` again when the API says the token has expired.
+
+> The demo API has a `POST /auth/demo-token` route that mints tokens for its demo users, so that the
+> demo can run without a backend. It is for the demo only: a real deployment mints tokens on the
+> host's own backend, with a secret that never reaches a browser.
+
+## 2. Show a dashboard
+
+### In a React app
+
+```sh
+npm install @dashkit/sdk
+```
+
+React and React DOM 18 or 19 are peer dependencies; ECharts and the grid library come with the SDK.
+
+```tsx
+import { Dashboard, DashKitProvider } from '@dashkit/sdk';
+
+// Your backend signs the embed token for the signed-in user.
+const getToken = () => fetch('/api/dashkit-token').then((response) => response.text());
+
+export function Analytics() {
+  return (
+    <DashKitProvider
+      apiUrl="https://analytics.example.com"
+      getToken={getToken}
+      theme={{ mode: 'auto', light: { primary: '#4f46e5' } }}
+      onFilterChange={(filters) => console.log(filters)}
+    >
+      <Dashboard dashboardId="overview" />
+    </DashKitProvider>
+  );
+}
+```
+
+Render `DashboardBuilder` in place of `Dashboard` to let users with the `editor` role rearrange and
+configure widgets: they get an **Edit dashboard** button, or start in the builder with
+`mode="edit"`. Viewers get the plain dashboard.
+
+### In any page
+
+```html
+<dashkit-dashboard
+  api-url="https://analytics.example.com"
+  dashboard-id="overview"
+></dashkit-dashboard>
+<script src="dashkit.js"></script>
+<script>
+  const dashboard = document.querySelector('dashkit-dashboard');
+  dashboard.getToken = () => fetch('/api/dashkit-token').then((response) => response.text());
+  dashboard.addEventListener('dashkit:filterchange', (event) => console.log(event.detail));
+</script>
+```
+
+`dashkit.js` is in the npm package at `dist/dashkit.js`, with React and every other dependency
+bundled in. A bundler loads it with `import '@dashkit/sdk/element'`, which also adds the element's
+TypeScript types. From script, `DashKit.mount(container, options)` does the same as the tag. Try the
+element live in [Embedding › Web Component](?path=/docs/embedding-web-component--docs).
+
+## 3. Make it yours
+
+- [Theming](?path=/docs/concepts-theming--docs): colours for light and dark mode, fonts, corner
+  radius, logo. The page must load any font the theme names.
+- [Cross-filtering](?path=/docs/concepts-cross-filtering--docs): which widgets filter which, and how
+  the host sets and reads the filters.
+- [Dashboard config](?path=/docs/concepts-dashboard-config--docs): the JSON a dashboard is stored as,
+  for hosts that build dashboards in code.
+
+## Run the demo yourself
+
+From a clone of the repository, with Node 24 and pnpm:
+
+```sh
+pnpm install
+pnpm dev        # the demo API on http://localhost:4000 and the demo app on http://localhost:5173
+pnpm storybook  # this Storybook on http://localhost:6006
+```
