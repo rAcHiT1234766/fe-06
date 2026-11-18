@@ -1,8 +1,9 @@
 # Performance
 
-Every number on this page was measured, on the code at commit `a0f0817`, on 18 November 2026. The
-targets come from the project requirements (NFR-P1 to NFR-P6). Where a target is missed, the row
-says so and why.
+Every number on this page was measured on 18 November 2026: the timings in the main table on the
+code at commit `a0f0817`, the bundle sizes at `9637048`, the last change to code, and the timings
+under "Re-measured after Phase 7" at both. The targets come from the project requirements (NFR-P1
+to NFR-P6). Where a target is missed, the row says so and why.
 
 ## How it was measured
 
@@ -27,9 +28,9 @@ with the targets; the throttled runs show how much headroom there is.
 
 | Requirement  | What was measured                                                                | Result                                                                                     | Target                         | Met           |
 | ------------ | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------ | ------------- |
-| NFR-P1       | npm build as a host bundles it: minified, every dependency except React included | 215.6 kB gzipped                                                                           | ≤ 300 kB                       | Yes           |
-| NFR-P1       | `dist/index.js` alone, dependencies external                                     | 17.9 kB gzipped                                                                            | (context)                      |               |
-| NFR-P2       | Script-tag build, `dist/dashkit.js`, everything included                         | 282.7 kB gzipped                                                                           | ≤ 500 kB                       | Yes           |
+| NFR-P1       | npm build as a host bundles it: minified, every dependency except React included | 217.6 kB gzipped                                                                           | ≤ 300 kB                       | Yes           |
+| NFR-P1       | `dist/index.js` alone, dependencies external                                     | 20.1 kB gzipped                                                                            | (context)                      |               |
+| NFR-P2       | Script-tag build, `dist/dashkit.js`, everything included                         | 284.6 kB gzipped                                                                           | ≤ 500 kB                       | Yes           |
 | NFR-P3       | Mount to first chart finished, animation on                                      | median 155 ms, worst 637 ms                                                                | ≤ 1.5 s                        | Yes           |
 | NFR-P3       | Same, reduced motion                                                             | median 103 ms, worst 123 ms                                                                | ≤ 1.5 s                        | Yes           |
 | NFR-P3       | Same, animation on, CPU 4× slower                                                | median 1281 ms, worst 1489 ms                                                              | ≤ 1.5 s                        | Yes           |
@@ -62,6 +63,34 @@ the way a hand moves.
   size, and its chart redraws to fit, so a slow CPU drops some frames; 9 of 219 were over 50 ms.
   Dragging, which moves widgets without resizing their charts, stayed smooth.
 
+## Re-measured after Phase 7
+
+Everything after Phase 7, from paged tables to multi-select, was checked for a slowdown on 18
+November 2026: `pnpm perf` ran at `a0f0817`, the code measured above, and at `9637048`, the last
+change to code, one after the other and each from a fresh clone.
+
+| Measurement, medians                                     |  `a0f0817` |  `9637048` | Target                 |
+| -------------------------------------------------------- | ---------: | ---------: | ---------------------- |
+| Mount to first chart finished, animation on              |     243 ms |     207 ms | ≤ 1.5 s                |
+| Same, reduced motion                                     |     122 ms |     110 ms | ≤ 1.5 s                |
+| Same, animation on, CPU 4× slower                        |    2001 ms |    2150 ms | ≤ 1.5 s                |
+| Filter by a region not seen before, animation on         |     259 ms |     266 ms | ≤ 300 ms               |
+| Clear the filter, animation on                           |     245 ms |     244 ms | ≤ 300 ms               |
+| Filter by a region not seen before, CPU 4× slower        |     600 ms |     696 ms | ≤ 300 ms               |
+| Resize with 12 widgets, CPU 4× slower: frames over 50 ms |  12 of 211 |  13 of 192 | No visible jank        |
+| Identical queries from 10 widgets                        | 5 requests | 5 requests | One per distinct query |
+
+The two are within the spread between runs, so the changes did not slow the dashboard: the
+commits in between, measured the same way, gave 184 to 284 ms for the first row and 257 to 273 ms
+for the fourth. The machine was slower than when the table above was made, since the same code at
+`a0f0817` now took 2001 ms rather than 1281 ms to mount on a CPU slowed four times. That row misses
+its target on both commits; the normal-speed rows meet theirs.
+
+Two earlier runs at `9637048`, made inside the working repository rather than a fresh clone, were
+slower and erratic: one measured a cross-filter at 334 ms and failed. The likely difference is the
+editor and other tools watching that folder while the builds write to it, though that was not
+proven. Measure from a clean clone, with nothing else busy.
+
 ## Cross-filter latency before and after the brief transitions
 
 The first measurement of NFR-P4 missed: a median of 549 ms with animation on, against 42 ms with
@@ -79,8 +108,8 @@ briefly, and brought the median to 257 ms and the North America case to 249 ms.
 
 The breakdown was made once, by attributing every byte of the minified bundle to its source file
 through the bundle's source map, and compressing each package's share on its own. It shows the
-build before tables could be paged and the builder showed its save status in colour; those changes
-added no dependency and 1.0 kB gzipped to the whole bundle, all of it the SDK's own code.
+build at the end of Phase 7. What came after, from paged tables to multi-select, added no dependency
+and 2.9 kB gzipped to the whole bundle, while `dist/index.js` alone grew from 16.7 to 20.1 kB.
 
 | Package                                                       | Minified     | Share | Gzipped      |
 | ------------------------------------------------------------- | ------------ | ----- | ------------ |

@@ -250,7 +250,7 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
 - **Focus moves in layout effects.**
   After a save or a cancel, Save and Cancel disappear and the focus goes to Edit dashboard. A passive effect did this a moment after the page updated, leaving the focus on the page body in between; checking each commit from a fresh clone, the save test caught that gap twice on a busy machine. A layout effect moves the focus in the same update.
 - **Line coverage is not measured.**
-  Measuring it needs a coverage provider such as `@vitest/coverage-v8`, a dependency the guide does not name, so it waits for approval.
+  Measuring it needs a coverage provider such as `@vitest/coverage-v8`, a dependency the guide does not name, so it waits for approval. (Since added: see "After Phase 7".)
 
 ## Phase 7 — Ship
 

@@ -127,21 +127,24 @@ a series' own defaults override the chart's. Setting a short transition on every
 
 **On the slide:**
 
-| Check                                    | Result                                                                                                                   |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Unit, component and type tests           | 347 passed, the component tests on React 19 and 18                                                                       |
-| End-to-end tests                         | 51 passed: 9 user flows in Chromium, Firefox and WebKit; 11 axe accessibility checks and 13 Storybook checks in Chromium |
-| Permission matrix                        | No out-of-scope row for any demo user, and no query on a measure outside the user's scope                                |
-| Installed from the packed tarball        | Types check on React 18 and 19                                                                                           |
-| npm build, as a host bundles it          | 215.6 kB gzipped (target 300)                                                                                            |
-| Script-tag build                         | 282.7 kB gzipped (target 500)                                                                                            |
-| Mount to first chart                     | median 155 ms (target 1.5 s)                                                                                             |
-| Cross-filter, click to every chart drawn | median 257 ms (target 300 ms)                                                                                            |
-| Identical queries from 10 widgets        | 5 requests for 5 distinct queries                                                                                        |
+| Check                                    | Result                                                                                                                    |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Unit, component and type tests           | 410 passed, the component tests on React 19 and 18                                                                        |
+| End-to-end tests                         | 78 passed: 17 user flows in Chromium, Firefox and WebKit; 13 axe accessibility checks and 14 Storybook checks in Chromium |
+| Permission matrix                        | No out-of-scope row for any demo user, and no query on a measure outside the user's scope                                 |
+| Coverage, SDK core and query engine      | 99.4% and 97.2% of lines; CI fails if either drops below its gate                                                         |
+| Installed from the packed tarball        | Types check on React 18 and 19                                                                                            |
+| npm build, as a host bundles it          | 217.6 kB gzipped (target 300)                                                                                             |
+| Script-tag build                         | 284.6 kB gzipped (target 500)                                                                                             |
+| Mount to first chart                     | median 155 ms (target 1.5 s)                                                                                              |
+| Cross-filter, click to every chart drawn | median 257 ms (target 300 ms)                                                                                             |
+| Identical queries from 10 widgets        | 5 requests for 5 distinct queries                                                                                         |
 
 **Say:** "All of this runs in CI on every push, apart from the performance run, which depends on
 the machine. Two targets are missed on a CPU slowed four times: a cross-filter takes 534 ms there,
-and resizing drops a few frames. Both are in the performance report with the reason."
+and resizing drops a few frames. Both are in the performance report with the reason. A re-run after
+the stretch items found no slowdown from them; that day the machine was slower, and the mount on a
+slowed CPU missed its 1.5 seconds as well."
 
 ## 9. What is missing, and what comes next (9:00–9:45)
 

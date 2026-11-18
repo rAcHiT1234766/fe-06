@@ -1,5 +1,99 @@
 # Progress
 
+## After Phase 7 — Finishing the public options (18 November 2026)
+
+After Phase 7 the options that the public types offered but the SDK did not yet apply were
+finished, test coverage was measured and gated, the demo became a host product with the dashboard
+inside it, and all four stretch items were built. [DECISIONS.md](DECISIONS.md) and
+[LEARNING_LOG.md](LEARNING_LOG.md) record each under "After Phase 7". What remains still needs the
+author's accounts or the author in person: pushing to GitHub, deploying to Render, recording the
+backup video, presenting and answering the reflection.
+
+### Commits
+
+| Commit    | Change                                                               |
+| --------- | -------------------------------------------------------------------- |
+| `03e8927` | Test coverage measured with `@vitest/coverage-v8`                    |
+| `9e316a8` | At tablet width, widgets that share a row stay side by side          |
+| `76f98c0` | A layout item's own `minW` and `minH` apply                          |
+| `e74291d` | Tables split into pages with `options.pageSize`                      |
+| `48a82b2` | The builder's save status in the theme's success and warning colours |
+| `2a58fcf` | CI fails on a drop in coverage of the SDK core and the query engine  |
+| `011b777` | The demo plays a host product around the dashboard                   |
+| `4e94399` | The decisions and sizes since Phase 7 recorded (documentation only)  |
+| `2710a7b` | Column-level scope enforced (FR-3.11, stretch)                       |
+| `b777000` | Undo and redo in the builder (FR-5.10, stretch)                      |
+| `d2df657` | Moving and resizing widgets from the keyboard (FR-5.11, stretch)     |
+| `9637048` | Several values selected with Ctrl- or Cmd-click (FR-4.10, stretch)   |
+
+### Check results
+
+| Check                  | Result                                                                                                                                                                                                               |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm install`         | pass from a fresh clone, frozen lockfile                                                                                                                                                                             |
+| `pnpm lint`            | pass, zero warnings                                                                                                                                                                                                  |
+| `pnpm typecheck`       | pass in every package                                                                                                                                                                                                |
+| `pnpm test:coverage`   | 37 files, 410 tests passed: 230 in the SDK, the same 90 component tests again on React 18, 86 in the mock engine, 4 in the API. Lines covered: 99.4% of the SDK core and 97.2% of the query engine, above both gates |
+| `pnpm test:e2e`        | 78 passed: 17 user flows in Chromium, Firefox and WebKit, and 13 axe checks and 14 Storybook checks in Chromium; 54 skipped (the same 27 outside Chromium)                                                           |
+| `pnpm build`           | pass                                                                                                                                                                                                                 |
+| `pnpm build-storybook` | pass; JSDoc found on all 33 public exports and their members                                                                                                                                                         |
+| `pnpm size` (gzipped)  | npm `dist/index.js` 20.1 kB; as bundled by a host 217.6 kB (target 300); `dashkit.js` 284.6 kB (target 500)                                                                                                          |
+| `pnpm check:package`   | each build carries the libraries it should; the packed SDK installs and type-checks on React 18 and 19, strictest and default settings                                                                               |
+| `pnpm perf`            | no slowdown since Phase 7: from fresh clones of `a0f0817` and `9637048`, mount medians of 243 and 207 ms and cross-filter medians of 259 and 266 ms; [PERFORMANCE.md](PERFORMANCE.md) has the table                  |
+
+These ran at `9637048`, the last change to code. [TEST_REPORT.md](TEST_REPORT.md) has the output.
+
+### Each commit
+
+Each commit from `03e8927` to `9637048` was checked from its own fresh clone with a
+frozen-lockfile install, lint, typecheck, the unit tests, build, build-storybook and `test:e2e`.
+`4e94399`, which changes only documentation, was checked with its install and Prettier. Every
+commit passed every check.
+
+| Commits                | Unit tests                   | End to end, passed     |
+| ---------------------- | ---------------------------- | ---------------------- |
+| `03e8927` to `2a58fcf` | 347, 351, 359, 371, 372, 372 | 51, 51, 51, 52, 52, 52 |
+| `011b777`              | 372, under the coverage gate | 66                     |
+| `2710a7b`              | 382, under the coverage gate | 69                     |
+| `b777000`              | 394, under the coverage gate | 72                     |
+| `d2df657`              | 403, under the coverage gate | 75                     |
+| `9637048`              | 410, under the coverage gate | 78                     |
+
+The end-to-end run for `2a58fcf` reused a development server already running on the machine, so
+it did not test that commit's own build. That commit changes only the coverage settings and CI,
+and its application code is the same as `48a82b2`'s, which passed on servers of its own. Every
+run from `011b777` on started its own servers, with the ports checked free first.
+
+The demo script was run again at `9637048`, since the demo now plays a host product: all eleven
+steps against production builds of the API, the demo and Storybook, served as the Blueprint
+deploys them, passed 25 of 25 checks with no page errors.
+
+The definition of done in the Phase 7 section below still holds, with larger counts: the
+permission suite now has 38 tests, and 14 end-to-end checks run against the Storybook build. The
+steps after deployment listed there still apply.
+
+### Known gaps
+
+These replace the list in the Phase 7 section.
+
+- Two performance targets are missed on a CPU slowed four times, though met at full speed: a
+  cross-filter (NFR-P4) and smooth resizing (NFR-P5). In the re-run, on a slower day, mounting on
+  a slowed CPU missed its 1.5 s too, at `a0f0817` as at `9637048` (2001 and 2150 ms). Runs inside
+  the working repository came out slower and erratic; PERFORMANCE.md says how to measure.
+- Nothing has been tested on the deployed services yet, Lighthouse included, and Render's build
+  image has not been tried.
+- A free Render API sleeps after about 15 minutes idle and keeps dashboards in memory, so a saved
+  dashboard lasts until the service restarts.
+- Screen readers in browse mode keep the arrow keys for reading, so a screen reader user switches
+  to focus mode to move a widget from its handle.
+- An edit reversed by hand, rather than with Undo, still counts as unsaved, since changes are
+  detected by identity.
+- Some unit test files print `AbortError`, `Network error` and `ENOTFOUND api.test` lines when a
+  test ends with requests still in flight (9 in the last run). Nothing fails.
+- The demo app builds into one 910 kB chunk (297 kB gzipped) and Vite warns about its size. This
+  is the demo only; the SDK's own sizes are in the table above.
+- The zip export in the project root is not part of the project and must not be committed.
+
 ## Phase 7 — Ship: ready to deploy (18 November 2026)
 
 Phases 0 to 7 are committed. What remains needs the author's accounts or the author in person:
