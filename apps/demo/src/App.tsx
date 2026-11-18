@@ -1,7 +1,9 @@
 import { demoBrands } from '@dashkit/mock-engine/brands';
 import { demoUsers } from '@dashkit/mock-engine/users';
 import { DashboardBuilder, DashKitProvider, type DashKitTheme } from '@dashkit/sdk';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { PAGES, useCurrentPage, useShownMode } from './host-state';
+import { AppBar, AppNav, brandStyle, HostPage } from './Shell';
 
 const API_URL = import.meta.env.VITE_DASHKIT_API_URL;
 
@@ -23,10 +25,12 @@ function tamperWith(token: string) {
   return token.slice(0, middle) + (token[middle] === 'A' ? 'B' : 'A') + token.slice(middle + 1);
 }
 
+const capitalise = (word: string) => `${word[0]!.toUpperCase()}${word.slice(1)}`;
+
 function describeUser(userId: string) {
   const { tenantId, role, scopes } = demoUsers[userId]!;
   const regions = scopes.regions === '*' ? 'all regions' : scopes.regions.join(' + ');
-  return `${userId[0]!.toUpperCase()}${userId.slice(1)} · ${demoBrands[tenantId]?.brand?.name} · ${role} · ${regions}`;
+  return `${capitalise(userId)} · ${demoBrands[tenantId]?.brand?.name} · ${role} · ${regions}`;
 }
 
 export function App() {
@@ -36,6 +40,8 @@ export function App() {
   const [isTampered, setIsTampered] = useState(false);
   const [brandId, setBrandId] = useState('acme');
   const [mode, setMode] = useState<Mode>(demoBrands.acme!.mode ?? 'auto');
+  const page = useCurrentPage();
+  const shownMode = useShownMode(mode);
 
   useEffect(() => {
     let isCurrent = true;
@@ -58,8 +64,19 @@ export function App() {
     };
   }, [userId]);
 
+  // After moving to another page, a screen reader starts from its heading, as after a page load.
+  const heading = useRef<HTMLHeadingElement>(null);
+  const shownPage = useRef(page);
+  useEffect(() => {
+    if (shownPage.current === page) return;
+    shownPage.current = page;
+    heading.current?.focus();
+  }, [page]);
+
   const renewToken = useCallback(() => fetchDemoToken(userId), [userId]);
   const theme = useMemo(() => ({ ...demoBrands[brandId], mode }), [brandId, mode]);
+  const brand = demoBrands[brandId];
+  const pageLabel = PAGES.find(({ id }) => id === page)!.label;
 
   function changeBrand(nextBrandId: string) {
     setBrandId(nextBrandId);
@@ -67,9 +84,13 @@ export function App() {
   }
 
   return (
-    <>
-      <header className="demo-header">
-        <h1 className="demo-product">Host product</h1>
+    <div className="app" style={brandStyle(brand, shownMode)}>
+      {/* The presenter's controls. They sit outside the host product and keep their own look. */}
+      <section className="demo-panel" aria-label="Demo controls">
+        <p className="demo-heading">
+          <span className="demo-badge">Demo</span>
+          <span className="demo-hint">Not part of the host product</span>
+        </p>
         <label>
           Signed in as
           <select value={userId} onChange={(event) => setUserId(event.target.value)}>
@@ -83,9 +104,9 @@ export function App() {
         <label>
           Brand
           <select value={brandId} onChange={(event) => changeBrand(event.target.value)}>
-            {Object.entries(demoBrands).map(([id, brand]) => (
+            {Object.entries(demoBrands).map(([id, { brand: identity }]) => (
               <option key={id} value={id}>
-                {brand.brand?.name}
+                {identity?.name}
               </option>
             ))}
           </select>
@@ -108,22 +129,37 @@ export function App() {
         >
           Tamper with token
         </button>
-      </header>
-      <main className="demo-main">
-        {signInError && <p role="alert">{signInError}</p>}
-        {token && (
-          // A tampered token gets no getToken, so the dashboard shows the invalid session instead
-          // of quietly fetching a fresh token.
-          <DashKitProvider
-            apiUrl={API_URL}
-            token={token}
-            {...(isTampered ? {} : { getToken: renewToken })}
-            theme={theme}
-          >
-            <DashboardBuilder dashboardId="overview" />
-          </DashKitProvider>
+      </section>
+      <AppBar
+        brand={brand}
+        userName={capitalise(userId)}
+        role={capitalise(demoUsers[userId]!.role)}
+      />
+      <AppNav page={page} />
+      <main className="app-main">
+        <h1 ref={heading} className="app-title" tabIndex={-1}>
+          {pageLabel}
+        </h1>
+        {page !== 'analytics' ? (
+          <HostPage label={pageLabel} />
+        ) : (
+          <>
+            {signInError && <p role="alert">{signInError}</p>}
+            {token && (
+              // A tampered token gets no getToken, so the dashboard shows the invalid session
+              // instead of quietly fetching a fresh token.
+              <DashKitProvider
+                apiUrl={API_URL}
+                token={token}
+                {...(isTampered ? {} : { getToken: renewToken })}
+                theme={theme}
+              >
+                <DashboardBuilder dashboardId="overview" />
+              </DashKitProvider>
+            )}
+          </>
         )}
       </main>
-    </>
+    </div>
   );
 }

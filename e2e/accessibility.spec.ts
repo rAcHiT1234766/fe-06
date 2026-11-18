@@ -49,6 +49,26 @@ for (const brand of BRANDS) {
   }
 }
 
+test('NFR-A1 the host product with its sidebar, in every brand and mode, has no serious violations', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await showDashboard(page);
+  for (const brand of BRANDS) {
+    for (const mode of ['light', 'dark']) {
+      await page.getByLabel('Brand').selectOption(brand);
+      await page.getByLabel('Mode').selectOption(mode);
+      await expectNoSeriousViolations(page);
+    }
+  }
+});
+
+test('NFR-A1 one of the host product’s own pages has no serious violations', async ({ page }) => {
+  await page.goto('/#orders');
+  await expect(page.getByRole('heading', { level: 1, name: 'Orders' })).toBeVisible();
+  await expectNoSeriousViolations(page);
+});
+
 test('NFR-A1 the dashboard with an active filter has no serious violations', async ({ page }) => {
   await showDashboard(page);
   const southAsia = dataOf(page, 'Population by region').getByRole('button', {

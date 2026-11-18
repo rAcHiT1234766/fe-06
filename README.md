@@ -4,7 +4,7 @@ DashKit is an SDK that puts analytics dashboards inside another company's produc
 product's brand, showing each signed-in user only the data they may see, filtering across charts
 when one is clicked, and editable by the people allowed to edit.
 
-![The demo host product showing DashKit's World development overview dashboard in the Acme Global brand: a total population figure, population by region as bars, GDP by income level as a pie, average life expectancy since 2000 as a line, and a table of countries.](docs/images/demo.png)
+![The demo app: a dark bar of demo controls above a fictional host product in the Acme Global brand, with its logo, navigation and signed-in user, showing DashKit's World development overview dashboard on its Analytics page: a total population figure, population by region as bars, GDP by income level as a pie, average life expectancy since 2000 as a line, and a table of countries.](docs/images/demo.png)
 
 ## Live links
 
@@ -24,7 +24,9 @@ pnpm dev
 ```
 
 `pnpm dev` builds the SDK once, then starts the demo data API on http://localhost:4000 and the demo
-app on **http://localhost:5173**. Open the app and try:
+app on **http://localhost:5173**. The app plays a host product: a fictional business app with its
+own navigation, styled from the customer's brand like the dashboard it embeds, which is on its
+**Analytics** page. The dark **Demo** bar above it holds the controls. Open the app and try:
 
 - **Signed in as**: switch between Asha (Acme Global, editor, every region), Ravi (AsiaInsights,
   viewer, South Asia and East Asia & Pacific) and Elena (EuroStat Co, editor, Europe & Central
@@ -34,7 +36,10 @@ app on **http://localhost:5173**. Open the app and try:
   value.
 - **Edit dashboard** (Asha or Elena): drag widgets by their handle, resize them from the corner,
   add widgets, change their settings, and save. Reload the page to see the saved version.
-- **Brand** and **Mode**: three customer brands, each in light, dark or following the system.
+- **Brand** and **Mode**: three customer brands, each in light, dark or following the system. The
+  host product follows them too.
+- **Home**, **Orders** and **Settings** stand for the host product's own pages; leaving Analytics
+  and coming back mounts the dashboard afresh.
 - **Tamper with token**: changes one character of the token, and the API refuses it.
 - **http://localhost:5173/plain-html/**: the same dashboard on a page with no framework, from one
   script tag and the `<dashkit-dashboard>` element.
