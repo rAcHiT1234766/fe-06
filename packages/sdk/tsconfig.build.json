@@ -1,7 +1,16 @@
 {
   "extends": "./tsconfig.json",
   "include": ["src"],
-  // The element entry's declarations are published on their own, and every global they declare
-  // would otherwise be copied into index.d.ts. Tests are not part of the package.
-  "exclude": ["src/element-types.ts", "src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.test-d.ts"]
+  // The element entry's declarations are published on their own, as dist/element.d.ts by the element
+  // build: every global they declare would otherwise be copied into index.d.ts, and the type plugin
+  // would write its own dist/element.d.ts for src/element.ts and then delete it as an intermediate
+  // file, which removes the element build's copy whenever the two builds overlap, as in watch mode.
+  // Tests are not part of the package.
+  "exclude": [
+    "src/element.ts",
+    "src/element-types.ts",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.test-d.ts"
+  ]
 }
