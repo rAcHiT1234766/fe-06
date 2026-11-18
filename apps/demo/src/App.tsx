@@ -47,8 +47,10 @@ export function App() {
         setSignInError(undefined);
       },
       () => {
-        if (isCurrent)
-          setSignInError(`Could not reach the demo API at ${API_URL}. Is pnpm dev running?`);
+        if (!isCurrent) return;
+        setSignInError(
+          `Could not reach the demo API at ${API_URL}. Locally, run pnpm dev; a deployed API may take a minute to wake up, then reload.`,
+        );
       },
     );
     return () => {
