@@ -70,6 +70,40 @@ async function openSettings(title: string) {
 const change = (panel: HTMLElement, label: string, value: string) =>
   fireEvent.change(within(panel).getByLabelText(label), { target: { value } });
 
+describe('column scope', () => {
+  it('FR-3.11 shows an editor only the measures they may query, and starts new widgets on one', async () => {
+    render(
+      <DashKitProvider apiUrl={API_URL} token={await demoToken('kofi')}>
+        <DashboardBuilder dashboardId="overview" mode="edit" />
+      </DashKitProvider>,
+    );
+    await screen.findByRole('button', { name: 'Cancel' });
+
+    // The API refuses the widgets that need GDP, and says which measure.
+    const refused = await within(widget('GDP by income level')).findByRole('alert');
+    expect(refused.textContent).toBe('Access deniedYour access does not include GDP (US$)');
+
+    const panel = await openSettings('GDP by income level');
+    const measure = within(panel).getByLabelText<HTMLSelectElement>('Measure');
+    expect([...measure.options].map(({ textContent }) => textContent)).toEqual([
+      'Not available to you',
+      'Population',
+      'Life expectancy (years)',
+      'Internet users (%)',
+      'Unemployment (%)',
+      'Electricity access (%)',
+    ]);
+    expect(measure.selectedOptions[0]!.textContent).toBe('Not available to you');
+    fireEvent.click(within(panel).getByRole('button', { name: 'Close widget settings' }));
+
+    // The KPI starter shows total GDP; for this editor it starts on population instead.
+    fireEvent.click(within(palette()).getByRole('button', { name: 'KPI' }));
+    const added = await screen.findByRole('region', { name: 'Population' });
+    expect(await within(added).findByText(/^\d+(\.\d)?B$/)).toBeTruthy();
+    expect(within(added).queryByRole('alert')).toBeNull();
+  });
+});
+
 describe('DashboardBuilder', () => {
   it('FR-5.1 lets an editor switch between the dashboard and the builder', async () => {
     await renderBuilder('asha');

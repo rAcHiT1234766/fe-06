@@ -177,6 +177,12 @@ export function ConfigPanel({
               if (info) onChange(setMeasure(widget, field, info.defaultAgg));
             }}
           >
+            {measure && !fieldCatalog.measures.some(({ name }) => name === measure.field) && (
+              // Outside the user's column scope: the API refuses it and does not list its label.
+              <option value={measure.field} disabled>
+                Not available to you
+              </option>
+            )}
             {fieldCatalog.measures.map(({ name, label }) => (
               <option key={name} value={name}>
                 {label}

@@ -173,7 +173,7 @@ process through MSW. Every route except `/health` and `/auth/demo-token` needs
 | ------ | ------------------ | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | GET    | `/health`          | Liveness check                                            | `{ "status": "ok" }`                                                                                      |
 | POST   | `/auth/demo-token` | Signs a token for a demo user                             | **Demo only: stands in for the host's backend.** Body `{ "userId": "ravi" }`, answer `{ "token": "..." }` |
-| GET    | `/meta`            | The dimensions, measures and aggregations a query may use | Each with its label; measures with their format and default aggregation                                   |
+| GET    | `/meta`            | The dimensions, measures and aggregations a query may use | Each with its label; measures with their format and default aggregation, only those the token allows      |
 | POST   | `/query`           | Runs a `Query` and returns a `QueryResult`                | The token's row scope is applied before the query's own filters                                           |
 | GET    | `/dashboards`      | The caller's tenant's dashboards                          | `[{ "id", "title" }]`                                                                                     |
 | GET    | `/dashboards/:id`  | One dashboard config                                      | 404 if it is not in the caller's tenant                                                                   |
@@ -236,17 +236,22 @@ Every error has the same shape:
 { "error": { "code": "FORBIDDEN", "message": "Only editors can change dashboards" } }
 ```
 
-| HTTP | Code              | When                                                                           |
-| ---- | ----------------- | ------------------------------------------------------------------------------ |
-| 400  | `INVALID_QUERY`   | Unknown field, operator or aggregation; a malformed body; an invalid dashboard |
-| 401  | `UNAUTHENTICATED` | Missing, malformed, badly signed or expired token                              |
-| 403  | `FORBIDDEN`       | A viewer tries to save or delete a dashboard                                   |
-| 404  | `NOT_FOUND`       | Unknown route, or a dashboard that does not exist in the caller's tenant       |
-| 500  | `UNKNOWN`         | Anything else; the message is a generic "Internal error"                       |
+| HTTP | Code              | When                                                                                                        |
+| ---- | ----------------- | ----------------------------------------------------------------------------------------------------------- |
+| 400  | `INVALID_QUERY`   | Unknown field, operator or aggregation; a malformed body; an invalid dashboard                              |
+| 401  | `UNAUTHENTICATED` | Missing, malformed, badly signed or expired token                                                           |
+| 403  | `FORBIDDEN`       | A viewer tries to save or delete a dashboard; a query names a measure outside the token's `scopes.measures` |
+| 404  | `NOT_FOUND`       | Unknown route, or a dashboard that does not exist in the caller's tenant                                    |
+| 500  | `UNKNOWN`         | Anything else; the message is a generic "Internal error"                                                    |
 
-The SDK adds `NETWORK` for a request that never got an answer. Column-level scope (refusing a
-measure outside the token's `scopes.measures`) is a stretch requirement and is not implemented;
-the API ignores that claim.
+The SDK adds `NETWORK` for a request that never got an answer.
+
+**Column-level scope.** When a token lists `scopes.measures`, a query that shows any other
+measure, or filters on one, is refused as a whole with `FORBIDDEN` and a message naming the
+measures, such as `Your access does not include GDP (US$)`. A filter counts because narrowing by a
+measure reveals its values one step at a time. `/meta` lists only the allowed measures. Saving a
+dashboard that uses other measures is allowed: the config holds no data, and every query is
+checked when it runs.
 
 ### Server settings
 
@@ -286,13 +291,14 @@ Percentages are on the 0 to 100 scale the World Bank publishes. Aggregations are
 value. Each row also stores its region's code (`SAS`, `EAS`, `ECS` and so on), which row-level
 security matches against the token's `scopes.regions`. It cannot be queried.
 
-The demo has three tenants, each with one user and the same starting dashboard:
+The demo has three tenants, each starting with the same dashboard, and four users:
 
-| User    | Tenant         | Brand        | Role   | Regions                                        |
-| ------- | -------------- | ------------ | ------ | ---------------------------------------------- |
-| `asha`  | `acme`         | Acme Global  | editor | all (`'*'`)                                    |
-| `ravi`  | `asiainsights` | AsiaInsights | viewer | `SAS`, `EAS` (South Asia, East Asia & Pacific) |
-| `elena` | `eurostat`     | EuroStat Co  | editor | `ECS` (Europe & Central Asia)                  |
+| User    | Tenant         | Brand        | Role   | Regions                                        | Measures                         |
+| ------- | -------------- | ------------ | ------ | ---------------------------------------------- | -------------------------------- |
+| `asha`  | `acme`         | Acme Global  | editor | all (`'*'`)                                    | all                              |
+| `ravi`  | `asiainsights` | AsiaInsights | viewer | `SAS`, `EAS` (South Asia, East Asia & Pacific) | all                              |
+| `elena` | `eurostat`     | EuroStat Co  | editor | `ECS` (Europe & Central Asia)                  | all                              |
+| `kofi`  | `acme`         | Acme Global  | editor | all (`'*'`)                                    | all but `gdp` and `gdpPerCapita` |
 
 ## Dashboard config
 

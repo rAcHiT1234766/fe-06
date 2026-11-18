@@ -123,3 +123,75 @@ it.each(['ravi', 'elena'])(
     expect((response.body as QueryResult).rows).toEqual([]);
   },
 );
+
+describe('column scope (FR-3.11)', () => {
+  const allowed = demoUsers.kofi!.scopes.measures as string[];
+
+  async function getMeta(userId: string) {
+    const response = await api.handle(
+      new Request('http://api.test/meta', {
+        headers: { Authorization: `Bearer ${await signIn(userId)}` },
+      }),
+    );
+    return ((await response.json()) as { measures: { name: string }[] }).measures.map(
+      ({ name }) => name,
+    );
+  }
+
+  it('lists only the measures a user may query', async () => {
+    expect(await getMeta('kofi')).toEqual(allowed);
+    expect(await getMeta('asha')).toEqual([
+      'gdp',
+      'gdpPerCapita',
+      'population',
+      'lifeExpectancy',
+      'internetUsers',
+      'unemployment',
+      'electricityAccess',
+    ]);
+  });
+
+  it.each([
+    ['shows a measure', { measures: [{ field: 'gdp' }], dimensions: ['region'] }, 'GDP (US$)'],
+    [
+      'shows two measures',
+      { measures: [{ field: 'population' }, { field: 'gdpPerCapita' }, { field: 'gdp' }] },
+      'GDP per capita (US$) or GDP (US$)',
+    ],
+    [
+      'only filters on a measure',
+      {
+        measures: [{ field: 'population' }],
+        dimensions: ['country'],
+        filters: [{ field: 'gdp', op: 'gt', value: 1e12 }],
+      },
+      'GDP (US$)',
+    ],
+  ])('refuses a query that %s outside the scope', async (_how, body, labels) => {
+    const response = await post('/query', { dataset: 'wdi', ...body }, await signIn('kofi'));
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({
+      error: { code: 'FORBIDDEN', message: `Your access does not include ${labels}` },
+    });
+  });
+
+  it('answers queries on the measures in scope, from every region', async () => {
+    const rows = await query(await signIn('kofi'), {
+      measures: allowed.map((field) => ({ field })),
+      dimensions: ['region'],
+      filters: [{ field: 'lifeExpectancy', op: 'gt', value: 0 }],
+    });
+    expect(rows).toHaveLength(7);
+  });
+
+  it('refuses exactly the starter widgets that need GDP', async () => {
+    const token = await signIn('kofi');
+    const refused = [];
+    for (const { title, query: body } of createStarterDashboard(latestYear).widgets) {
+      const { status } = await post('/query', body, token);
+      if (status === 403) refused.push(title);
+      else expect(status).toBe(200);
+    }
+    expect(refused).toEqual(['GDP by income level', 'Countries']);
+  });
+});

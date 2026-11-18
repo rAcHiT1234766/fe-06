@@ -6,6 +6,7 @@ import type {
   WidgetConfig,
   WidgetType,
 } from '../types';
+import type { FieldCatalog } from '../query-client';
 import { withYearRule } from './edit-dashboard';
 
 type SortOrder = NonNullable<Query['orderBy']>[number];
@@ -63,6 +64,26 @@ export function setMeasure(widget: WidgetConfig, field: MeasureField, agg: Aggre
   const [first, ...others] = widget.query.measures;
   const query = { ...widget.query, measures: [{ field, agg }, ...others] };
   return withQuery(widget, renameSortField(query, first?.alias ?? first?.field, field));
+}
+
+/**
+ * Fits a new widget to the measures the signed-in user may query, as the API's `/meta` lists them.
+ * A starter whose measure is outside the user's column scope would only be refused, so it switches
+ * to the first measure they may use and takes a title that names it.
+ */
+export function fitToCatalog(
+  widget: WidgetConfig,
+  catalog: Pick<FieldCatalog, 'dimensions' | 'measures'>,
+): WidgetConfig {
+  const [first] = widget.query.measures;
+  const [replacement] = catalog.measures;
+  if (!first || !replacement || catalog.measures.some(({ name }) => name === first.field)) {
+    return widget;
+  }
+  const [dimension] = widget.query.dimensions ?? [];
+  const grouping = catalog.dimensions.find(({ name }) => name === dimension)?.label;
+  const title = grouping ? `${replacement.label} by ${grouping.toLowerCase()}` : replacement.label;
+  return { ...setMeasure(widget, replacement.name, replacement.defaultAgg), title };
 }
 
 export function setAggregation(widget: WidgetConfig, agg: Aggregation) {

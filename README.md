@@ -30,7 +30,9 @@ own navigation, styled from the customer's brand like the dashboard it embeds, w
 
 - **Signed in as**: switch between Asha (Acme Global, editor, every region), Ravi (AsiaInsights,
   viewer, South Asia and East Asia & Pacific) and Elena (EuroStat Co, editor, Europe & Central
-  Asia). Each gets their own token, their own dashboard and only their own regions' rows.
+  Asia). Each gets their own token, their own dashboard and only their own regions' rows. Kofi
+  (Acme Global, editor, every region) may not query GDP: the API refuses the two widgets that need
+  it, and his builder never offers it.
 - **Click a bar or a pie slice** to filter the other widgets; click it again, or use the chip above
   the grid, to clear it. Keyboard users press Tab to reach a chart's data table and Enter on a
   value.
@@ -153,8 +155,8 @@ export async function mintDashKitToken(user: {
 
 Other demo shortcuts: the API keeps dashboards in memory; without `DASHKIT_TOKEN_SECRET` it signs
 with a random secret, so tokens end when it restarts; and in Storybook the whole API runs inside the
-browser. Column-level scope (limiting which measures a user may query) is not implemented. The
-Storybook page **Concepts › Security model** has the full token flow and what the API enforces.
+browser. The Storybook page **Concepts › Security model** has the full token flow and what the API
+enforces, rows and measures alike.
 
 ## Project structure
 
@@ -206,7 +208,6 @@ Details, including the two targets missed on a CPU slowed four times, are in
 ## Roadmap
 
 - Deploy the API, the demo and Storybook, and run Lighthouse on the deployed demo.
-- Column-level scope: limit the measures a token may query.
 - Undo and redo in the builder, and a keyboard way to move and resize widgets.
 - Select several values in one chart.
 - Measure test coverage in `core` and `mock-engine`.

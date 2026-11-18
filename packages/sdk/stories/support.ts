@@ -37,8 +37,11 @@ export const demoUserItems = Object.entries(demoUsers).map(
     const customer = demoBrands[tenantId]?.brand?.name ?? tenantId;
     const regions =
       scopes.regions === '*' ? 'every region' : `regions ${scopes.regions.join(', ')}`;
+    const measures = Array.isArray(scopes.measures)
+      ? `, ${scopes.measures.length} measures only`
+      : '';
     const name = userId.charAt(0).toUpperCase() + userId.slice(1);
-    return { value: userId, title: name, right: `${role} at ${customer}, ${regions}` };
+    return { value: userId, title: name, right: `${role} at ${customer}, ${regions}${measures}` };
   },
 );
 

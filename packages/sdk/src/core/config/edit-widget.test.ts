@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Query, WidgetConfig } from '../types';
 import {
   changeWidgetType,
+  fitToCatalog,
   setAggregation,
   setDimension,
   setMeasure,
@@ -142,5 +143,54 @@ describe('editing one setting', () => {
     const plain: WidgetConfig = { ...gdpByRegion };
     delete plain.options;
     expect(setPageSize(setPageSize(plain, 5), undefined)).not.toHaveProperty('options');
+  });
+});
+
+describe('fitToCatalog', () => {
+  // As the API's /meta lists them for a user whose column scope leaves out both GDP measures.
+  const withoutGdp = {
+    dimensions: [{ name: 'region' as const, label: 'Region' }],
+    measures: [
+      {
+        name: 'population' as const,
+        label: 'Population',
+        format: 'number' as const,
+        defaultAgg: 'sum' as const,
+      },
+      {
+        name: 'lifeExpectancy' as const,
+        label: 'Life expectancy (years)',
+        format: 'number' as const,
+        defaultAgg: 'avg' as const,
+      },
+    ],
+  };
+
+  it('FR-3.11 moves a new widget off a measure outside the column scope, sorting and title too', () => {
+    expect(fitToCatalog(gdpByRegion, withoutGdp)).toEqual({
+      ...gdpByRegion,
+      title: 'Population by region',
+      query: {
+        ...gdpByRegion.query,
+        measures: [{ field: 'population', agg: 'sum' }],
+        orderBy: [{ field: 'population', direction: 'desc' }],
+      },
+    });
+    const kpi: WidgetConfig = {
+      id: 'total-gdp',
+      type: 'kpi',
+      title: 'Total GDP',
+      query: { dataset: 'wdi', measures: [{ field: 'gdp', agg: 'sum' }], filters: [in2024] },
+    };
+    expect(fitToCatalog(kpi, withoutGdp)).toMatchObject({
+      title: 'Population',
+      query: { measures: [{ field: 'population', agg: 'sum' }], filters: [in2024] },
+    });
+  });
+
+  it('FR-3.11 leaves a widget alone when its measure is allowed, or no measure is', () => {
+    const lifeByRegion = setMeasure(gdpByRegion, 'lifeExpectancy', 'avg');
+    expect(fitToCatalog(lifeByRegion, withoutGdp)).toBe(lifeByRegion);
+    expect(fitToCatalog(gdpByRegion, { ...withoutGdp, measures: [] })).toBe(gdpByRegion);
   });
 });

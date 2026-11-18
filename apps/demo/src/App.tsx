@@ -30,7 +30,10 @@ const capitalise = (word: string) => `${word[0]!.toUpperCase()}${word.slice(1)}`
 function describeUser(userId: string) {
   const { tenantId, role, scopes } = demoUsers[userId]!;
   const regions = scopes.regions === '*' ? 'all regions' : scopes.regions.join(' + ');
-  return `${capitalise(userId)} · ${demoBrands[tenantId]?.brand?.name} · ${role} · ${regions}`;
+  const measures = Array.isArray(scopes.measures)
+    ? ` · ${scopes.measures.length} measures only`
+    : '';
+  return `${capitalise(userId)} · ${demoBrands[tenantId]?.brand?.name} · ${role} · ${regions}${measures}`;
 }
 
 export function App() {

@@ -74,15 +74,17 @@ the builder and the API in agreement: there is no second format to drift."
 
 - Every widget declares a query. One query client sends them all: it attaches the token, sends
   identical queries once, and caches results.
-- The host's backend signs a 15-minute token: tenant, role, regions. The SDK keeps it in memory.
+- The host's backend signs a 15-minute token: tenant, role, regions and, if it chooses, the
+  measures the user may query. The SDK keeps it in memory.
 - The API verifies it on every request and applies the user's scope before anything else.
   Filters can only narrow what the user sees.
 
 **Say:** "The browser never decides what a user may see. The host's backend knows who is signed
 in, so it signs the token. The API checks the signature on every request and filters rows by the
 token's regions before the query runs, so a filter from the browser can only narrow the result.
-That is why, in the demo, Ravi's network tab never contains another region, and why his save was
-refused even with a valid token. The demo's sign-in route is for the demo only; the README shows
+That is why, in the demo, Ravi's network tab never contains another region, why Kofi's GDP
+queries come back 403 rather than being hidden by the page, and why Ravi's save was refused even
+with a valid token. The demo's sign-in route is for the demo only; the README shows
 how a real backend mints the token."
 
 ## 6. Hard problem 1: one app, two worlds (6:30–7:15)
@@ -129,7 +131,7 @@ a series' own defaults override the chart's. Setting a short transition on every
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | Unit, component and type tests           | 347 passed, the component tests on React 19 and 18                                                                       |
 | End-to-end tests                         | 51 passed: 9 user flows in Chromium, Firefox and WebKit; 11 axe accessibility checks and 13 Storybook checks in Chromium |
-| Permission matrix                        | No out-of-scope row for any demo user                                                                                    |
+| Permission matrix                        | No out-of-scope row for any demo user, and no query on a measure outside the user's scope                                |
 | Installed from the packed tarball        | Types check on React 18 and 19                                                                                           |
 | npm build, as a host bundles it          | 215.6 kB gzipped (target 300)                                                                                            |
 | Script-tag build                         | 282.7 kB gzipped (target 500)                                                                                            |
@@ -145,16 +147,16 @@ and resizing drops a few frames. Both are in the performance report with the rea
 
 **On the slide:**
 
-- Not built (stretch items): column-level scope, multi-select, undo and redo, keyboard moving and
-  resizing of widgets.
+- Built after the must-haves: column-level scope, the stretch item that completes the security
+  model.
+- Not built (stretch items): multi-select, undo and redo, keyboard moving and resizing of widgets.
 - The demo API keeps dashboards in memory and signs its own demo tokens.
-- Next: persistent storage, enforcing the measures a token allows, cross-filtering within 300 ms on
-  slow devices, and measuring test coverage.
+- Next: persistent storage, and cross-filtering within 300 ms on slow devices.
 
-**Say:** "Everything the brief marked as must-have is built and tested. The stretch items are not,
-and the demo API is a stand-in: a real deployment would store dashboards in a database and let the
-host's backend sign tokens. With more time I would start with column-level scope, because it
-completes the security model."
+**Say:** "Everything the brief marked as must-have is built and tested, and so is column-level
+scope, the stretch item that completes the security model. The other stretch items are not, and the
+demo API is a stand-in: a real deployment would store dashboards in a database and let the host's
+backend sign tokens."
 
 ## 10. Thank you (9:45–10:00)
 

@@ -69,7 +69,7 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
 - **Several 401s at the same moment share one token renewal.**
   The host's `getToken` then runs once per expiry instead of once per widget.
 - **Column-level scope (FR-3.11) is not implemented.**
-  It is a stretch item and no demo user needs it.
+  It is a stretch item and no demo user needs it. (Since built: see "After Phase 7".)
 
 ## Phase 2 — Widgets and theming
 
@@ -305,3 +305,11 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
   The dashboard measures its own width. At 1280 px, the size the demo script records at, a sidebar would leave it under 1,200 px and switch it to eight columns, so the sidebar waits for a screen wide enough to keep twelve.
 - **The page lives in the address.**
   Back and Forward work, a page can be opened by its link, and after a move the focus goes to the new page's heading, so a screen reader starts there as after a page load.
+- **Column-level scope refuses the whole query, as the guide's `assertMeasuresAllowed` does.**
+  Dropping the forbidden measure and answering the rest would show a widget that looks complete but is not, and the message names the measure so the widget can say why. A filter on a forbidden measure is refused too: "GDP above a trillion", narrowed step by step, would reveal every country's GDP.
+- **A new demo user, Kofi, shows it, rather than a narrower scope for an existing one.**
+  He shares Acme Global's dashboard with Asha, so the same dashboard shows both scopes, and the tests and demo steps for Asha, Ravi and Elena are unchanged.
+- **The builder follows `/meta`, and a new widget fits it.**
+  Two widget starters use a GDP measure; for a user without it, they switch to the first measure `/meta` lists and take a title naming it, so a new widget never starts out refused. A widget already on a forbidden measure says "Not available to you" in its settings rather than quietly showing another measure as selected.
+- **Saving a dashboard that uses measures the editor may not query is allowed.**
+  A config holds no data, and every query is checked when it runs, so other users of the dashboard keep their widgets.

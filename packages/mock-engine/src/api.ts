@@ -1,5 +1,6 @@
-import type { DashboardConfig, TokenClaims } from '@dashkit/sdk';
+import type { DashboardConfig, MeasureField, TokenClaims } from '@dashkit/sdk';
 import { signDemoToken, verifyToken } from './auth.ts';
+import { mayQueryMeasure } from './column-scope.ts';
 import { createStarterDashboard, parseDashboardConfig } from './dashboards.ts';
 import { ApiError } from './errors.ts';
 import { executeQuery } from './execute-query.ts';
@@ -13,16 +14,17 @@ export interface MockApi {
   handle(request: Request): Promise<Response>;
 }
 
-const meta = {
+const allMeasures = (Object.keys(measures) as MeasureField[]).map((name) => {
+  const { label, format, defaultAgg } = measures[name];
+  return { name, label, format, defaultAgg };
+});
+
+// Only the measures the caller may query, so a builder never offers one the API would refuse.
+const metaFor = ({ scopes }: TokenClaims) => ({
   dimensions: Object.entries(dimensions).map(([name, field]) => ({ name, ...field })),
-  measures: Object.entries(measures).map(([name, { label, format, defaultAgg }]) => ({
-    name,
-    label,
-    format,
-    defaultAgg,
-  })),
+  measures: allMeasures.filter(({ name }) => mayQueryMeasure(scopes, name)),
   aggregations,
-};
+});
 
 const notFound = () => new ApiError(404, 'NOT_FOUND', 'Not found');
 
@@ -84,7 +86,7 @@ export function createApi(tokenSecret: string): MockApi {
 
     const claims = await verifyToken(request.headers.get('Authorization'), tokenSecret);
 
-    if (method === 'GET' && pathname === '/meta') return Response.json(meta);
+    if (method === 'GET' && pathname === '/meta') return Response.json(metaFor(claims));
     if (method === 'POST' && pathname === '/query') {
       return Response.json(executeQuery(snapshotRows, await readJson(request), claims));
     }

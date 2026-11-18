@@ -8,6 +8,7 @@ import {
   updateWidget,
   withYearRule,
 } from '../core/config/edit-dashboard';
+import { fitToCatalog } from '../core/config/edit-widget';
 import { canEditAt } from '../core/config/layout';
 import { validateDashboard } from '../core/config/schema';
 import type {
@@ -144,12 +145,13 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
 
   const addFromPalette = (type: WidgetType) => {
     const { defaultSize, starter } = widgetRegistry[type];
-    const widget: WidgetConfig = {
+    const fromStarter: WidgetConfig = {
       id: nextWidgetId(config, type),
       type,
       ...starter,
       query: withYearRule(starter.query, latestYear),
     };
+    const widget = fieldCatalog.value ? fitToCatalog(fromStarter, fieldCatalog.value) : fromStarter;
     editDraft((current) => addWidget(current, widget, defaultSize));
     setAddedId(widget.id);
   };

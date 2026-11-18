@@ -18,6 +18,15 @@ type Story = StoryObj<typeof meta>;
 export const RowLevelSecurity: Story = { name: 'Row-level security', globals: { user: 'ravi' } };
 
 /**
+ * Signed in as Kofi, who may see every region but no GDP measure. The API refuses the two widgets
+ * that need one, naming the measure, and shows the others in full.
+ */
+export const ColumnLevelSecurity: Story = {
+  name: 'Column-level security',
+  globals: { user: 'kofi' },
+};
+
+/**
  * A token that fails verification. The API answers 401, the SDK has no `getToken` to ask for a new
  * one, and the dashboard says the session is not valid, in its own theme.
  */

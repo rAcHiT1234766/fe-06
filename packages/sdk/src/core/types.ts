@@ -240,8 +240,9 @@ export interface TokenClaims {
     /** Region codes the user may see, or `'*'` for all regions. */
     regions: string[] | '*';
     /**
-     * Measures the user may query; omitted means all of them. The demo API does not enforce this
-     * yet, so it cannot be relied on to hide a measure.
+     * Measures the user may query, or `'*'` or omitted for all of them. The API refuses a query
+     * that shows or filters on any other measure, and its `/meta` route lists only these, so the
+     * builder never offers the rest.
      */
     measures?: MeasureField[] | '*';
   };

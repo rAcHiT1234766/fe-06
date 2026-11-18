@@ -7,6 +7,21 @@ export const demoUsers: Record<string, DemoUser> = {
   asha: { tenantId: 'acme', role: 'editor', scopes: { regions: '*' } },
   ravi: { tenantId: 'asiainsights', role: 'viewer', scopes: { regions: ['SAS', 'EAS'] } },
   elena: { tenantId: 'eurostat', role: 'editor', scopes: { regions: ['ECS'] } },
+  // Every region, but no GDP figures: column-level scope.
+  kofi: {
+    tenantId: 'acme',
+    role: 'editor',
+    scopes: {
+      regions: '*',
+      measures: [
+        'population',
+        'lifeExpectancy',
+        'internetUsers',
+        'unemployment',
+        'electricityAccess',
+      ],
+    },
+  },
 };
 
 export const findDemoUser = (userId: unknown): DemoUser | undefined =>

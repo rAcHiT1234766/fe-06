@@ -1,4 +1,5 @@
 import type { Aggregation, QueryResult, Scalar, TokenClaims } from '@dashkit/sdk';
+import { assertMeasuresAllowed } from './column-scope.ts';
 import { parseQuery, type ParsedFilter, type ParsedQuery } from './parse-query.ts';
 import { dimensions, measures, type DataRow } from './schema.ts';
 
@@ -115,6 +116,7 @@ export function executeQuery(
 ): QueryResult {
   const started = performance.now();
   const query = parseQuery(requestBody);
+  assertMeasuresAllowed(query, claims.scopes);
 
   const scoped = rows.filter((row) => isInScope(row, claims.scopes.regions));
   const filtered = scoped.filter((row) =>

@@ -28,7 +28,7 @@ embed token that the host's backend signed. Nothing the page or the SDK sends ca
 | `tenantId`        | The customer the user belongs to.                                             |
 | `role`            | `editor` may change and save dashboards; `viewer` may only look.              |
 | `scopes.regions`  | The region codes whose rows the user may see, or `'*'` for all.               |
-| `scopes.measures` | Reserved for limiting the measures a user may query. The demo API ignores it. |
+| `scopes.measures` | The measures the user may query, or `'*'` or no list for all of them.         |
 | `iat`, `exp`      | When the token was issued and when it expires, in seconds since 1970.         |
 
 ## What the API enforces
@@ -38,6 +38,7 @@ embed token that the host's backend signed. Nothing the page or the SDK sends ca
 | A valid token on every call | Signature and expiry checked before any other work                                      | 401 `UNAUTHENTICATED`                           |
 | Customers stay apart        | Dashboards are stored under the token's tenant and looked up there only                 | 404 `NOT_FOUND`, as for one that does not exist |
 | Row-level security          | Rows outside the token's regions are removed before the query's own filters are applied | The rows are simply not in the result           |
+| Column-level security       | A query may not show or filter on a measure outside the token's measures                | 403 `FORBIDDEN`, naming the measure             |
 | Only editors change things  | Saving and deleting a dashboard need the `editor` role                                  | 403 `FORBIDDEN`                                 |
 | Queries are well formed     | Fields, operators and values are checked; a result holds at most 1000 rows              | 400 `INVALID_QUERY`                             |
 | Only known pages call it    | The server answers browsers only from the origins in `DASHKIT_ALLOWED_ORIGINS`          | The browser blocks the response                 |
@@ -51,6 +52,8 @@ a region the user may not see, or one the host passes in, returns no rows rather
 - It never signs a token and never contains a secret.
 - It hides the builder's controls from viewers. That is a courtesy, not a protection: the API
   refuses a viewer's save in any case.
+- Its builder offers only the measures the API's `/meta` route lists for the token, and a new
+  widget starts on one of them. Again a courtesy: a query for any other measure is refused.
 - Every error reaches the host's `onError`, as a code and a message.
 
 ## In this Storybook
@@ -60,9 +63,11 @@ with a random secret created when the page loads. Its `POST /auth/demo-token` ro
 token to anyone who names a demo user, stands in for the host's backend in the demo only. A real
 deployment has no such route, and its secret never reaches a browser.
 
-The **User** toolbar control signs in as a different demo user. These stories show two of the
+The **User** toolbar control signs in as a different demo user. These stories show three of the
 rules above:
 
 <Canvas of={SecurityStories.RowLevelSecurity} />
+
+<Canvas of={SecurityStories.ColumnLevelSecurity} />
 
 <Canvas of={SecurityStories.SessionInvalid} />
