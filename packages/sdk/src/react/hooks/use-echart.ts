@@ -27,13 +27,16 @@ export function useEChart(
   option: ChartOption,
   theme: object,
   onItemClick?: (dataIndex: number) => void,
+  onFinished?: () => void,
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<EChartsType>(null);
   // The chart subscribes to clicks once and calls whichever handler the latest render passed.
   const onItemClickRef = useRef(onItemClick);
+  const onFinishedRef = useRef(onFinished);
   useEffect(() => {
     onItemClickRef.current = onItemClick;
+    onFinishedRef.current = onFinished;
   });
 
   useEffect(() => {
@@ -42,6 +45,8 @@ export function useEChart(
     const chart = init(container);
     chartRef.current = chart;
     chart.on('click', (event: ECElementEvent) => onItemClickRef.current?.(event.dataIndex));
+    // Fired once a render, and any animation it started, is complete.
+    chart.on('finished', () => onFinishedRef.current?.());
     const resizeObserver = new ResizeObserver(() => chart.resize());
     resizeObserver.observe(container);
     // Canvas text only uses fonts that have finished loading, so measure again once they have.

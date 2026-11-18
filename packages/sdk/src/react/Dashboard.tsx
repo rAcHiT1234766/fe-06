@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, type ReactNode } from 'react';
+import { useContext, useEffect, useLayoutEffect, useMemo, type ReactNode } from 'react';
 import { breakpointFor } from '../core/config/layout';
 import { applyDefaultFilters } from '../core/merge-query';
 import type { DashboardConfig } from '../core/types';
@@ -55,6 +55,8 @@ export function DashboardLoader({
   children,
 }: DashboardProps & { children: (config: DashboardConfig) => ReactNode }) {
   const loaded = useDashboardConfig(dashboardId, config);
+  const { timing } = useDashKit();
+  useLayoutEffect(() => timing.mounted(), [timing]);
   const onReady = useContext(DashboardReadyContext);
   const isSettled = loaded.config !== undefined || loaded.error !== undefined;
   useEffect(() => {

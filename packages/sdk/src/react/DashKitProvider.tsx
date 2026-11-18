@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { createFilterStore } from '../core/filter-store';
 import { QueryClient } from '../core/query-client';
+import { RenderTiming } from '../core/render-timing';
 import { findLowContrastPairs } from '../core/theme/contrast';
 import { createTheme, resolveTheme } from '../core/theme/create-theme';
 import type { ActiveFilter, DashKitError, DashKitOptions } from '../core/types';
@@ -88,6 +89,8 @@ export function DashKitProvider({
     () => filterStore.subscribe(() => onFilterChangeRef.current?.(filterStore.getFilters())),
     [filterStore],
   );
+  const [timing] = useState(() => new RenderTiming());
+  useEffect(() => filterStore.subscribe(() => timing.filtersChanged()), [filterStore, timing]);
 
   const prefersDark = useSyncExternalStore(subscribeToColorScheme, systemPrefersDark);
   const resolvedTheme = useMemo(
@@ -106,8 +109,8 @@ export function DashKitProvider({
   }, [resolvedTheme]);
 
   const value = useMemo(
-    () => ({ client, filterStore, theme: resolvedTheme, reportError }),
-    [client, filterStore, resolvedTheme, reportError],
+    () => ({ client, filterStore, theme: resolvedTheme, reportError, timing }),
+    [client, filterStore, resolvedTheme, reportError, timing],
   );
   return <DashKitContext.Provider value={value}>{children}</DashKitContext.Provider>;
 }

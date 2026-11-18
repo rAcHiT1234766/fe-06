@@ -1,4 +1,4 @@
-import { useContext, useMemo } from 'react';
+import { useContext, useLayoutEffect, useMemo } from 'react';
 import { formatValue } from '../../core/format';
 import type { QueryResult, WidgetConfig } from '../../core/types';
 import {
@@ -19,12 +19,22 @@ interface WidgetViewProps {
   result: QueryResult;
 }
 
+/** Reports drawing `content` to the render timing; the browser has painted it by the next frame. */
+function useDrawnInNextFrame(widgetId: string, content: unknown) {
+  const { timing } = useDashKit();
+  useLayoutEffect(() => {
+    timing.started(widgetId);
+    const frame = requestAnimationFrame(() => timing.finished(widgetId, 'other'));
+    return () => cancelAnimationFrame(frame);
+  }, [timing, widgetId, content]);
+}
+
 function ChartView({
   widget,
   result,
   buildOption,
 }: WidgetViewProps & { buildOption: BuildChartOption }) {
-  const { theme } = useDashKit();
+  const { theme, timing } = useDashKit();
   const selection = useSelection(widget);
   const selectedValues = selection?.values;
   const outlineColor = theme.colors.text;
@@ -40,10 +50,13 @@ function ChartView({
       ),
     [buildOption, result, widget, selectedValues, outlineColor, isCompact],
   );
+  // The chart reports when ECharts has finished drawing this option.
+  useLayoutEffect(() => timing.started(widget.id), [timing, widget.id, option]);
   const chartRef = useEChart(
     option,
     chartTheme,
     selection && ((rowIndex) => selection.toggle(result.rows[rowIndex]?.[selection.field] ?? null)),
+    () => timing.finished(widget.id, 'chart'),
   );
   return (
     <>
@@ -59,6 +72,7 @@ function ChartView({
 
 function TableView({ widget, result }: WidgetViewProps) {
   const selection = useSelection(widget);
+  useDrawnInNextFrame(widget.id, selection?.values ?? result);
   return (
     // Focusable so keyboard users can scroll a table taller or wider than its widget.
     <div
@@ -72,7 +86,8 @@ function TableView({ widget, result }: WidgetViewProps) {
   );
 }
 
-function KpiView({ result }: WidgetViewProps) {
+function KpiView({ widget, result }: WidgetViewProps) {
+  useDrawnInNextFrame(widget.id, result);
   const measure = result.columns.find((column) => column.role === 'measure');
   const value = measure ? (result.rows[0]?.[measure.name] ?? null) : null;
   return (

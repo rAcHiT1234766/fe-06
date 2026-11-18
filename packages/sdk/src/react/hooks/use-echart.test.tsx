@@ -45,12 +45,16 @@ interface ChartProps {
   option: ChartOption;
   theme: object;
   onItemClick?: (dataIndex: number) => void;
+  onFinished?: () => void;
 }
 
-function Chart({ option, theme, onItemClick }: ChartProps) {
-  const ref = useEChart(option, theme, onItemClick);
+function Chart({ option, theme, onItemClick, onFinished }: ChartProps) {
+  const ref = useEChart(option, theme, onItemClick, onFinished);
   return <div ref={ref} data-testid="chart" />;
 }
+
+const handlersFor = (eventName: string) =>
+  chart.on.mock.calls.filter(([name]) => name === eventName).map(([, handler]) => handler);
 
 describe('useEChart', () => {
   it('draws into its element with the theme, then replaces the option on change', () => {
@@ -100,11 +104,23 @@ describe('useEChart', () => {
     const view = render(<Chart option={{}} theme={{}} onItemClick={first} />);
     view.rerender(<Chart option={{}} theme={{}} onItemClick={latest} />);
 
-    expect(chart.on).toHaveBeenCalledOnce();
-    const [eventName, handleClick] = chart.on.mock.calls[0]!;
-    expect(eventName).toBe('click');
-    handleClick({ dataIndex: 3 });
+    const clickHandlers = handlersFor('click');
+    expect(clickHandlers).toHaveLength(1);
+    clickHandlers[0]!({ dataIndex: 3 });
     expect(latest).toHaveBeenCalledWith(3);
+    expect(first).not.toHaveBeenCalled();
+  });
+
+  it('NFR-P3 tells the handler from the latest render when a render has finished', () => {
+    const first = vi.fn();
+    const latest = vi.fn();
+    const view = render(<Chart option={{}} theme={{}} onFinished={first} />);
+    view.rerender(<Chart option={{}} theme={{}} onFinished={latest} />);
+
+    const finishedHandlers = handlersFor('finished');
+    expect(finishedHandlers).toHaveLength(1);
+    finishedHandlers[0]!({ dataIndex: 0 });
+    expect(latest).toHaveBeenCalledOnce();
     expect(first).not.toHaveBeenCalled();
   });
 

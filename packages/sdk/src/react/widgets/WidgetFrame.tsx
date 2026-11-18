@@ -1,5 +1,6 @@
-import { useId, type ReactNode } from 'react';
+import { useId, useLayoutEffect, type ReactNode } from 'react';
 import type { DashKitError, QueryResult, WidgetConfig } from '../../core/types';
+import { useDashKit } from '../context';
 import { useWidgetData } from '../hooks/use-widget-data';
 import { ErrorState } from '../ui/ErrorState';
 import { Skeleton } from '../ui/Skeleton';
@@ -30,6 +31,16 @@ export function WidgetFrame({ widget, actions }: WidgetFrameProps) {
   const { data, error, isFetching } = useWidgetData(widget);
   // A first load shows a skeleton; later loads keep the old result and show a bar instead.
   const isUpdating = isFetching && Boolean(data ?? error);
+
+  // The views report when they have drawn a result; the frame reports waiting, and the states that
+  // have no view.
+  const { timing } = useDashKit();
+  const hasView = !error && data !== undefined && data.rows.length > 0;
+  useLayoutEffect(() => {
+    timing.fetching(widget.id, isFetching);
+    if (!isFetching && !hasView) timing.finished(widget.id, 'other');
+  }, [timing, widget.id, isFetching, hasView, data, error]);
+  useLayoutEffect(() => () => timing.removed(widget.id), [timing, widget.id]);
   return (
     <section className="dk-widget" aria-labelledby={titleId} aria-busy={isUpdating}>
       {isUpdating && <div className="dk-progress" aria-hidden="true" />}
