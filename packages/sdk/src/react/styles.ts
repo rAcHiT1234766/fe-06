@@ -5,8 +5,9 @@ import base from './styles/base.css?inline';
 import builder from './styles/builder.css?inline';
 import dashboard from './styles/dashboard.css?inline';
 import grid from './styles/grid.css?inline';
+import responsive from './styles/responsive.css?inline';
 import widget from './styles/widget.css?inline';
 
 // Styles travel as a string so the same text can be placed next to the dashboard on a host page
 // and inside the Web Component's shadow root.
-export const styles = [base, dashboard, grid, widget, builder].join('\n');
+export const styles = [base, dashboard, grid, widget, builder, responsive].join('\n');

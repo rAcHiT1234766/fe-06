@@ -1,4 +1,6 @@
+/* A container, so a widget's content can adapt to the widget's own width. */
 .dk-widget {
+  container-type: inline-size;
   position: relative;
   display: flex;
   height: 100%;

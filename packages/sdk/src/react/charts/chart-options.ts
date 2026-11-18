@@ -25,11 +25,17 @@ export interface ChartSelection {
   outlineColor: string;
 }
 
+/** `isCompact` is set on a phone-sized dashboard, where every chart has the width of the screen. */
 export type BuildChartOption = (
   result: QueryResult,
   widget: WidgetConfig,
   selection?: ChartSelection,
+  isCompact?: boolean,
 ) => ChartOption;
+
+// On a phone, long category names beside horizontal bars would leave no room for the bars. The
+// full names stay in the tooltip and in the chart's data table.
+const COMPACT_CATEGORY_LABEL = { width: 110, overflow: 'truncate' as const };
 
 function describeResult({ columns, rows }: QueryResult) {
   const dimension = columns.find((column) => column.role === 'dimension');
@@ -84,11 +90,16 @@ function legendFor(widget: WidgetConfig, seriesCount: number) {
   };
 }
 
-export const buildBarOption: BuildChartOption = (result, widget, selection) => {
+export const buildBarOption: BuildChartOption = (result, widget, selection, isCompact) => {
   const { keys, categories, measures, valuesOf } = describeResult(result);
   const isHorizontal = widget.options?.orientation === 'horizontal';
   // Reading top to bottom should follow the query's sort order, which a y axis would reverse.
-  const categoryAxis = { type: 'category' as const, data: categories, inverse: isHorizontal };
+  const categoryAxis = {
+    type: 'category' as const,
+    data: categories,
+    inverse: isHorizontal,
+    ...(isHorizontal && isCompact && { axisLabel: COMPACT_CATEGORY_LABEL }),
+  };
   const valueAxis = valueAxisFor(measures[0]);
   return {
     ...legendFor(widget, measures.length),

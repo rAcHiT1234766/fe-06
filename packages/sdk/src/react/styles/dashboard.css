@@ -7,6 +7,7 @@
 
 .dk-dashboard-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--dk-space-3);
 }

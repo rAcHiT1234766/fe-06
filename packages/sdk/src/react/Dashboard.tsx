@@ -1,10 +1,13 @@
 import { useContext, useEffect, useMemo, type ReactNode } from 'react';
+import { breakpointFor } from '../core/config/layout';
 import { applyDefaultFilters } from '../core/merge-query';
 import type { DashboardConfig } from '../core/types';
 import { useDashKit } from './context';
+import { BreakpointContext } from './breakpoint-context';
 import { DashboardGrid } from './DashboardGrid';
 import { FilterBar } from './FilterBar';
 import { useDashboardConfig } from './hooks/use-dashboard-config';
+import { useMeasuredWidth } from './hooks/use-measured-width';
 import { DashboardReadyContext } from './ready-context';
 import { ThemeRoot } from './ThemeRoot';
 import { ErrorState } from './ui/ErrorState';
@@ -57,13 +60,18 @@ export function DashboardLoader({
   useEffect(() => {
     if (isSettled) onReady?.();
   }, [isSettled, onReady]);
+  // The layout follows the width of the dashboard's container, not of the window.
+  const { ref, width } = useMeasuredWidth<HTMLDivElement>();
+  const breakpoint = breakpointFor(width);
 
   return (
     <ThemeRoot>
-      <div className="dk-dashboard">
-        {loaded.error && <ErrorState error={loaded.error} />}
-        {!loaded.error && !loaded.config && <Skeleton />}
-        {loaded.config && children(loaded.config)}
+      <div ref={ref} className="dk-dashboard" data-dk-breakpoint={breakpoint}>
+        <BreakpointContext.Provider value={breakpoint}>
+          {loaded.error && <ErrorState error={loaded.error} />}
+          {!loaded.error && !loaded.config && <Skeleton />}
+          {loaded.config && children(loaded.config)}
+        </BreakpointContext.Provider>
       </div>
     </ThemeRoot>
   );
@@ -75,7 +83,7 @@ function DashboardContent({ config }: { config: DashboardConfig }) {
     <>
       <DashboardHeader config={config} />
       <FilterBar />
-      <DashboardGrid widgets={widgets} layout={config.layouts.lg} />
+      <DashboardGrid widgets={widgets} layouts={config.layouts} />
     </>
   );
 }

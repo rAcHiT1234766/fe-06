@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useContext, useEffect, useId, useRef, useState } from 'react';
 import {
   addWidget,
   duplicateWidget,
@@ -7,6 +7,7 @@ import {
   updateWidget,
   withYearRule,
 } from '../core/config/edit-dashboard';
+import { canEditAt } from '../core/config/layout';
 import { validateDashboard } from '../core/config/schema';
 import type {
   DashboardConfig,
@@ -21,6 +22,7 @@ import { loadFieldCatalog, loadLatestYear, loadRole } from './builder/loaders';
 import { Palette } from './builder/Palette';
 import { useUnsavedChangesWarning } from './builder/use-unsaved-changes-warning';
 import { WidgetActions } from './builder/WidgetActions';
+import { BreakpointContext } from './breakpoint-context';
 import { useDashKit } from './context';
 import {
   DashboardHeader,
@@ -69,9 +71,12 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
 
   // The dashboard as the API holds it: as loaded, or as this builder last saved it.
   const savedConfig = saved?.base === loadedConfig ? saved.config : loadedConfig;
-  const draftConfig = isEditor && draft?.base === savedConfig ? draft.config : undefined;
+  const pendingDraft = isEditor && draft?.base === savedConfig ? draft.config : undefined;
+  const hasUnsavedChanges = pendingDraft !== undefined && pendingDraft !== savedConfig;
+  // In a narrow container the dashboard is only shown; a draft waits until there is room again.
+  const isRoomy = canEditAt(useContext(BreakpointContext));
+  const draftConfig = isRoomy ? pendingDraft : undefined;
   const isEditing = draftConfig !== undefined;
-  const hasUnsavedChanges = isEditing && draftConfig !== savedConfig;
   const config = draftConfig ?? savedConfig;
   const widgets = useDashboardWidgets(config);
   const latestYear = useClientValue(loadLatestYear, isEditing).value;
@@ -176,7 +181,14 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
   return (
     <>
       <DashboardHeader config={config}>
-        {isEditor && (
+        {isEditor && !isRoomy && (
+          <p className="dk-toolbar-note">
+            {hasUnsavedChanges
+              ? 'Your unsaved changes are kept until there is room to edit again.'
+              : 'Editing needs a wider screen.'}
+          </p>
+        )}
+        {isEditor && isRoomy && (
           <div className="dk-toolbar">
             <p className="dk-toolbar-status" role="status">
               {!isEditing && saved?.base === loadedConfig ? 'Saved' : ''}
@@ -223,7 +235,7 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
       <div className="dk-builder-body">
         <DashboardGrid
           widgets={widgets}
-          layout={config.layouts.lg}
+          layouts={config.layouts}
           isEditing={isEditing}
           onLayoutChange={changeLayout}
           actionsFor={actionsFor}

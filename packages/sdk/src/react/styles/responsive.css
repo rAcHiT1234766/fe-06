@@ -1,0 +1,32 @@
+/* Loaded last, so these rules win over each control's own size. */
+
+/* On a phone the page around the dashboard usually has margins of its own. */
+.dk-dashboard[data-dk-breakpoint='xs'] {
+  gap: var(--dk-space-3);
+  padding: var(--dk-space-3) var(--dk-space-2);
+}
+
+/* A narrow widget gives its content the room that padding would take. */
+@container (width < 20rem) {
+  .dk-widget-header,
+  .dk-widget-body {
+    padding-inline: var(--dk-space-3);
+  }
+}
+
+/* With a finger as the pointer, every control is at least 44 px square. */
+@media (any-pointer: coarse) {
+  .dk-button,
+  .dk-icon-button,
+  .dk-chip-remove,
+  .dk-text-button,
+  .dk-select,
+  .dk-input {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .dk-check {
+    min-height: 44px;
+  }
+}

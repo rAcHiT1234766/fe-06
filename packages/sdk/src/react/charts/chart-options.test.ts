@@ -76,6 +76,17 @@ describe('chart option builders', () => {
     expect(option.yAxis).toMatchObject({ type: 'category', inverse: true });
   });
 
+  it('FR-6.8 shortens long category names beside horizontal bars on a phone', () => {
+    const horizontal = widget('bar', { orientation: 'horizontal' });
+    expect(buildBarOption(populationByRegion, horizontal, undefined, true).yAxis).toMatchObject({
+      axisLabel: { width: 110, overflow: 'truncate' },
+    });
+    expect(buildBarOption(populationByRegion, horizontal).yAxis).not.toHaveProperty('axisLabel');
+    expect(
+      buildBarOption(populationByRegion, widget('bar'), undefined, true).xAxis,
+    ).not.toHaveProperty('axisLabel');
+  });
+
   it('stacks bars only when asked', () => {
     expect(seriesOf(buildBarOption(gdpByYear, widget('bar')))[0]).not.toHaveProperty('stack');
     expect(seriesOf(buildBarOption(gdpByYear, widget('bar', { stacked: true })))[0]).toMatchObject({

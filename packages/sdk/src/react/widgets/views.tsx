@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useContext, useMemo } from 'react';
 import { formatValue } from '../../core/format';
 import type { QueryResult, WidgetConfig } from '../../core/types';
 import {
@@ -7,6 +7,7 @@ import {
   buildPieOption,
   type BuildChartOption,
 } from '../charts/chart-options';
+import { BreakpointContext } from '../breakpoint-context';
 import { buildEChartsTheme } from '../charts/echarts-theme';
 import { useDashKit } from '../context';
 import { useSelection } from '../hooks/use-cross-filter';
@@ -28,9 +29,16 @@ function ChartView({
   const selectedValues = selection?.values;
   const outlineColor = theme.colors.text;
   const chartTheme = useMemo(() => buildEChartsTheme(theme), [theme]);
+  const isCompact = useContext(BreakpointContext) === 'xs';
   const option = useMemo(
-    () => buildOption(result, widget, selectedValues && { values: selectedValues, outlineColor }),
-    [buildOption, result, widget, selectedValues, outlineColor],
+    () =>
+      buildOption(
+        result,
+        widget,
+        selectedValues && { values: selectedValues, outlineColor },
+        isCompact,
+      ),
+    [buildOption, result, widget, selectedValues, outlineColor, isCompact],
   );
   const chartRef = useEChart(
     option,

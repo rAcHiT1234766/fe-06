@@ -4,6 +4,12 @@
   color: var(--dk-color-text-muted);
 }
 
+.dk-toolbar-note {
+  align-self: center;
+  margin: 0 0 0 auto;
+  color: var(--dk-color-text-muted);
+}
+
 .dk-save-problems {
   padding: var(--dk-space-3) var(--dk-space-4);
   background: color-mix(in srgb, var(--dk-color-danger) 8%, var(--dk-color-surface));
