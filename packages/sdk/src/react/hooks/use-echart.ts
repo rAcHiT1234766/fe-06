@@ -23,6 +23,30 @@ registerChartModules([
 
 const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+// Charts animate briefly, so a filter change has finished drawing soon after the click (NFR-P4).
+// ECharts' defaults run from 300 ms to a second: a line whose points all move far, as when its
+// range changes, is drawn again with the entrance animation. Each series reads these settings
+// from its own options before the chart's, so they are set on both.
+const BRIEF_ANIMATION = {
+  animationDuration: 200,
+  animationDurationUpdate: 200,
+  animationEasingUpdate: 'cubicOut',
+} as const;
+
+function withBriefAnimation(option: ChartOption, isAnimated: boolean): ChartOption {
+  const { series } = option;
+  return {
+    ...option,
+    ...BRIEF_ANIMATION,
+    animation: isAnimated,
+    ...(series && {
+      series: Array.isArray(series)
+        ? series.map((item) => ({ ...item, ...BRIEF_ANIMATION }))
+        : { ...series, ...BRIEF_ANIMATION },
+    }),
+  };
+}
+
 export function useEChart(
   option: ChartOption,
   theme: object,
@@ -62,10 +86,9 @@ export function useEChart(
 
   useEffect(() => {
     // Replacing instead of merging stops series from an earlier option lingering on the chart.
-    chartRef.current?.setOption(
-      { ...option, animation: !prefersReducedMotion() },
-      { notMerge: true },
-    );
+    chartRef.current?.setOption(withBriefAnimation(option, !prefersReducedMotion()), {
+      notMerge: true,
+    });
   }, [option]);
 
   // Declared after the option effect because ECharts ignores setTheme on a chart that has no option

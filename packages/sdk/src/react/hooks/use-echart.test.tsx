@@ -53,6 +53,12 @@ function Chart({ option, theme, onItemClick, onFinished }: ChartProps) {
   return <div ref={ref} data-testid="chart" />;
 }
 
+const briefAnimation = {
+  animationDuration: 200,
+  animationDurationUpdate: 200,
+  animationEasingUpdate: 'cubicOut',
+};
+
 const handlersFor = (eventName: string) =>
   chart.on.mock.calls.filter(([name]) => name === eventName).map(([, handler]) => handler);
 
@@ -64,13 +70,13 @@ describe('useEChart', () => {
     expect(init).toHaveBeenCalledWith(view.getByTestId('chart'));
     expect(chart.setTheme).toHaveBeenCalledWith(theme);
     expect(chart.setOption).toHaveBeenLastCalledWith(
-      { series: [], animation: true },
+      { series: [], ...briefAnimation, animation: true },
       { notMerge: true },
     );
 
     view.rerender(<Chart option={{ legend: { show: true } }} theme={theme} />);
     expect(chart.setOption).toHaveBeenLastCalledWith(
-      { legend: { show: true }, animation: true },
+      { legend: { show: true }, ...briefAnimation, animation: true },
       { notMerge: true },
     );
     expect(chart.setTheme).toHaveBeenCalledTimes(1);
@@ -95,7 +101,22 @@ describe('useEChart', () => {
         ({ media, matches: media.includes('reduced-motion') }) as unknown as MediaQueryList,
     );
     render(<Chart option={{}} theme={{}} />);
-    expect(chart.setOption).toHaveBeenLastCalledWith({ animation: false }, { notMerge: true });
+    expect(chart.setOption).toHaveBeenLastCalledWith(
+      { ...briefAnimation, animation: false },
+      { notMerge: true },
+    );
+  });
+
+  it('NFR-P4 animates briefly, setting the durations on each series as well', () => {
+    render(<Chart option={{ series: [{ type: 'line', data: [1, 2] }] }} theme={{}} />);
+    expect(chart.setOption).toHaveBeenLastCalledWith(
+      {
+        series: [{ type: 'line', data: [1, 2], ...briefAnimation }],
+        ...briefAnimation,
+        animation: true,
+      },
+      { notMerge: true },
+    );
   });
 
   it('FR-4.1 passes a clicked item to the handler from the latest render', () => {
