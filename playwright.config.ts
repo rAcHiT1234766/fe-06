@@ -6,7 +6,15 @@ export default defineConfig({
   testDir: 'e2e',
   forbidOnly: isCI,
   use: { baseURL: 'http://localhost:5173', trace: 'retain-on-failure' },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  // One API serves every browser, and the builder test rebuilds a saved dashboard, so two
+  // browsers running it at once would change each other's data. Tests therefore run one at a time.
+  workers: 1,
+  // NFR-C1: Chrome and Edge share Chromium's engine, and WebKit is Safari's.
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+  ],
   webServer: [
     {
       command: 'pnpm --filter @dashkit/mock-api start',

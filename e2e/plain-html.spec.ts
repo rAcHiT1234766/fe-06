@@ -52,7 +52,10 @@ async function differingPixels(page: Page, first: Buffer, second: Buffer) {
       const decode = async (base64: string) => {
         const blob = await (await fetch(`data:image/png;base64,${base64}`)).blob();
         const bitmap = await createImageBitmap(blob);
-        const context = new OffscreenCanvas(bitmap.width, bitmap.height).getContext('2d')!;
+        const canvas = document.createElement('canvas');
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        const context = canvas.getContext('2d')!;
         context.drawImage(bitmap, 0, 0);
         return context.getImageData(0, 0, bitmap.width, bitmap.height);
       };
