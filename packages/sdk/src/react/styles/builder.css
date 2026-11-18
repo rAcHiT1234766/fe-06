@@ -1,7 +1,18 @@
 .dk-toolbar-status {
+  display: inline-flex;
   align-self: center;
+  align-items: center;
+  gap: var(--dk-space-1);
   margin: 0;
   color: var(--dk-color-text-muted);
+}
+
+.dk-toolbar-status[data-dk-status='saved'] {
+  color: var(--dk-color-success);
+}
+
+.dk-toolbar-status[data-dk-status='unsaved'] {
+  color: var(--dk-color-warning);
 }
 
 .dk-toolbar-note {

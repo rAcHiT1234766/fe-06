@@ -297,12 +297,18 @@ describe('saving', () => {
     const onSave = vi.fn();
     const view = await renderEditing('asha', { dashboardId: 'save-and-reload', onSave });
 
+    const saveStatus = () => document.querySelector<HTMLElement>('.dk-toolbar-status')!;
+    expect(saveStatus().textContent).toBe('');
     fireEvent.click(screen.getByRole('button', { name: 'Remove Total population' }));
+    // In the theme's warning colour, with an icon, until the draft is saved or cancelled.
+    expect(saveStatus().textContent).toBe('Unsaved changes');
+    expect(saveStatus().dataset.dkStatus).toBe('unsaved');
     fireEvent.click(screen.getByRole('button', { name: 'Duplicate Countries' }));
     change(await openSettings('Population by region'), 'Title', 'People by region');
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(await screen.findByText('Saved')).toBeTruthy();
+    expect(saveStatus().dataset.dkStatus).toBe('saved');
     expect(dragHandles()).toEqual([]);
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Edit dashboard' }));
     expect(onSave).toHaveBeenCalledOnce();

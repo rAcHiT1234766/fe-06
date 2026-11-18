@@ -19,6 +19,7 @@ import type {
   WidgetType,
 } from '../core/types';
 import { ConfigPanel } from './builder/ConfigPanel';
+import { ChangedIcon, CheckIcon } from './builder/icons';
 import { loadFieldCatalog, loadLatestYear, loadRole } from './builder/loaders';
 import { Palette } from './builder/Palette';
 import { useUnsavedChangesWarning } from './builder/use-unsaved-changes-warning';
@@ -179,6 +180,15 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
     />
   );
 
+  // In the theme's success and warning colours, each with an icon and words, so that the colour
+  // is never the only signal.
+  const saveStatus =
+    !isEditing && saved?.base === loadedConfig
+      ? 'saved'
+      : isEditing && hasUnsavedChanges
+        ? 'unsaved'
+        : undefined;
+
   return (
     <>
       <DashboardHeader config={config}>
@@ -191,8 +201,19 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
         )}
         {isEditor && isRoomy && (
           <div className="dk-toolbar">
-            <p className="dk-toolbar-status" role="status">
-              {!isEditing && saved?.base === loadedConfig ? 'Saved' : ''}
+            <p className="dk-toolbar-status" role="status" data-dk-status={saveStatus}>
+              {saveStatus === 'saved' && (
+                <>
+                  <CheckIcon />
+                  <span>Saved</span>
+                </>
+              )}
+              {saveStatus === 'unsaved' && (
+                <>
+                  <ChangedIcon />
+                  <span>Unsaved changes</span>
+                </>
+              )}
             </p>
             {isEditing ? (
               <>

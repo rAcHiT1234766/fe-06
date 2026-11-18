@@ -179,11 +179,11 @@ export interface ColorTokens {
   textMuted: string;
   /** Lines around cards, inputs and table cells. */
   border: string;
-  /** Status colour for good values. No built-in widget uses it at present. */
+  /** Text for a good outcome, such as the builder's "Saved", on the background. */
   success: string;
-  /** Status colour for values that need attention. No built-in widget uses it at present. */
+  /** Text for something that needs attention, such as the builder's "Unsaved changes". */
   warning: string;
-  /** Error messages, and the problems that stop a dashboard from being saved. */
+  /** Error messages on a widget, and the problems that stop a dashboard from being saved. */
   danger: string;
   /** Series colours for charts, 6 to 10 of them. */
   chart: string[];

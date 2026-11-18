@@ -81,4 +81,18 @@ describe('theme', () => {
       findLowContrastPairs({ ...colors, textMuted: 'gray', primary: 'hsl(0 0% 47%)' }),
     ).toEqual([]);
   });
+
+  it('FR-2.8 reports status colours too light to read as text', () => {
+    const colors = {
+      ...defaultTheme.light,
+      success: '#4ade80',
+      warning: '#fbbf24',
+      danger: '#fca5a5',
+    };
+    expect(findLowContrastPairs(colors)).toEqual([
+      'success on background',
+      'warning on background',
+      'danger on surface',
+    ]);
+  });
 });

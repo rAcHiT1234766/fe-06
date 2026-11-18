@@ -18,6 +18,10 @@ const icon = (shape: ReactNode) => (
 
 export const CrossIcon = () => icon(<path d="M4 4l8 8M12 4l-8 8" />);
 
+export const CheckIcon = () => icon(<path d="M3 8.5l3.25 3.25L13 5" />);
+
+export const ChangedIcon = () => icon(<circle cx="8" cy="8" r="3.5" fill="currentColor" />);
+
 export const DuplicateIcon = () =>
   icon(
     <>

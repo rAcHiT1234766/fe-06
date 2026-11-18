@@ -30,6 +30,10 @@ const TEXT_PAIRS: [ColorName, ColorName][] = [
   ['text', 'surface'],
   ['textMuted', 'surface'],
   ['primaryContrast', 'primary'],
+  // The builder's "Saved" and "Unsaved changes" sit on the background; error titles on a widget.
+  ['success', 'background'],
+  ['warning', 'background'],
+  ['danger', 'surface'],
 ];
 
 export function findLowContrastPairs(colors: ColorTokens): string[] {
