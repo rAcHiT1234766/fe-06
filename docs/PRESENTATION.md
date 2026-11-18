@@ -110,15 +110,15 @@ host's CSS cannot reach the dashboard."
 
 - Target: a click to every chart updated within 300 ms.
 - First measurement: median **549 ms**. With animation off: 42 ms.
-- The data was back and drawn within 60 ms; the rest was ECharts' default animations, including a
-  500 ms pie update and a one-second line redraw.
+- The results arrived, and the table and KPI were drawn, within 60 ms of the click. The rest was
+  ECharts' default animations, including a 500 ms pie update and a one-second line redraw.
 - Fix: 200 ms transitions, set on every series as well as on the chart. None with reduced motion.
 - Now: median **257 ms**.
 
 **Say:** "I measured instead of guessing. The SDK records User Timing marks, from the click to the
-moment the last chart reports it has finished. The first run missed badly, but the network and
-rendering took under 60 ms: the time went on ECharts' default animations, and a series' own
-defaults override the chart's. Setting a short transition on every series brought the median to
+moment the last chart reports it has finished. The first run missed badly, yet the results were
+back, and the table and KPI drawn, within 60 ms: the time went on ECharts' default animations, and
+a series' own defaults override the chart's. Setting a short transition on every series brought the median to
 257 ms."
 
 ## 8. Results (8:00–9:00)
