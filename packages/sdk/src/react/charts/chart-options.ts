@@ -25,7 +25,10 @@ export interface ChartSelection {
   outlineColor: string;
 }
 
-/** `isCompact` is set on a phone-sized dashboard, where every chart has the width of the screen. */
+/**
+ * `isCompact` is set on a phone or tablet-sized dashboard, below 900 px, where a chart may have half
+ * of that width or less.
+ */
 export type BuildChartOption = (
   result: QueryResult,
   widget: WidgetConfig,
@@ -33,8 +36,8 @@ export type BuildChartOption = (
   isCompact?: boolean,
 ) => ChartOption;
 
-// On a phone, long category names beside horizontal bars would leave no room for the bars. The
-// full names stay in the tooltip and in the chart's data table.
+// On a narrow chart, long category names beside horizontal bars would leave no room for the bars.
+// The full names stay in the tooltip and in the chart's data table.
 const COMPACT_CATEGORY_LABEL = { width: 110, overflow: 'truncate' as const };
 
 function describeResult({ columns, rows }: QueryResult) {

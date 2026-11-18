@@ -49,13 +49,29 @@ describe('deriveLayout', () => {
     expect(rows(deriveLayout(overview, 'md'))).toEqual(['kpi:2 bar:6', 'pie:3 line:5', 'table:8']);
   });
 
-  it('FR-6.7 gives narrow widgets a whole row at sm, so no row ends in a gap', () => {
-    expect(rows(deriveLayout(overview, 'sm'))).toEqual([
-      'kpi:4',
-      'bar:4',
-      'pie:2 line:2',
-      'table:4',
-    ]);
+  it('FR-6.7 keeps side-by-side widgets together at sm, the widest giving up columns', () => {
+    // At sm the KPI's share rounds to 1 of 4 columns and the bar's to 3. The KPI needs 2, so the
+    // bar gives up one rather than both taking a whole row.
+    expect(rows(deriveLayout(overview, 'sm'))).toEqual(['kpi:2 bar:2', 'pie:2 line:2', 'table:4']);
+  });
+
+  it('starts a new row when side-by-side widgets cannot all have the minimum width', () => {
+    const three: LayoutItem[] = [
+      { i: 'a', x: 0, y: 0, w: 4, h: 3 },
+      { i: 'b', x: 4, y: 0, w: 4, h: 3 },
+      { i: 'c', x: 8, y: 0, w: 4, h: 3 },
+    ];
+    expect(rows(deriveLayout(three, 'sm'))).toEqual(['a:2 b:2', 'c:4']);
+    expect(rows(deriveLayout(three, 'md'))).toEqual(['a:3 b:2 c:3']);
+  });
+
+  it('never narrows a row to make room for a widget from the row below', () => {
+    const layout: LayoutItem[] = [
+      { i: 'wide', x: 0, y: 0, w: 10, h: 3 },
+      { i: 'next', x: 0, y: 3, w: 3, h: 3 },
+    ];
+    // At md they would fit side by side only if the wide widget gave up a column.
+    expect(rows(deriveLayout(layout, 'md'))).toEqual(['wide:8', 'next:8']);
   });
 
   it('FR-6.8 stacks every widget in one column at xs, with taller charts', () => {

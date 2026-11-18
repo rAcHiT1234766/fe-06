@@ -5,8 +5,15 @@ import { Dashboard } from './Dashboard';
 import { DashboardBuilder } from './DashboardBuilder';
 import { DashKitProvider } from './DashKitProvider';
 
-// The test DOM cannot draw on a canvas. Chart options are tested on their own, and drawing in a browser.
-vi.mock('./hooks/use-echart', () => ({ useEChart: () => ({ current: null }) }));
+// The test DOM cannot draw on a canvas. Chart options are tested on their own, and drawing in a
+// browser; here the options each chart was given are kept, to check what the breakpoint changes.
+const { chartOptions } = vi.hoisted(() => ({ chartOptions: [] as unknown[] }));
+vi.mock('./hooks/use-echart', () => ({
+  useEChart: (option: unknown) => {
+    chartOptions.push(option);
+    return { current: null };
+  },
+}));
 
 setupMockApi();
 
@@ -30,6 +37,7 @@ class FakeResizeObserver {
 
 beforeEach(() => {
   width = 1280;
+  chartOptions.length = 0;
   vi.stubGlobal('ResizeObserver', FakeResizeObserver);
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() =>
     DOMRect.fromRect({ width, height: 800 }),
@@ -82,6 +90,20 @@ describe('responsive layout', () => {
     await renderDashboard();
     expect(breakpoint()).toBe('xs');
     expect(leftEdges()).toEqual(new Set(['0']));
+  });
+
+  it('FR-6.7 keeps neighbours side by side in a tablet-sized container, with short bar labels', async () => {
+    width = 700;
+    await renderDashboard();
+    expect(breakpoint()).toBe('sm');
+    expect(leftEdges().size).toBe(2);
+    // At half the width, the region names are cut short so that the bars keep their room.
+    const horizontalBars = chartOptions.filter(
+      (option) => (option as { yAxis?: { type?: string } }).yAxis?.type === 'category',
+    );
+    expect(horizontalBars.at(-1)).toMatchObject({
+      yAxis: { axisLabel: { width: 110, overflow: 'truncate' } },
+    });
   });
 
   it('FR-6.7 follows the container as it is resized', async () => {

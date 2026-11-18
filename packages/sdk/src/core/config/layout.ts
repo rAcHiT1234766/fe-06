@@ -25,40 +25,65 @@ export const canEditAt = (breakpoint: Breakpoint) => breakpoint === 'lg' || brea
 /**
  * Re-flows the authored `lg` layout into the columns of a smaller breakpoint. Each widget keeps its
  * share of the row where it can, widgets stay in reading order (top to bottom, then left to right),
- * and the last widget in a row takes any columns left over, so no row ends in a gap. In the single
- * `xs` column, charts and tables get one more row for legends and labels below the plot.
+ * and the last widget in a row takes any columns left over, so no row ends in a gap. Widgets that
+ * sit side by side at `lg` stay side by side as long as each can have the minimum width, with the
+ * widest giving up columns first. In the single `xs` column, charts and tables get one more row for
+ * legends and labels below the plot.
  */
 export function deriveLayout(lg: LayoutItem[], breakpoint: Breakpoint): LayoutItem[] {
   if (breakpoint === 'lg') return lg;
   const columns = COLUMNS[breakpoint];
+  const minimum = MIN_COLUMNS[breakpoint];
   const scale = (column: number) => Math.round((column * columns) / COLUMNS.lg);
 
   const derived: LayoutItem[] = [];
-  let row: LayoutItem[] = [];
-  let x = 0;
+  let row: { item: LayoutItem; w: number; h: number }[] = [];
   let y = 0;
-  let rowBottom = 0;
-  const endRow = () => {
-    const last = row.at(-1);
-    if (last) last.w += columns - x;
+  const placeRow = () => {
+    const widths = fitRow(
+      row.map(({ w }) => w),
+      columns,
+    );
+    let x = 0;
+    for (const [index, { item, h }] of row.entries()) {
+      const w = widths[index]!;
+      derived.push({ i: item.i, x, y, w, h });
+      x += w;
+    }
+    y += Math.max(...row.map(({ h }) => h));
     row = [];
-    x = 0;
-    y = rowBottom;
   };
 
   for (const item of lg.toSorted((a, b) => a.y - b.y || a.x - b.x)) {
     const scaled = scale(item.x + item.w) - scale(item.x);
-    const w = Math.min(columns, Math.max(MIN_COLUMNS[breakpoint], scaled));
+    const w = Math.min(columns, Math.max(minimum, scaled));
     const h = breakpoint === 'xs' && item.h > 3 ? item.h + 1 : item.h;
-    if (x + w > columns) endRow();
-    const placed = { i: item.i, x, y, w, h };
-    derived.push(placed);
-    row.push(placed);
-    x += w;
-    rowBottom = Math.max(rowBottom, y + h);
+    const used = row.reduce((total, placed) => total + placed.w, 0);
+    // Only neighbours from the same `lg` row are narrowed; a widget from the next row starts a new
+    // one rather than squeezing the row above.
+    const isSameRow = row[0]?.item.y === item.y;
+    const fits = used + w <= columns || (isSameRow && (row.length + 1) * minimum <= columns);
+    if (row.length > 0 && !fits) placeRow();
+    row.push({ item, w, h });
   }
-  endRow();
+  if (row.length > 0) placeRow();
   return derived;
+}
+
+/**
+ * Fits one row's widths into the grid: while they add up to more than `columns`, the widest gives
+ * up a column, and the last widget takes any columns left over. Callers make sure every widget can
+ * keep the minimum width, so the widest is always above it.
+ */
+function fitRow(widths: number[], columns: number): number[] {
+  const fitted = [...widths];
+  let total = fitted.reduce((sum, width) => sum + width, 0);
+  while (total > columns) {
+    fitted[fitted.indexOf(Math.max(...fitted))]! -= 1;
+    total -= 1;
+  }
+  fitted[fitted.length - 1]! += columns - total;
+  return fitted;
 }
 
 /** The layout for a breakpoint: the one the dashboard provides, or one derived from `lg`. */

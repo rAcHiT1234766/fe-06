@@ -39,7 +39,8 @@ function ChartView({
   const selectedValues = selection?.values;
   const outlineColor = theme.colors.text;
   const chartTheme = useMemo(() => buildEChartsTheme(theme), [theme]);
-  const isCompact = useContext(BreakpointContext) === 'xs';
+  const breakpoint = useContext(BreakpointContext);
+  const isCompact = breakpoint === 'xs' || breakpoint === 'sm';
   const option = useMemo(
     () =>
       buildOption(
