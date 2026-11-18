@@ -214,3 +214,40 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
   Screenshots taken at another scroll position differ by one or two levels on the widgets' rounded corners. A channel difference of up to 8 counts as equal; a leaked font changed about 39,000 pixels and one leaked button colour about 3,400, so the test still fails on any real leak.
 - **The mock engine has a version, `0.0.0`.**
   `pnpm pack` rewrites every workspace range in the SDK's manifest, including dev dependencies, and needs a version to write. The engine stays private.
+
+## Phase 6 — Quality and documentation
+
+- **The component tests run a second time on React 18, from `packages/react18-check`.**
+  A Vitest project points at the SDK's own test files and aliases `react`, `react-dom` and their subpaths to React 18 copies installed in that package, so the same 76 tests run against both peer versions without a second copy of the tests. A setup file fails the run if React 18 is not the one loaded.
+- **End-to-end tests run one at a time, in Chromium, Firefox and WebKit.**
+  The tests share one demo API, and the builder test replaces a tenant's dashboard, so tests in parallel could see each other's saves. The whole suite takes under two minutes.
+- **The axe accessibility checks run in Chromium only.**
+  axe's rules read the DOM and computed styles, which do not differ between the engines for these views, and the same views pass the functional tests in all three browsers. Only violations rated serious or critical fail a test.
+- **The element's types ship as `dist/element.d.ts`, written by hand in `src/element-types.ts`** (agreed).
+  They add `<dashkit-dashboard>` to `HTMLElementTagNameMap`, give each `dashkit:*` event its `detail` type, add the tag to JSX, and type `window.DashKit`. The npm build's type bundler copies every global declaration it sees into `index.d.ts`, so the build's tsconfig leaves this file out and the element build copies it as it is. `TAG_NAME` is typed as `string`, so the SDK's own code never depends on the global tag map.
+- **`pnpm check:package` installs the packed SDK into four fresh projects.**
+  React 18 and 19, each with the strictest TypeScript settings and with the defaults, and `skipLibCheck` off. Each project has lines marked `@ts-expect-error` that must fail, and the check also refuses an `any` anywhere in the shipped types. CI runs it after the size check.
+- **Charts animate for 200 ms, and not at all with reduced motion.**
+  The first cross-filter measurement missed its 300 ms target (median 549 ms) because of ECharts' default animations. The durations are set on every series as well as on the chart, because a series' own defaults win over the chart's.
+- **The SDK records User Timing entries.**
+  `dashkit:mount`, `dashkit:first-chart`, `dashkit:filter-change` and `dashkit:cross-filter` are the measurements the performance tests read, and a host can read them too. Nothing is recorded when the Performance API is missing.
+- **Performance is measured by hand, not in CI.**
+  `pnpm perf` builds the SDK and the demo, takes several minutes, and depends on the machine. CI gates the bundle sizes only. The results, with the machine and browser, are in `PERFORMANCE.md`.
+- **The bundle breakdown came from the bundle's source map, read with Node's own `SourceMap`.**
+  A one-off script attributed every byte of `dashkit.js` to the package it came from, without adding a visualiser package to the project.
+- **Component tests may take 15 seconds.**
+  With the React 18 run, twice as many component tests run in parallel, and one builder test that takes about a second alone timed out at Vitest's default of 5 seconds in a full run.
+- **The API reference is generated from the public types, and every public property needs JSDoc.**
+  `scripts/api-reference.ts` walks the exports of both entries with the TypeScript compiler and writes the Storybook page before Storybook starts or builds. It fails when an export, a property or a method has no JSDoc, so CI enforces the editor tooltips too. Its output is not committed.
+- **Accepted but unused options are documented as such, not removed.**
+  `pageSize`, a layout item's `minW` and `minH`, the `success` and `warning` colours, and a token's `scopes.measures` are part of the public types from the guide, but nothing applies them yet. Their JSDoc now says so; removing them would change a public contract.
+- **Storybook has a signed-in user in its toolbar.**
+  The story loader signs in as the chosen user through the in-browser API, and Storybook runs loaders again when a toolbar value changes. Stories that need one user pin it with story-level `globals`, which also disables that toolbar control for them.
+- **Every widget has the same six stories, from one shared module.**
+  Default, Loading, Empty, Error, Selected and Dark. Line and table widgets need `crossFilter.emit` to hold a selection, so their Selected stories set it. A KPI cannot be selected, so its Selected story shows it narrowed by a selection in another widget.
+- **`pnpm dev` watches both SDK builds, and neither empties `dist/`.**
+  The demo app imports the npm build and its plain HTML page loads `dashkit.js`, both from `dist/`. A plain `vite build --watch` emptied the folder and rebuilt only `index.js`, so the plain HTML page failed under `pnpm dev`; the end-to-end tests start the demo without the watcher and never saw it. `scripts/dev.ts` runs both watchers in one process. `src/element.ts` also leaves `tsconfig.build.json`: the type plugin wrote and then deleted its own `dist/element.d.ts`, which removed the element build's copy whenever the two builds overlapped.
+- **Focus moves in layout effects.**
+  After a save or a cancel, Save and Cancel disappear and the focus goes to Edit dashboard. A passive effect did this a moment after the page updated, leaving the focus on the page body in between; checking each commit from a fresh clone, the save test caught that gap twice on a busy machine. A layout effect moves the focus in the same update.
+- **Line coverage is not measured.**
+  Measuring it needs a coverage provider such as `@vitest/coverage-v8`, a dependency the guide does not name, so it waits for approval.

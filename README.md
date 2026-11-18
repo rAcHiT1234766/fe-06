@@ -130,7 +130,8 @@ export async function mintDashKitToken(user: {
   id: string;
   companyId: string;
   canEdit: boolean;
-  regions: string[];
+  // World Bank region codes, such as ['SAS', 'EAS'], or '*' for every region.
+  regions: string[] | '*';
 }) {
   return new SignJWT({
     tenantId: user.companyId,
