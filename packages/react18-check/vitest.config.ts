@@ -23,6 +23,9 @@ export default defineProject({
     dir: `${sdk}src`,
     include: ['**/*.test.tsx', 'element/*.test.ts'],
     environment: 'happy-dom',
+    // A test that renders a whole dashboard takes about a second alone, but several when every
+    // project runs at once on a busy machine; the default of 5 s left too little room.
+    testTimeout: 15_000,
     environmentOptions: {
       // The mock API answers through MSW without CORS headers, which only the HTTP server adds.
       happyDOM: { settings: { fetch: { disableSameOriginPolicy: true } } },
