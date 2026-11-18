@@ -67,7 +67,7 @@ export function App() {
   return (
     <>
       <header className="demo-header">
-        <strong className="demo-product">Host product</strong>
+        <h1 className="demo-product">Host product</h1>
         <label>
           Signed in as
           <select value={userId} onChange={(event) => setUserId(event.target.value)}>
