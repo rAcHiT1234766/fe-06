@@ -6,6 +6,7 @@ import {
   fitToCatalog,
   setAggregation,
   setDimension,
+  setDrillDown,
   setMeasure,
   setPageSize,
   setRowLimit,
@@ -144,6 +145,21 @@ describe('editing one setting', () => {
     const plain: WidgetConfig = { ...gdpByRegion };
     delete plain.options;
     expect(setPageSize(setPageSize(plain, 5), undefined)).not.toHaveProperty('options');
+  });
+
+  it('sets and clears the field a click drills down to', () => {
+    const drilling = setDrillDown(gdpByRegion, 'country');
+    expect(drilling.drillDown).toBe('country');
+    expect(setDrillDown(drilling, undefined)).toEqual(gdpByRegion);
+  });
+
+  it('drops the drill-down when the widget is grouped by that field, or cannot drill', () => {
+    const drilling = setDrillDown(gdpByRegion, 'country');
+    expect(setDimension(drilling, 'incomeLevel', 2024).drillDown).toBe('country');
+    expect(setDimension(drilling, 'country', 2024)).not.toHaveProperty('drillDown');
+    expect(changeWidgetType(drilling, 'pie', byIncome, 2024).drillDown).toBe('country');
+    expect(changeWidgetType(drilling, 'line', byYear, 2024)).not.toHaveProperty('drillDown');
+    expect(changeWidgetType(drilling, 'kpi', byYear, 2024)).not.toHaveProperty('drillDown');
   });
 });
 

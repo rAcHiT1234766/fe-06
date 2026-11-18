@@ -1,6 +1,13 @@
 import { useSyncExternalStore } from 'react';
+import { drilledInto } from '../../core/drill-down';
 import { emittedField } from '../../core/filter-store';
-import type { DimensionField, Scalar, WidgetConfig } from '../../core/types';
+import type {
+  ActiveFilter,
+  DimensionField,
+  QueryResult,
+  Scalar,
+  WidgetConfig,
+} from '../../core/types';
 import { useDashKit } from '../context';
 
 export function useActiveFilters() {
@@ -17,14 +24,24 @@ export interface Selection {
   toggle: (value: Scalar, additive?: boolean) => void;
 }
 
-export function useSelection(widget: WidgetConfig): Selection | undefined {
+/**
+ * The selection a widget's clicks change, when `result` has the field it is on. A drilled-down
+ * widget shows another field, so it has nothing of the selection's to click; until its new rows
+ * arrive, the old ones and their buttons stay, keeping the focus where it was.
+ */
+export function useSelection(widget: WidgetConfig, result: QueryResult): Selection | undefined {
   const { filterStore } = useDashKit();
   const activeFilters = useActiveFilters();
   const field = emittedField(widget);
-  if (!field) return undefined;
+  if (!field || !result.columns.some(({ name }) => name === field)) return undefined;
   return {
     field,
     values: activeFilters.find((filter) => filter.sourceWidgetId === widget.id)?.values,
     toggle: (value, additive) => filterStore.toggle(field, value, widget.id, additive),
   };
+}
+
+/** The selection the widget is drilled into, or `undefined` while it shows its top level. */
+export function useDrilledInto(widget: WidgetConfig): ActiveFilter | undefined {
+  return drilledInto(widget, useActiveFilters());
 }

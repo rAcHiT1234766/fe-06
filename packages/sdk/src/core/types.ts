@@ -129,6 +129,13 @@ export interface WidgetConfig {
     donut?: boolean;
     pageSize?: number;
   };
+  /**
+   * A field to show within a selection made in this widget, such as `country` for a chart of
+   * regions. Clicking a region then shows that region's countries here, while the other widgets
+   * filter by the region as usual, and a link above the chart leads back. Only a widget that emits
+   * cross-filters drills down, and only to a field other than the one it is clicked on.
+   */
+  drillDown?: DimensionField;
   /** `emit` defaults to true for bar and pie widgets; `listen` defaults to true for all. */
   crossFilter?: {
     emit?: boolean;

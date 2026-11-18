@@ -12,7 +12,8 @@ export type ConfigField =
   | 'pageSize'
   | 'orientation'
   | 'emit'
-  | 'listen';
+  | 'listen'
+  | 'drillDown';
 
 const groupedFields: ConfigField[] = ['measure', 'aggregation', 'dimension', 'sort', 'limit'];
 
@@ -45,7 +46,7 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
         orderBy: [{ field: 'gdpPerCapita', direction: 'desc' }],
       },
     },
-    configFields: [...groupedFields, 'orientation', 'emit', 'listen'],
+    configFields: [...groupedFields, 'orientation', 'emit', 'drillDown', 'listen'],
   },
   line: {
     label: 'Line chart',
@@ -76,7 +77,7 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
         dimensions: ['incomeLevel'],
       },
     },
-    configFields: [...groupedFields, 'emit', 'listen'],
+    configFields: [...groupedFields, 'emit', 'drillDown', 'listen'],
   },
   table: {
     label: 'Table',
@@ -92,7 +93,7 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
         orderBy: [{ field: 'lifeExpectancy', direction: 'desc' }],
       },
     },
-    configFields: [...groupedFields, 'pageSize', 'emit', 'listen'],
+    configFields: [...groupedFields, 'pageSize', 'emit', 'drillDown', 'listen'],
   },
   kpi: {
     label: 'KPI',

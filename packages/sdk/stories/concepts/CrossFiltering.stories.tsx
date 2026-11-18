@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import { Dashboard } from '../../src';
+import { Dashboard, type DashboardConfig } from '../../src';
 import { hostArgTypes, type HostArgs } from '../support';
 
 /**
@@ -42,4 +42,57 @@ export const PermissionsStillApply: Story = {
     filters: [{ field: 'region', values: ['Europe & Central Asia'], sourceWidgetId: 'host' }],
   },
   globals: { user: 'ravi' },
+};
+
+const inLatestYear = [{ field: 'year' as const, op: 'eq' as const, value: 2024 }];
+
+const drillDownDashboard: DashboardConfig = {
+  id: 'drill-down',
+  schemaVersion: 1,
+  title: 'Population',
+  description: 'Click a region to see its countries.',
+  widgets: [
+    {
+      id: 'by-region',
+      type: 'bar',
+      title: 'Population by region',
+      options: { orientation: 'horizontal' },
+      drillDown: 'country',
+      query: {
+        dataset: 'wdi',
+        measures: [{ field: 'population', agg: 'sum' }],
+        dimensions: ['region'],
+        filters: inLatestYear,
+        orderBy: [{ field: 'population', direction: 'desc' }],
+      },
+    },
+    {
+      id: 'by-income',
+      type: 'pie',
+      title: 'Population by income level',
+      query: {
+        dataset: 'wdi',
+        measures: [{ field: 'population', agg: 'sum' }],
+        dimensions: ['incomeLevel'],
+        filters: inLatestYear,
+      },
+    },
+  ],
+  layouts: {
+    lg: [
+      { i: 'by-region', x: 0, y: 0, w: 7, h: 5 },
+      { i: 'by-income', x: 7, y: 0, w: 5, h: 5 },
+    ],
+  },
+};
+
+/**
+ * "Population by region" has `drillDown: 'country'`. Click a region: the chart shows that region's
+ * countries, the pie is filtered to the region as by any click, and "All regions" above the chart
+ * leads back. Keyboard users press Enter on a region in the chart's data table, and the focus moves
+ * to "All regions".
+ */
+export const DrillDown: Story = {
+  name: 'Drill down',
+  render: () => <Dashboard config={drillDownDashboard} />,
 };

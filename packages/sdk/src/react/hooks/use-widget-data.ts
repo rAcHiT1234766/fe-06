@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { ownQuery } from '../../core/drill-down';
 import { filtersFor } from '../../core/filter-store';
 import { mergeQuery } from '../../core/merge-query';
 import { queryKey, type QueryClient } from '../../core/query-client';
@@ -25,7 +26,7 @@ export function useWidgetData(widget: WidgetConfig): WidgetData {
   const { client } = useDashKit();
   const activeFilters = useActiveFilters();
   const query = useMemo(
-    () => mergeQuery(widget.query, filtersFor(activeFilters, widget)),
+    () => mergeQuery(ownQuery(widget, activeFilters), filtersFor(activeFilters, widget)),
     [widget, activeFilters],
   );
   const key = queryKey(query);

@@ -357,3 +357,19 @@ The author asked for five features the requirements do not list. Each is recorde
   The header then holds the editor's controls, and the data belongs to an unsaved draft.
 - **`allow-export="false"` counts as absent.**
   It is a boolean attribute, but React 18 writes `false` on a custom element as the text "false", which would otherwise turn the downloads on.
+- **Drill-down is a widget's own selection, seen one level down.**
+  `drillDown` names a field. A click selects the value as for any cross-filter, so the other widgets filter by it, and the clicked widget, which never filters by its own selection, shows `drillDown` within it instead of highlighting it. Nothing new is stored, undone or reported: the host's `onFilterChange` hears the selection, and the chip's ×, **Clear all** and the **All regions** link all lead back.
+- **One level, to any other field.**
+  The data's only hierarchy is region to country, so `drillDown` names one field rather than a path. Income level to country, or region to year, work the same way.
+- **The drilled query swaps one field and keeps the rest.**
+  It groups by `drillDown` in place of the clicked field, keeps to the selected values, and sorts by the new field where it sorted by the old one. Measures, filters such as the year, and the row limit stay.
+- **Only the widget's own selection drills it.**
+  A selection made by the host or another widget filters it as usual, so a host that sets a region does not change what the charts show.
+- **The drilled level has nothing to click.**
+  Its rows are countries, not values of the widget's selection field. Selecting a country there would need a second selection in the same widget.
+- **Filter buttons follow the rows on screen, not the selection.**
+  While the countries load, the regions and their buttons stay, so the button that was pressed keeps the focus until the rows change. The component test caught the first version, which dropped the buttons with the selection and the focus with them.
+- **The focus follows keyboard users, never pointer users.**
+  After drilling in from a button in the widget, the focus moves to **All regions**; after leaving with Enter or Space, which give a click with no pointer and a `detail` of 0, it moves to the value drilled into, in the data table. A click on the canvas leaves the focus where it was, and so does a mouse click on **All regions**, since the data table it would focus covers the chart.
+- **Offered for bar, pie and table widgets.**
+  Their clicks pick one value. A line usually runs over years and a KPI has nothing to click; changing a widget to either drops `drillDown`, as grouping by the drill-down field itself does.

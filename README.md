@@ -61,7 +61,8 @@ Saved dashboards live in the demo API's memory, so restarting `pnpm dev` resets 
 - **Row-level security.** The data API applies each user's scope, from a token signed by the host's
   backend, before anything else. Filters can only narrow what a user sees.
 - **Cross-filtering.** Clicking a bar or slice filters every other widget, and Ctrl- or Cmd-click
-  selects several. The host can set the filters and hears about every change.
+  selects several. A chart can drill down, from a region to its countries. The host can set the
+  filters and hears about every change.
 - **A dashboard builder** for editors: drag or use the keyboard to move and resize, add,
   configure, undo, save. Viewers never see it, and the API refuses their writes anyway.
 - **CSV export**, when the host allows it: each widget downloads the rows it shows, only ever

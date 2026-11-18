@@ -246,6 +246,33 @@ describe('DashboardBuilder', () => {
     expect(within(chart).getByRole('cell', { name: 'South Asia' })).toBeTruthy();
   });
 
+  it('offers drill-down to the other fields, while clicking the widget filters', async () => {
+    await renderEditing('asha');
+    const panel = await openSettings('Population by region');
+    const drillDown = within(panel).getByLabelText<HTMLSelectElement>('Drill down to');
+    expect([...drillDown.options].map(({ text }) => text)).toEqual([
+      'Nothing',
+      'Country',
+      'Income level',
+      'Year',
+    ]);
+    change(panel, 'Drill down to', 'country');
+
+    // The draft drills down at once: a click shows the region's countries.
+    const chart = widget('Population by region');
+    fireEvent.click(within(chart).getByRole('button', { name: 'Filter by South Asia' }));
+    expect(await within(chart).findByRole('button', { name: 'All regions' })).toBeTruthy();
+    expect(await within(chart).findByRole('cell', { name: 'India' })).toBeTruthy();
+
+    // A widget whose clicks filter nothing has no selection to drill into.
+    fireEvent.click(within(panel).getByLabelText('Clicking it filters other widgets'));
+    expect(within(panel).queryByLabelText('Drill down to')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Close widget settings' }));
+    expect(
+      within(await openSettings('Total population')).queryByLabelText('Drill down to'),
+    ).toBeNull();
+  });
+
   it('FR-5.5 splits a table into pages of the size an editor chooses', async () => {
     await renderEditing('asha');
     const panel = await openSettings('Countries');

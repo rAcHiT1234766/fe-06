@@ -9,6 +9,7 @@
 /* A narrow widget gives its content the room that padding would take. */
 @container (width < 20rem) {
   .dk-widget-header,
+  .dk-drill-path,
   .dk-widget-body {
     padding-inline: var(--dk-space-3);
   }

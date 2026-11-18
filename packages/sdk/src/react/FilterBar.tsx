@@ -1,14 +1,7 @@
 import { formatValue } from '../core/format';
-import type { DimensionField } from '../core/types';
 import { useDashKit } from './context';
+import { FIELD_NAMES, formatFor } from './field-names';
 import { useActiveFilters } from './hooks/use-cross-filter';
-
-const FIELD_LABELS: Record<DimensionField, string> = {
-  country: 'Country',
-  region: 'Region',
-  incomeLevel: 'Income level',
-  year: 'Year',
-};
 
 export function FilterBar() {
   const { filterStore } = useDashKit();
@@ -18,8 +11,7 @@ export function FilterBar() {
     <div className="dk-filter-bar" role="group" aria-label="Active filters">
       <ul className="dk-chips">
         {filters.map(({ field, values }) => {
-          const format = field === 'year' ? 'year' : undefined;
-          const label = `${FIELD_LABELS[field]}: ${values.map((value) => formatValue(value, format)).join(', ')}`;
+          const label = `${FIELD_NAMES[field].label}: ${values.map((value) => formatValue(value, formatFor(field))).join(', ')}`;
           return (
             <li key={field} className="dk-chip">
               <span>{label}</span>

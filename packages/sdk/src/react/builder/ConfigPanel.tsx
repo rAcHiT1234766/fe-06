@@ -3,13 +3,14 @@ import {
   changeWidgetType,
   setAggregation,
   setDimension,
+  setDrillDown,
   setMeasure,
   setPageSize,
   setRowLimit,
   setSortOrder,
 } from '../../core/config/edit-widget';
 import { MAX_ROWS } from '../../core/config/schema';
-import { emitsFilters } from '../../core/filter-store';
+import { emitsFilters, emittedField } from '../../core/filter-store';
 import type { FieldCatalog } from '../../core/query-client';
 import type {
   Aggregation,
@@ -298,6 +299,28 @@ export function ConfigPanel({
           >
             <option value="vertical">Vertical</option>
             <option value="horizontal">Horizontal</option>
+          </select>
+        </Field>
+      )}
+
+      {fieldCatalog && fields.has('drillDown') && emittedField(widget) && (
+        <Field label="Drill down to">
+          <select
+            className="dk-input"
+            value={widget.drillDown ?? ''}
+            onChange={(event) => {
+              const { value } = event.currentTarget;
+              onChange(setDrillDown(widget, value ? (value as DimensionField) : undefined));
+            }}
+          >
+            <option value="">Nothing</option>
+            {fieldCatalog.dimensions
+              .filter(({ name }) => name !== emittedField(widget))
+              .map(({ name, label }) => (
+                <option key={name} value={name}>
+                  {label}
+                </option>
+              ))}
           </select>
         </Field>
       )}

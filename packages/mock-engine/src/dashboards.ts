@@ -1,5 +1,6 @@
 import type { DashboardConfig, LayoutItem, WidgetConfig } from '@dashkit/sdk';
 import { MAX_ROWS, parseQuery } from './parse-query.ts';
+import { dimensions } from './schema.ts';
 import { invalidRequest, isOneOf, isRecord } from './validation.ts';
 
 const WIDGET_TYPES: WidgetConfig['type'][] = ['bar', 'line', 'pie', 'table', 'kpi'];
@@ -122,6 +123,10 @@ export function parseDashboardConfig(body: unknown, id: string): DashboardConfig
     const pageSize = isRecord(widget.options) ? widget.options.pageSize : undefined;
     if (pageSize !== undefined && !isWholeNumber(pageSize, 1, MAX_ROWS)) {
       throw invalidRequest(`"pageSize" must be a whole number from 1 to ${MAX_ROWS}`);
+    }
+    const { drillDown } = widget;
+    if (drillDown !== undefined && !isOneOf(Object.keys(dimensions), drillDown)) {
+      throw invalidRequest(`"drillDown" must be one of ${Object.keys(dimensions).join(', ')}`);
     }
     return widget.id;
   });

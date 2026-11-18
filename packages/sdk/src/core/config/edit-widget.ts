@@ -8,6 +8,7 @@ import type {
 } from '../types';
 import type { FieldCatalog } from '../query-client';
 import { withYearRule } from './edit-dashboard';
+import { DRILLABLE_TYPES } from '../drill-down';
 
 type SortOrder = NonNullable<Query['orderBy']>[number];
 
@@ -56,6 +57,7 @@ export function changeWidgetType(
   }
   const changed: WidgetConfig = { ...widget, type, query: withYearRule(query, latestYear) };
   delete changed.options;
+  if (!DRILLABLE_TYPES.includes(type)) delete changed.drillDown;
   return changed;
 }
 
@@ -125,7 +127,18 @@ export function setDimension(
   const [first, ...others] = widget.query.dimensions ?? [];
   const dimensions = [dimension, ...others.filter((other) => other !== dimension)];
   const query = renameSortField({ ...widget.query, dimensions }, first, dimension);
-  return withQuery(widget, withYearRule(query, latestYear));
+  const changed = withQuery(widget, withYearRule(query, latestYear));
+  // Drilling into the field a widget is grouped by would show the same thing again.
+  if (changed.drillDown === dimension) delete changed.drillDown;
+  return changed;
+}
+
+/** Sets the field a click shows within the clicked value, or none. */
+export function setDrillDown(widget: WidgetConfig, field: DimensionField | undefined) {
+  const changed: WidgetConfig = { ...widget };
+  if (field) changed.drillDown = field;
+  else delete changed.drillDown;
+  return changed;
 }
 
 export function setSortOrder(widget: WidgetConfig, order: SortOrder | undefined) {

@@ -176,6 +176,19 @@ describe('demo API', () => {
     expect((await call('GET', '/dashboards/overview', { token: asha })).body).toEqual(saved.body);
   });
 
+  it('stores the field a widget drills down to', async () => {
+    const asha = await tokenFor('asha');
+    const dashboard = dashboardNamed('drilling', 'Drilling');
+    const body = {
+      ...dashboard,
+      widgets: dashboard.widgets.map((widget) =>
+        widget.type === 'bar' ? { ...widget, drillDown: 'country' } : widget,
+      ),
+    };
+    const saved = await call('PUT', '/dashboards/drilling', { token: asha, body });
+    expect(saved).toMatchObject({ status: 200, body });
+  });
+
   it.each([
     ['an id that differs from the URL', { ...createStarterDashboard(2024), id: 'other' }],
     [
@@ -202,6 +215,16 @@ describe('demo API', () => {
         const dashboard = createStarterDashboard(2024);
         const widgets = dashboard.widgets.map((widget) =>
           widget.type === 'table' ? { ...widget, options: { pageSize: 0 } } : widget,
+        );
+        return { ...dashboard, widgets };
+      })(),
+    ],
+    [
+      'a drill-down to a field that is not a dimension',
+      (() => {
+        const dashboard = createStarterDashboard(2024);
+        const widgets = dashboard.widgets.map((widget) =>
+          widget.type === 'bar' ? { ...widget, drillDown: 'gdp' } : widget,
         );
         return { ...dashboard, widgets };
       })(),

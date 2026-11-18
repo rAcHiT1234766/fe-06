@@ -1,9 +1,11 @@
-import { useId, useLayoutEffect, type ReactNode } from 'react';
+import { useId, useLayoutEffect, useRef, type ReactNode } from 'react';
 import type { DashKitError, QueryResult, WidgetConfig } from '../../core/types';
 import { useDashKit } from '../context';
+import { useDrilledInto } from '../hooks/use-cross-filter';
 import { useWidgetData } from '../hooks/use-widget-data';
 import { ErrorState } from '../ui/ErrorState';
 import { Skeleton } from '../ui/Skeleton';
+import { DrillPath, useDrillFocus } from './DrillPath';
 import { ExportButton } from './ExportButton';
 import { widgetRegistry } from './registry';
 
@@ -44,8 +46,17 @@ export function WidgetFrame({ widget, actions, canExport = false }: WidgetFrameP
     if (!isFetching && !hasView) timing.finished(widget.id, 'other');
   }, [timing, widget.id, isFetching, hasView, data, error]);
   useLayoutEffect(() => () => timing.removed(widget.id), [timing, widget.id]);
+
+  const sectionRef = useRef<HTMLElement>(null);
+  const drilled = useDrilledInto(widget);
+  const drillFocus = useDrillFocus(sectionRef, drilled, !isFetching && hasView);
   return (
-    <section className="dk-widget" aria-labelledby={titleId} aria-busy={isUpdating}>
+    <section
+      ref={sectionRef}
+      className="dk-widget"
+      aria-labelledby={titleId}
+      aria-busy={isUpdating}
+    >
       {isUpdating && <div className="dk-progress" aria-hidden="true" />}
       <header className="dk-widget-header">
         <h3 id={titleId} className="dk-widget-title">
@@ -58,6 +69,15 @@ export function WidgetFrame({ widget, actions, canExport = false }: WidgetFrameP
         )}
         {actions}
       </header>
+      {drilled && (
+        <DrillPath
+          title={widget.title}
+          selection={drilled}
+          onLeave={(isKeyboard) => {
+            if (isKeyboard) drillFocus.returnTo(drilled);
+          }}
+        />
+      )}
       <div className="dk-widget-body">
         <WidgetBody widget={widget} data={data} error={error} />
       </div>

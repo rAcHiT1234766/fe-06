@@ -182,3 +182,23 @@
 .dk-table .dk-numeric {
   text-align: end;
 }
+
+/* The way back from a drill-down, between the title and the chart it explains. */
+.dk-drill-path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dk-space-1);
+  padding: var(--dk-space-1) var(--dk-space-4) 0;
+  color: var(--dk-color-text-muted);
+  font-size: 0.875em;
+}
+
+.dk-drill-path .dk-text-button {
+  padding-inline: 0;
+}
+
+.dk-drill-path [aria-current] {
+  color: var(--dk-color-text);
+  font-weight: 600;
+}

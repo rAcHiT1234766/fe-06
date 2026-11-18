@@ -36,7 +36,7 @@ function ChartView({
   buildOption,
 }: WidgetViewProps & { buildOption: BuildChartOption }) {
   const { theme, timing } = useDashKit();
-  const selection = useSelection(widget);
+  const selection = useSelection(widget, result);
   const selectedValues = selection?.values;
   const outlineColor = theme.colors.text;
   const chartTheme = useMemo(() => buildEChartsTheme(theme), [theme]);
@@ -75,7 +75,7 @@ function ChartView({
 }
 
 function TableView({ widget, result }: WidgetViewProps) {
-  const selection = useSelection(widget);
+  const selection = useSelection(widget, result);
   const paged = usePagedResult(result, widget.options?.pageSize);
   useDrawnInNextFrame(widget.id, selection?.values ?? paged.result);
   const scrollRef = useRef<HTMLDivElement>(null);
