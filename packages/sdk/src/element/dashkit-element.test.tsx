@@ -1,9 +1,11 @@
-import { fireEvent, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, waitFor, within } from '@testing-library/react';
 import { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { QueryClient } from '../core/query-client';
 import type { ActiveFilter, DashboardConfig } from '../core/types';
 import '../element';
+import { DashboardBuilder } from '../react/DashboardBuilder';
+import { DashKitProvider } from '../react/DashKitProvider';
 import { API_URL, demoToken, setupMockApi } from '../testing/mock-api';
 import { DashKitElement } from './dashkit-element';
 
@@ -56,6 +58,31 @@ describe('<dashkit-dashboard>', () => {
     // Nothing is added to the page itself, so the page's styles have nothing to match.
     expect(element.children).toHaveLength(0);
     expect(document.querySelector('.dk-root')).toBeNull();
+  });
+
+  it('FR-1.3 renders exactly what the React component renders, from the same code', async () => {
+    const token = await demoToken('asha');
+    const { container } = render(
+      <DashKitProvider apiUrl={API_URL} token={token}>
+        <DashboardBuilder dashboardId="overview" />
+      </DashKitProvider>,
+    );
+    const element = addElement({ 'api-url': API_URL, 'dashboard-id': 'overview', token });
+    await within(container).findByRole('table', { name: 'Countries' });
+    await showsCountries(element);
+
+    // Every node's tag and class in document order, and the text, without the ids each render
+    // makes: the theme's styles are scoped to the root's own generated id.
+    const shapeOf = (root: Element) =>
+      [...root.querySelectorAll('*')].map(
+        (node) => `${node.tagName}.${node.getAttribute('class')}`,
+      );
+    const textOf = (root: Element) =>
+      root.textContent.replaceAll(root.getAttribute('data-dk-theme')!, 'theme-id');
+    const fromReact = container.querySelector('.dk-root')!;
+    const fromElement = element.shadowRoot!.querySelector('.dk-root')!;
+    await waitFor(() => expect(textOf(fromElement)).toBe(textOf(fromReact)));
+    expect(shapeOf(fromElement)).toEqual(shapeOf(fromReact));
   });
 
   it('FR-1.7 announces once that it is ready, with an event that leaves the shadow root', async () => {

@@ -52,6 +52,36 @@ for (const file of ['index.d.ts', 'element.d.ts']) {
   check(anys.length === 0, `dist/${file} uses any:\n${anys.join('\n')}`);
 }
 
+// FR-1.4: the npm build leaves React and the chart library to the host's installs, and the
+// script-tag build carries its own. React's production builds link to react.dev/errors, and
+// ECharts names its internal state `__ec_inner_`, so either string shows that library is bundled.
+const manifest = JSON.parse(readFileSync(new URL('package.json', sdkDir), 'utf8')) as {
+  peerDependencies: Record<string, string>;
+  dependencies: Record<string, string>;
+};
+check(
+  ['react', 'react-dom'].every((name) => name in manifest.peerDependencies),
+  'react and react-dom must be peer dependencies of @dashkit/sdk.',
+);
+const npmBuild = readFileSync(new URL('dist/index.js', sdkDir), 'utf8');
+check(
+  /from "react"/.test(npmBuild) && /from "echarts\/core"/.test(npmBuild),
+  'dist/index.js must import React and ECharts from the host project.',
+);
+check(
+  !npmBuild.includes('react.dev/errors') && !npmBuild.includes('__ec_inner_'),
+  'dist/index.js must not bundle React or ECharts.',
+);
+const scriptBuild = readFileSync(new URL('dist/dashkit.js', sdkDir), 'utf8');
+check(
+  scriptBuild.startsWith('var DashKit=(function'),
+  'dist/dashkit.js must be a classic script that defines window.DashKit.',
+);
+check(
+  scriptBuild.includes('react.dev/errors') && scriptBuild.includes('__ec_inner_'),
+  'dist/dashkit.js must bundle React and ECharts.',
+);
+
 // Code an integrator would write. Wrong usage must be rejected, so it is marked as expected errors.
 const app = `
 import { useEffect, useRef } from 'react';
