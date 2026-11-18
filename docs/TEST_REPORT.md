@@ -1,8 +1,9 @@
 # Test report
 
-Every result on this page comes from runs on 18 November 2026, on the code at commit `ba35b11`,
-on the machine described in [PERFORMANCE.md](PERFORMANCE.md) (Windows 11, Intel Core i5-1135G7,
-16 GB). Performance numbers are on that page.
+Every result on this page comes from runs on 18 November 2026, on a fresh clone of commit
+`fdc8e2d`, on the machine described in [PERFORMANCE.md](PERFORMANCE.md) (Windows 11, Intel Core
+i5-1135G7, 16 GB). The end-to-end run used `6988833`, which changes only documentation.
+Performance numbers are on that page.
 
 | Tool       | Version                                                   |
 | ---------- | --------------------------------------------------------- |
@@ -16,16 +17,16 @@ on the machine described in [PERFORMANCE.md](PERFORMANCE.md) (Windows 11, Intel 
 
 ## Summary
 
-| Check                 | Command                | Result                                                                                                |
-| --------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------- |
-| Lint                  | `pnpm lint`            | Pass, no warnings                                                                                     |
-| Types                 | `pnpm typecheck`       | Pass in every package                                                                                 |
-| Unit, component, type | `pnpm test`            | 33 files, 345 tests passed, no type errors                                                            |
-| End to end            | `pnpm test:e2e`        | 38 passed, 22 skipped (the accessibility checks run in Chromium only), in 1.9 minutes                 |
-| Build                 | `pnpm build`           | Pass                                                                                                  |
-| Storybook             | `pnpm build-storybook` | Pass; the API reference generator found JSDoc on all 33 public exports and their members              |
-| Bundle size           | `pnpm size`            | 214.6 kB gzipped as a host bundles the npm build (target 300); 281.7 kB for `dashkit.js` (target 500) |
-| Installed package     | `pnpm check:package`   | The packed SDK installs into four fresh projects and type-checks in each                              |
+| Check                 | Command                | Result                                                                                                                   |
+| --------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Lint                  | `pnpm lint`            | Pass, no warnings                                                                                                        |
+| Types                 | `pnpm typecheck`       | Pass in every package                                                                                                    |
+| Unit, component, type | `pnpm test`            | 33 files, 347 tests passed, no type errors                                                                               |
+| End to end            | `pnpm test:e2e`        | 51 passed, 48 skipped (the accessibility and Storybook checks run in Chromium only), in 2.6 minutes                      |
+| Build                 | `pnpm build`           | Pass                                                                                                                     |
+| Storybook             | `pnpm build-storybook` | Pass; the API reference generator found JSDoc on all 33 public exports and their members                                 |
+| Bundle size           | `pnpm size`            | 214.6 kB gzipped as a host bundles the npm build (target 300); 281.7 kB for `dashkit.js` (target 500)                    |
+| Installed package     | `pnpm check:package`   | Each build carries the libraries it should, and the packed SDK installs into four fresh projects and type-checks in each |
 
 CI runs all of these on every push, the end-to-end tests in all three browsers.
 
@@ -35,21 +36,21 @@ CI runs all of these on every push, the end-to-end tests in all three browsers.
 
 ```text
  Test Files  33 passed (33)
-      Tests  345 passed (345)
+      Tests  347 passed (347)
  Type Errors  no errors
-   Duration  40.28s (tests 53%, environment 26%, import 10%, setup 9%, typecheck 1%, transform 1%)
+   Duration  38.89s (tests 46%, environment 25%, import 11%, setup 10%, transform 7%, typecheck 2%)
 ```
 
 | Project                | Area                                                                                                                                                                                          |   Tests |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------: |
 | `sdk`                  | Core: query client 17, filter store 10, layouts 10, theme 10, widget edits 9, number formats 9, dashboard edits 7, config schema 6, render timing 5, query merging 4, no hard-coded colours 1 |      88 |
 | `sdk`                  | Chart options 11, ECharts theme 1                                                                                                                                                             |      12 |
-| `sdk`                  | Components on React 19: builder 19, dashboard 13, element 13, cross-filtering 12, ECharts hook 8, responsive 6, `DashKit.mount()` 5                                                           |      76 |
+| `sdk`                  | Components on React 19: builder 19, element 14, dashboard 13, cross-filtering 12, ECharts hook 8, responsive 6, `DashKit.mount()` 5                                                           |      77 |
 | `sdk`                  | Type tests: the public API 9, core types 4                                                                                                                                                    |      13 |
-| `sdk on React 18`      | The same 76 component tests, against React 18.3.1                                                                                                                                             |      76 |
+| `sdk on React 18`      | The same 77 component tests, against React 18.3.1                                                                                                                                             |      77 |
 | `@dashkit/mock-engine` | Permission matrix 32, query execution 28, API routes 16                                                                                                                                       |      76 |
 | `@dashkit/mock-api`    | The HTTP server: CORS for listed and other origins, preflight, and passing the token and body through                                                                                         |       4 |
-| **Total**              |                                                                                                                                                                                               | **345** |
+| **Total**              |                                                                                                                                                                                               | **347** |
 
 What they cover, against the plan in the implementation guide:
 
@@ -68,7 +69,9 @@ What they cover, against the plan in the implementation guide:
 - **Components** through the real query engine over MSW: each widget's loading, empty, error and
   populated states, the filter bar and its chips, cross-filtering between widgets, the config
   panel, role-based controls, saving and cancelling, unsaved-change warnings, container
-  breakpoints, and the custom element's attributes, properties, events and lifecycle.
+  breakpoints, and the custom element's attributes, properties, events and lifecycle. One test
+  renders the element and the React component side by side and requires the same markup, which
+  shows that both entry points come from the same code (FR-1.3).
 - **Types.** `expectTypeOf` tests check that the public types accept correct use and reject wrong
   use, such as passing both `dashboardId` and `config`, or reading the wrong `detail` type from a
   `dashkit:*` event.
@@ -84,6 +87,12 @@ the workspace, and type-checks a small host app with `skipLibCheck` off. Each pr
 lines marked `@ts-expect-error` that must fail, so the check proves wrong use is rejected too. It
 also checks that the package holds exactly the six expected files and that no type contains `any`.
 
+It then checks what each build carries (FR-1.4). The npm build must list `react` and `react-dom` as
+peer dependencies and import React and ECharts rather than contain them. `dashkit.js` must be a
+classic script that defines `window.DashKit` and contains both libraries. Of the SDK's dependencies,
+only React's production code links to `react.dev/errors` and only ECharts names its internal state
+`__ec_inner_`, so the check looks for those strings.
+
 ```text
 React 18, strictest TypeScript settings: types check.
 React 18, defaults TypeScript settings: types check.
@@ -94,7 +103,8 @@ The packed SDK (6 files) installs and type-checks.
 
 ## End-to-end tests
 
-Playwright runs the demo app against the demo API, one test at a time, in each browser.
+Playwright runs the demo app against the demo API, one test at a time, in each browser. It also
+builds Storybook and serves the static files, as they are deployed, for the Storybook checks.
 
 | Test                                                                                                | Chromium | Firefox | WebKit  |
 | --------------------------------------------------------------------------------------------------- | :------: | :-----: | :-----: |
@@ -108,10 +118,11 @@ Playwright runs the demo app against the demo API, one test at a time, in each b
 | FR-6.8 FR-6.9 the dashboard is usable on a 360 px phone                                             |   pass   |  pass   |  pass   |
 | FR-6.10 an editor on a phone sees the dashboard and a notice instead of the builder                 |   pass   |  pass   |  pass   |
 | 11 accessibility checks (below)                                                                     |   pass   | skipped | skipped |
+| 13 Storybook checks, FR-6.4 to FR-6.6 (below)                                                       |   pass   | skipped | skipped |
 
 ```text
-  22 skipped
-  38 passed (1.9m)
+  48 skipped
+  51 passed (2.6m)
 ```
 
 ### Accessibility
@@ -134,10 +145,19 @@ and the builder's tests check where the focus goes after each action.
 
 ## Storybook
 
-`pnpm build-storybook` builds every story and docs page. Separately, each of the 59 entries (46
-stories and 13 docs pages) was opened in Chromium against the Storybook dev server: none raised a
-page error or showed Storybook's error screen. The only failed requests were the ones the Error and
-"Session invalid" stories make on purpose. This check was a one-off script, not part of CI.
+`pnpm build-storybook` builds every story and docs page. The end-to-end run then serves the
+static build and checks, in Chromium, failing on any uncaught page error:
+
+- each of the five widgets' Default, Loading, Empty and Error stories shows that state (FR-6.4; 5
+  checks);
+- the theming playground applies its radius control, the cross-filtering page filters from a
+  chart's data table, switching the toolbar's user from Asha to Ravi cuts the regions from seven to
+  two, and the builder stories show editing to an editor but not to a viewer (FR-6.5; 4 checks);
+- the Getting started, Theming, Security model and API reference pages render (FR-6.6; 4 checks).
+
+In Phase 6, each of the 59 entries (46 stories and 13 docs pages) was also opened once in Chromium
+against the Storybook dev server: none raised a page error or showed Storybook's error screen. That
+check was a one-off script, not part of CI.
 
 ## What is not covered
 
