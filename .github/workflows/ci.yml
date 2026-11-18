@@ -21,6 +21,7 @@ jobs:
       - run: pnpm build
       - run: pnpm build-storybook
       - run: pnpm size
+      - run: pnpm check:package
 
   e2e:
     runs-on: ubuntu-latest

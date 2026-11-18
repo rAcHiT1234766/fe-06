@@ -16,7 +16,8 @@
     "storybook": "pnpm --filter @dashkit/sdk storybook",
     "build-storybook": "pnpm --filter @dashkit/sdk build-storybook",
     "size": "pnpm --filter @dashkit/sdk size",
-    "data:fetch": "node scripts/fetch-worldbank.ts"
+    "data:fetch": "node scripts/fetch-worldbank.ts",
+    "check:package": "node scripts/check-package.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
