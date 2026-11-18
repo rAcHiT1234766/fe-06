@@ -82,6 +82,7 @@ export class DashKitElement extends HTMLElement {
   #generation = 0;
   #announcedGeneration = -1;
 
+  /** The theme, as `DashKitProvider` takes it. The `color-scheme` attribute overrides its `mode`. */
   get theme(): ThemeInput | undefined {
     return this.#theme;
   }
@@ -111,7 +112,10 @@ export class DashKitElement extends HTMLElement {
     this.#render();
   }
 
-  // Typed overloads, so `event.detail` has the right type for each `dashkit:*` event.
+  /**
+   * Listens for an event. For the `dashkit:*` events, `event.detail` has each event's own type; see
+   * {@link DashKitElementEventMap}.
+   */
   override addEventListener<K extends keyof DashKitElementEventMap>(
     type: K,
     listener: Listener<K>,
@@ -130,6 +134,7 @@ export class DashKitElement extends HTMLElement {
     super.addEventListener(type, listener, options);
   }
 
+  /** Removes a listener added with `addEventListener`. */
   override removeEventListener<K extends keyof DashKitElementEventMap>(
     type: K,
     listener: Listener<K>,
@@ -156,6 +161,7 @@ export class DashKitElement extends HTMLElement {
     this.#render();
   }
 
+  /** Removes every active cross-filter. */
   clearFilters() {
     this.setFilters([]);
   }

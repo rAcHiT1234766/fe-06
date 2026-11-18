@@ -9,6 +9,7 @@ export interface DashKitHandle {
   update(options: Partial<DashKitOptions>): void;
   /** Replaces the active cross-filters, as a click on a chart would. */
   setFilters(filters: ActiveFilter[]): void;
+  /** Removes every active cross-filter. */
   clearFilters(): void;
   /** Forgets every cached result and loads the dashboard and its data again. */
   refresh(): void;

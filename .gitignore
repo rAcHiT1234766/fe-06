@@ -10,3 +10,6 @@ playwright-report/
 .env.*
 !.env.example
 .DS_Store
+
+# Written by packages/sdk/scripts/api-reference.ts before Storybook starts or builds.
+packages/sdk/stories/generated/

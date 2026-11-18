@@ -24,8 +24,9 @@
     "build": "vite build && vite build --config vite.element.config.ts",
     "typecheck": "tsc --noEmit",
     "size": "node scripts/size.ts",
-    "storybook": "storybook dev --port 6006",
-    "build-storybook": "storybook build"
+    "api-reference": "node scripts/api-reference.ts",
+    "storybook": "node scripts/api-reference.ts && storybook dev --port 6006",
+    "build-storybook": "node scripts/api-reference.ts && storybook build"
   },
   "peerDependencies": {
     "react": "^18 || ^19",

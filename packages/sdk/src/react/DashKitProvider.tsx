@@ -26,6 +26,7 @@ export interface DashKitProviderProps extends Pick<
    * own controls. Clicks in the dashboard still change them and are reported to `onFilterChange`.
    */
   filters?: ActiveFilter[];
+  /** The dashboards and builders that use this connection, theme and set of filters. */
   children: ReactNode;
 }
 
