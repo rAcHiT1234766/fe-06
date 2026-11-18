@@ -232,7 +232,10 @@ export interface TokenClaims {
   scopes: {
     /** Region codes the user may see, or `'*'` for all regions. */
     regions: string[] | '*';
-    /** Measures the user may query. Omitted means all of them. */
+    /**
+     * Measures the user may query; omitted means all of them. The demo API does not enforce this
+     * yet, so it cannot be relied on to hide a measure.
+     */
     measures?: MeasureField[] | '*';
   };
   /** When the token expires, in seconds since 1970. */
