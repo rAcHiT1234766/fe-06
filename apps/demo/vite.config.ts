@@ -7,17 +7,19 @@ import { defineConfig, type Plugin } from 'vite';
 // cannot bundle a classic script, so this serves the built file during development and copies it
 // into the build.
 function elementScript(): Plugin {
-  const path = createRequire(import.meta.url).resolve('@dashkit/sdk/element');
+  // Read when it is asked for, not when the config loads: the tests load this config too, before
+  // the SDK has been built.
+  const read = () => readFileSync(createRequire(import.meta.url).resolve('@dashkit/sdk/element'));
   return {
     name: 'dashkit-element-script',
     configureServer(server) {
       server.middlewares.use('/dashkit.js', (_request, response) => {
         response.setHeader('Content-Type', 'text/javascript');
-        response.end(readFileSync(path));
+        response.end(read());
       });
     },
     generateBundle() {
-      this.emitFile({ type: 'asset', fileName: 'dashkit.js', source: readFileSync(path) });
+      this.emitFile({ type: 'asset', fileName: 'dashkit.js', source: read() });
     },
   };
 }
