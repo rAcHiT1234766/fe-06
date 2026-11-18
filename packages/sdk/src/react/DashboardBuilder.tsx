@@ -198,7 +198,8 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
   };
 
   // Only the lg layout is authored; smaller ones are derived from it.
-  const changeLayout = (lg: LayoutItem[]) => editDraft((current) => arrangeWidgets(current, lg));
+  const changeLayout = (lg: LayoutItem[], group?: string) =>
+    editDraft((current) => arrangeWidgets(current, lg), group);
 
   const addFromPalette = (type: WidgetType) => {
     const { defaultSize, starter } = widgetRegistry[type];
@@ -372,7 +373,7 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
 
 /**
  * A {@link Dashboard} that editors can change: they open the builder, arrange and configure widgets,
- * and save. Nothing is stored until Save, and Cancel restores the saved dashboard. Undo and Redo,
+ * and save. Widgets move and resize by pointer or, from their handle, with the arrow keys. Nothing is stored until Save, and Cancel restores the saved dashboard. Undo and Redo,
  * in the toolbar or as Ctrl+Z and Ctrl+Y (Cmd on a Mac), step through the edits made since editing
  * began. Viewers only see the dashboard, and the API refuses their changes in any case.
  * @example

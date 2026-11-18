@@ -29,4 +29,10 @@
   .dk-check {
     min-height: 44px;
   }
+
+  .dk-drag-handle {
+    width: 44px;
+    height: 44px;
+    padding: 10px 13px;
+  }
 }

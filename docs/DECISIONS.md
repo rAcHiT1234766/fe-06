@@ -172,7 +172,7 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
 - **The builder end-to-end test uses Elena's tenant.**
   It empties and rebuilds her dashboard, and no other test reads it.
 - **Undo and redo (FR-5.10) and a keyboard way to move and resize widgets (FR-5.11) are not implemented.**
-  Both are stretch items. Until FR-5.11 exists the drag handle is hidden from screen readers, since it does nothing without a pointer. (Undo and redo since built: see "After Phase 7".)
+  Both are stretch items. Until FR-5.11 exists the drag handle is hidden from screen readers, since it does nothing without a pointer. (Since built: see "After Phase 7".)
 
 ## Phase 5 — Embedding and responsive
 
@@ -317,5 +317,16 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
   Configs are never changed in place, so each version shares everything it did not change with the one before and costs little to keep. Undoing to the start gives back the very config editing began from, so "Unsaved changes" clears and leaving the page asks nothing. The last 100 steps are kept, and Save or Cancel ends the history.
 - **A run of edits to one setting is one step.**
   Typing a title would otherwise take one undo per letter. `changedSetting` names the one setting an edit changed, and edits to the same setting of the same widget merge until another edit or an undo comes between. A drag that ends where it began is not an edit at all.
-- **The shortcuts work while the focus is in the dashboard, and not in a text field.**
+- **The undo shortcuts work while the focus is in the dashboard, and not in a text field.**
   Ctrl+Z undoes and Ctrl+Y or Ctrl+Shift+Z redoes, with Cmd on a Mac. A text field keeps Ctrl+Z for its own typing, as everywhere else on the page, and the host page's shortcuts are untouched elsewhere. The toolbar buttons use `aria-disabled`, so the focus stays on them at the end of the history, and a visually hidden status says what was undone and how many steps are left.
+- **The drag handle is also the keyboard handle.**
+  It is a button named "Move or resize" and the widget's title. With the focus on it, the arrow keys move the widget a column or row and Shift with the arrow keys resizes it, within the same minimums as a resize by pointer. The keys do not also scroll the page.
+- **A key press uses the grid's own move, as at the end of a drag.**
+  Widgets in the way make room and the layout is compacted upwards, so the keyboard never makes a layout the pointer could not. Compaction means one row down often floats straight back, and a step into two neighbours can move one of them and leave the widget where it was, so a press goes on until the widget itself has moved that way. When it cannot, the builder says so.
+- **What a key press did is said, and the keys are shown.**
+  A visually hidden status gives the new column and row, or the new size, or why nothing moved. While the handle has keyboard focus it shows which keys to use, so sighted keyboard users learn them too; a pointer user never sees the hint.
+- **A run of key presses is one undo step**, one for moving and one for resizing, as a typed title is.
+- **Nothing puts the focus back after a move.**
+  A move can put the widget's element after others in the page. Code to return the focus to the handle was written, and removed when the end-to-end test passed without it in Chromium, Firefox and WebKit; the test still checks that the focus stays.
+- **Screen readers in browse mode keep the arrow keys for reading.**
+  A screen reader user switches to focus mode, as for any control that takes arrow keys; the handle's description names the keys. A menu of move and resize commands would avoid the switch, at the cost of many more controls on every widget.

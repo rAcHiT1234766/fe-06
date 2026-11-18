@@ -1,7 +1,8 @@
-import { useContext, type ReactNode } from 'react';
+import { useContext, useId, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { GridLayout, useContainerWidth, type Layout } from 'react-grid-layout';
 import { COLUMNS, layoutFor } from '../core/config/layout';
 import type { DashboardConfig, LayoutItem, WidgetConfig } from '../core/types';
+import { arrangeByKey, isArrowKey, type ArrowKey } from './arrange-by-key';
 import { BreakpointContext } from './breakpoint-context';
 import { useDashKit } from './context';
 import { widgetRegistry } from './widgets/registry';
@@ -12,8 +13,12 @@ interface DashboardGridProps {
   layouts: DashboardConfig['layouts'];
   /** Editing always works on the twelve-column `lg` layout, which is the one that is saved. */
   isEditing?: boolean;
-  /** Called when a drag or resize ends, not on every movement, with the new `lg` layout. */
-  onLayoutChange?: (layout: LayoutItem[]) => void;
+  /**
+   * Called when a drag or resize ends, not on every movement, with the new `lg` layout. A move or
+   * resize from the keyboard also gives a `group` naming the widget and which of the two it was, so
+   * a run of key presses can be undone as one.
+   */
+  onLayoutChange?: (layout: LayoutItem[], group?: string) => void;
   /** The builder's buttons for one widget, shown next to its drag handle. */
   actionsFor?: (widget: WidgetConfig) => ReactNode;
 }
@@ -21,6 +26,15 @@ interface DashboardGridProps {
 // The grid adds working flags such as `moved`, which do not belong in a saved dashboard.
 const toLayoutItems = (layout: Layout): LayoutItem[] =>
   layout.map(({ i, x, y, w, h }) => ({ i, x, y, w, h }));
+
+const KEY_HINT = 'Arrow keys move it; Shift and the arrow keys resize it.';
+
+const LIMITS: Record<ArrowKey, [move: string, resize: string]> = {
+  ArrowLeft: ['move further left', 'get any narrower'],
+  ArrowRight: ['move further right', 'get any wider'],
+  ArrowUp: ['move further up', 'get any shorter'],
+  ArrowDown: ['move further down', 'get any taller'],
+};
 
 /**
  * Pairs each layout item with its widget, in reading order so that keyboard and screen reader order
@@ -61,6 +75,31 @@ export function DashboardGrid({
   // The gap matches the --dk-space-4 spacing, which follows the brand's base font size.
   const gap = typography.baseFontSize;
 
+  const hintId = useId();
+  // Read by screen readers after each key press, since a widget moving is otherwise silent.
+  const [keyNote, setKeyNote] = useState('');
+
+  const arrangeWithKey = (event: KeyboardEvent, { id, title }: WidgetConfig) => {
+    if (!isArrowKey(event.key) || event.ctrlKey || event.metaKey || event.altKey) return;
+    // Otherwise the arrow keys would scroll the page as well.
+    event.preventDefault();
+    const isResizing = event.shiftKey;
+    const items = placed.map(({ item }) => item);
+    const next = arrangeByKey(items, id, event.key, isResizing, COLUMNS.lg);
+    const [moveLimit, resizeLimit] = LIMITS[event.key];
+    if (!next) {
+      setKeyNote(`${title} cannot ${isResizing ? resizeLimit : moveLimit}.`);
+      return;
+    }
+    const { x, y, w, h } = next.find(({ i }) => i === id)!;
+    setKeyNote(
+      isResizing
+        ? `${title}: ${w} of ${COLUMNS.lg} columns wide, ${h} rows high.`
+        : `${title}: column ${x + 1} of ${COLUMNS.lg}, row ${y + 1}.`,
+    );
+    onLayoutChange?.(toLayoutItems(next), `${id} ${isResizing ? 'resize' : 'move'}`);
+  };
+
   return (
     // The container stays even when empty: the width hook measures it once, when it mounts.
     <div ref={containerRef} className="dk-grid">
@@ -68,6 +107,16 @@ export function DashboardGrid({
         <p className="dk-state">
           {isEditing ? 'Add a widget to start.' : 'This dashboard has no widgets yet.'}
         </p>
+      )}
+      {isEditing && (
+        <>
+          <p id={hintId} className="dk-visually-hidden">
+            {KEY_HINT}
+          </p>
+          <p className="dk-visually-hidden" role="status">
+            {keyNote}
+          </p>
+        </>
       )}
       <GridLayout
         width={width}
@@ -91,8 +140,15 @@ export function DashboardGrid({
                 isEditing && (
                   <div className="dk-widget-actions">
                     {actionsFor?.(widget)}
-                    {/* There is no keyboard way to move a widget, so screen readers skip the handle. */}
-                    <span className="dk-drag-handle" title="Drag to move" aria-hidden="true" />
+                    <button
+                      type="button"
+                      className="dk-drag-handle"
+                      aria-label={`Move or resize ${widget.title}`}
+                      aria-describedby={hintId}
+                      title="Drag to move"
+                      data-dk-hint={KEY_HINT}
+                      onKeyDown={(event) => arrangeWithKey(event, widget)}
+                    />
                   </div>
                 )
               }

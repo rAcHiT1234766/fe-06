@@ -81,7 +81,8 @@ Takes the same props as `Dashboard`, plus:
 
 An editor (a token with `role: 'editor'`) gets an **Edit dashboard** button. In the builder they
 drag widgets by their handle, resize them from the corner, add widgets from the palette, change
-each one in its settings panel, and save or cancel. Editing needs a container at least 900 px wide;
+each one in its settings panel, undo and redo, and save or cancel. From the keyboard, the arrow
+keys move a widget whose handle has the focus, and Shift with the arrow keys resizes it. Editing needs a container at least 900 px wide;
 on a narrower one the builder says so and shows the dashboard.
 
 ## The custom element

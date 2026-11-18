@@ -382,6 +382,71 @@ describe('undo and redo', () => {
   });
 });
 
+describe('moving and resizing from the keyboard', () => {
+  const keyNote = () => document.querySelector('.dk-grid [role="status"]')!.textContent;
+  const handleOf = (title: string) =>
+    screen.getByRole('button', { name: `Move or resize ${title}` });
+  // Each key goes to whatever has the focus, so a press after a lost focus would do nothing.
+  const press = (key: string, shiftKey = false) =>
+    fireEvent.keyDown(document.activeElement!, { key, shiftKey });
+
+  it('FR-5.11 moves and resizes a widget from its handle, says what happened, and keeps the focus there', async () => {
+    await copyOverview('asha', 'keyboard-arrange');
+    const onSave = vi.fn();
+    await renderEditing('asha', { dashboardId: 'keyboard-arrange', onSave });
+    const handle = handleOf('Countries');
+    expect(document.getElementById(handle.getAttribute('aria-describedby')!)?.textContent).toBe(
+      'Arrow keys move it; Shift and the arrow keys resize it.',
+    );
+
+    handle.focus();
+    press('ArrowRight');
+    expect(keyNote()).toBe('Countries cannot move further right.');
+    press('ArrowUp');
+    expect(keyNote()).toBe('Countries: column 1 of 12, row 4.');
+    press('ArrowUp');
+    expect(keyNote()).toBe('Countries: column 1 of 12, row 1.');
+    expect(screen.getAllByRole('button', { name: /^Move or resize / })[0]).toBe(
+      handleOf('Countries'),
+    );
+    // Down again puts its element after two others in the page, and the focus stays on its handle.
+    press('ArrowDown');
+    expect(keyNote()).toBe('Countries: column 1 of 12, row 4.');
+    expect(screen.getAllByRole('button', { name: /^Move or resize / })[2]).toBe(
+      handleOf('Countries'),
+    );
+    expect(document.activeElement).toBe(handleOf('Countries'));
+    press('ArrowUp');
+
+    press('ArrowUp', true);
+    expect(keyNote()).toBe('Countries: 12 of 12 columns wide, 4 rows high.');
+    press('ArrowUp', true);
+    expect(keyNote()).toBe('Countries cannot get any shorter.');
+
+    // A run of presses of one kind is one step to undo.
+    const undo = screen.getByRole('button', { name: 'Undo' });
+    fireEvent.click(undo);
+    fireEvent.click(undo);
+    expect(undo.getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: 'Redo' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByText('Saved')).toBeTruthy();
+    const [stored] = onSave.mock.calls[0] as [DashboardConfig];
+    expect(stored.layouts.lg.find(({ i }) => i === 'countries')).toEqual({
+      i: 'countries',
+      x: 0,
+      y: 0,
+      w: 12,
+      h: 5,
+    });
+    // The widgets it passed are below it, none overlapping.
+    expect(stored.layouts.lg.filter(({ i }) => i !== 'countries').every(({ y }) => y >= 5)).toBe(
+      true,
+    );
+  });
+});
+
 describe('saving', () => {
   const leavePage = () => {
     const event = new Event('beforeunload', { cancelable: true });

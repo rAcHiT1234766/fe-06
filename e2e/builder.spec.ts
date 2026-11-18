@@ -154,6 +154,58 @@ test('FR-5.10 an editor undoes a resize and a removal from the keyboard, and red
   await page.getByRole('button', { name: 'Cancel' }).click();
 });
 
+test('FR-5.11 an editor moves and resizes a widget from the keyboard, and the focus stays on its handle', async ({
+  page,
+}) => {
+  await signIn(page, 'asha');
+  await page.getByRole('button', { name: 'Edit dashboard' }).click();
+  // Out of the way, so that no chart moved under the pointer shows a tooltip.
+  await page.mouse.move(0, 0);
+  const before = await describeDashboard(page);
+  const hint = 'Arrow keys move it; Shift and the arrow keys resize it.';
+  const handle = page.getByRole('button', { name: 'Move or resize Countries' });
+  await expect(handle).toHaveAccessibleDescription(hint);
+
+  // Reached with Tab, as a keyboard user reaches it, the handle shows which keys to use.
+  await page.getByRole('button', { name: 'Remove Countries' }).focus();
+  await page.keyboard.press('Tab');
+  await expect(handle).toBeFocused();
+  expect(await handle.evaluate((element) => getComputedStyle(element, '::after').content)).toBe(
+    JSON.stringify(hint),
+  );
+
+  const status = page.locator('.dk-grid [role="status"]');
+  const cell = page.locator('.react-grid-item', { has: widgetTitled(page, 'Countries') });
+  const box = () =>
+    cell.evaluate((element) => {
+      const { top, height } = element.getBoundingClientRect();
+      return { top: Math.round(top + window.scrollY), height: Math.round(height) };
+    });
+  const start = await box();
+  await page.keyboard.press('ArrowUp');
+  await expect(status).toHaveText('Countries: column 1 of 12, row 4.');
+  await page.keyboard.press('ArrowUp');
+  await expect(status).toHaveText('Countries: column 1 of 12, row 1.');
+  await expect.poll(async () => (await box()).top).toBeLessThan(start.top);
+  // Down puts the table's element after two others in the page; the focus stays on its handle.
+  await page.keyboard.press('ArrowDown');
+  await expect(status).toHaveText('Countries: column 1 of 12, row 4.');
+  await expect(page.getByRole('button', { name: /^Move or resize / }).nth(2)).toHaveAccessibleName(
+    'Move or resize Countries',
+  );
+  await expect(handle).toBeFocused();
+
+  await page.keyboard.press('Shift+ArrowUp');
+  await expect(status).toHaveText('Countries: 12 of 12 columns wide, 4 rows high.');
+  await expect.poll(async () => (await box()).height).toBeLessThan(start.height);
+
+  // The moves are one step to undo, and the resize another.
+  await page.keyboard.press('ControlOrMeta+z');
+  await page.keyboard.press('ControlOrMeta+z');
+  expect(await describeDashboard(page)).toEqual(before);
+  await page.getByRole('button', { name: 'Cancel' }).click();
+});
+
 test('FR-5.1 a viewer sees no edit controls, and the API refuses their save', async ({
   page,
   request,
