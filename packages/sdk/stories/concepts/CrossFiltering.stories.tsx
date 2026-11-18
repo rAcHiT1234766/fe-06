@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
-import { Dashboard, type DashboardConfig } from '../../src';
+import { Dashboard, type DashboardConfig, type WidgetConfig } from '../../src';
 import { hostArgTypes, type HostArgs } from '../support';
 
 /**
@@ -46,44 +46,57 @@ export const PermissionsStillApply: Story = {
 
 const inLatestYear = [{ field: 'year' as const, op: 'eq' as const, value: 2024 }];
 
-const drillDownDashboard: DashboardConfig = {
-  id: 'drill-down',
-  schemaVersion: 1,
+const byRegion: WidgetConfig = {
+  id: 'by-region',
+  type: 'bar',
+  title: 'Population by region',
+  options: { orientation: 'horizontal' },
+  query: {
+    dataset: 'wdi',
+    measures: [{ field: 'population', agg: 'sum' }],
+    dimensions: ['region'],
+    filters: inLatestYear,
+    orderBy: [{ field: 'population', direction: 'desc' }],
+  },
+};
+
+const byIncome: WidgetConfig = {
+  id: 'by-income',
+  type: 'pie',
+  title: 'Population by income level',
+  query: {
+    dataset: 'wdi',
+    measures: [{ field: 'population', agg: 'sum' }],
+    dimensions: ['incomeLevel'],
+    filters: inLatestYear,
+  },
+};
+
+const twoCharts = (config: Pick<DashboardConfig, 'id' | 'description' | 'widgets'>) => ({
+  ...config,
+  schemaVersion: 1 as const,
   title: 'Population',
-  description: 'Click a region to see its countries.',
-  widgets: [
-    {
-      id: 'by-region',
-      type: 'bar',
-      title: 'Population by region',
-      options: { orientation: 'horizontal' },
-      drillDown: 'country',
-      query: {
-        dataset: 'wdi',
-        measures: [{ field: 'population', agg: 'sum' }],
-        dimensions: ['region'],
-        filters: inLatestYear,
-        orderBy: [{ field: 'population', direction: 'desc' }],
-      },
-    },
-    {
-      id: 'by-income',
-      type: 'pie',
-      title: 'Population by income level',
-      query: {
-        dataset: 'wdi',
-        measures: [{ field: 'population', agg: 'sum' }],
-        dimensions: ['incomeLevel'],
-        filters: inLatestYear,
-      },
-    },
-  ],
   layouts: {
     lg: [
       { i: 'by-region', x: 0, y: 0, w: 7, h: 5 },
       { i: 'by-income', x: 7, y: 0, w: 5, h: 5 },
     ],
   },
+});
+
+const drillDownDashboard: DashboardConfig = twoCharts({
+  id: 'drill-down',
+  description: 'Click a region to see its countries.',
+  widgets: [{ ...byRegion, drillDown: 'country' }, byIncome],
+});
+
+const controlledDashboard: DashboardConfig = {
+  ...twoCharts({
+    id: 'filter-controls',
+    description: 'Choose a region or a year above the charts.',
+    widgets: [byRegion, byIncome],
+  }),
+  filterControls: [{ field: 'region' }, { field: 'year' }],
 };
 
 /**
@@ -95,4 +108,14 @@ const drillDownDashboard: DashboardConfig = {
 export const DrillDown: Story = {
   name: 'Drill down',
   render: () => <Dashboard config={drillDownDashboard} />,
+};
+
+/**
+ * The dashboard's config lists `filterControls` on region and year. A choice filters every widget,
+ * a click on a chart shows in the list, and the year chosen replaces the 2024 that both charts
+ * otherwise show.
+ */
+export const FilterControls: Story = {
+  name: 'Filter controls',
+  render: () => <Dashboard config={controlledDashboard} />,
 };

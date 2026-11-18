@@ -1,15 +1,27 @@
-import type { ActiveFilter, DashboardConfig, Query, WidgetConfig } from './types';
+import type { ActiveFilter, DashboardConfig, DimensionField, Query, WidgetConfig } from './types';
 
 /**
  * The query a widget actually runs: its own query narrowed by the active cross-filters. Each filter
  * becomes an `in` condition, and the API applies the user's row scope before any of them.
+ *
+ * A field in `controlledFields` has a filter control, which makes it a setting of the whole
+ * dashboard: a selection on it replaces the widget's own filters on that field, so choosing 2010
+ * shows 2010 in a widget that otherwise shows 2024. On other fields both apply.
  */
-export function mergeQuery(query: Query, filters: ActiveFilter[]): Query {
+export function mergeQuery(
+  query: Query,
+  filters: ActiveFilter[],
+  controlledFields: readonly DimensionField[] = [],
+): Query {
   if (filters.length === 0) return query;
+  // Strings, because a widget may also filter on a measure, which never has a control.
+  const replaced = new Set<string>(
+    filters.map(({ field }) => field).filter((field) => controlledFields.includes(field)),
+  );
   return {
     ...query,
     filters: [
-      ...(query.filters ?? []),
+      ...(query.filters ?? []).filter(({ field }) => !replaced.has(field)),
       ...filters.map(({ field, values }) => ({ field, op: 'in' as const, value: values })),
     ],
   };

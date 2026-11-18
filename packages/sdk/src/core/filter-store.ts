@@ -51,6 +51,18 @@ export function createFilterStore(initialFilters: ActiveFilter[] = []) {
           : filters.map((filter) => (filter === current ? selection : filter)),
       );
     },
+    /**
+     * Sets the selection on `field` to `values`, made by `sourceWidgetId`, replacing any selection
+     * on it, as a filter control does. No values removes the selection.
+     */
+    select(field: DimensionField, values: Scalar[], sourceWidgetId: string) {
+      const current = filters.find((filter) => filter.field === field);
+      const selection: ActiveFilter = { field, values, sourceWidgetId };
+      if (values.length === 0) {
+        if (current) set(filters.filter((filter) => filter !== current));
+      } else if (!current) set([...filters, selection]);
+      else set(filters.map((filter) => (filter === current ? selection : filter)));
+    },
     remove(field: DimensionField) {
       set(filters.filter((filter) => filter.field !== field));
     },

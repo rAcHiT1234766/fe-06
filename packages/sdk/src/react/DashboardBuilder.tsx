@@ -5,6 +5,7 @@ import {
   duplicateWidget,
   nextWidgetId,
   removeWidget,
+  toggleFilterControl,
   updateWidget,
   withYearRule,
 } from '../core/config/edit-dashboard';
@@ -39,11 +40,15 @@ import { useDashKit } from './context';
 import {
   DashboardHeader,
   DashboardLoader,
+  useControlledFields,
   useDashboardWidgets,
   type DashboardProps,
 } from './Dashboard';
 import { DashboardGrid } from './DashboardGrid';
+import { ControlledFieldsContext } from './controlled-fields-context';
 import { FilterBar } from './FilterBar';
+import { FilterControls } from './FilterControls';
+import { ControlPicker } from './builder/ControlPicker';
 import { useClientValue } from './hooks/use-client-value';
 import { widgetRegistry } from './widgets/registry';
 
@@ -109,6 +114,7 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
   const isEditing = draftConfig !== undefined;
   const config = draftConfig ?? savedConfig;
   const widgets = useDashboardWidgets(config);
+  const controlledFields = useControlledFields(config);
   const latestYear = useClientValue(loadLatestYear, isEditing).value;
   const fieldCatalog = useClientValue(loadFieldCatalog, isEditing);
   const selected = draftConfig?.widgets.find(({ id }) => id === selectedId);
@@ -339,15 +345,28 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
         </div>
       )}
       {isEditing && <Palette onAdd={addFromPalette} />}
+      {isEditing && fieldCatalog.value && (
+        <ControlPicker
+          // A field with a default filter cannot have a control, so it is not offered.
+          dimensions={fieldCatalog.value.dimensions.filter(
+            ({ name }) => !config.defaultFilters?.some(({ field }) => field === name),
+          )}
+          controls={config.filterControls ?? []}
+          onToggle={(field) => editDraft((current) => toggleFilterControl(current, field))}
+        />
+      )}
+      {config.filterControls && <FilterControls controls={config.filterControls} />}
       <FilterBar />
       <div className="dk-builder-body">
-        <DashboardGrid
-          widgets={widgets}
-          layouts={config.layouts}
-          isEditing={isEditing}
-          onLayoutChange={changeLayout}
-          actionsFor={actionsFor}
-        />
+        <ControlledFieldsContext.Provider value={controlledFields}>
+          <DashboardGrid
+            widgets={widgets}
+            layouts={config.layouts}
+            isEditing={isEditing}
+            onLayoutChange={changeLayout}
+            actionsFor={actionsFor}
+          />
+        </ControlledFieldsContext.Provider>
         {selected && (
           <ConfigPanel
             // A fresh panel for each widget, so focus starts at the title again.

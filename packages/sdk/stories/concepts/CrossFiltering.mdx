@@ -30,6 +30,16 @@ receives.
 A dashboard's `defaultFilters` are not cross-filters. They are part of the config, narrow every
 widget, including those that ignore cross-filters, and never show as chips.
 
+## Filter controls
+
+`filterControls` in the dashboard's config puts a list above the grid for each field it names. A
+choice in a list is a selection like a click, shown as a chip and reported to the host, and a click
+on a chart shows in the list. A field with a control is a setting of the whole dashboard: the year
+chosen replaces the year a widget otherwise shows, where on other fields a selection and a widget's
+own filter both apply. In the builder, **Filters above the dashboard** adds and removes the lists.
+
+<Canvas of={CrossFilteringStories.FilterControls} />
+
 ## Drill-down
 
 <Canvas of={CrossFilteringStories.DrillDown} />

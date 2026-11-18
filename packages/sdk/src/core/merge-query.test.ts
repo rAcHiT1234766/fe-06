@@ -26,6 +26,32 @@ describe('mergeQuery', () => {
     expect(populationByIncome.filters).toHaveLength(1);
   });
 
+  it('lets a selection on a field with a filter control replace the widget’s own filters on it', () => {
+    const withGdpFloor: Query = {
+      ...populationByIncome,
+      filters: [
+        { field: 'year', op: 'eq', value: 2024 },
+        { field: 'gdp', op: 'gt', value: 0 },
+        { field: 'region', op: 'eq', value: 'South Asia' },
+      ],
+    };
+    const merged = mergeQuery(
+      withGdpFloor,
+      [
+        { field: 'year', values: [2010], sourceWidgetId: 'filter-control' },
+        { field: 'region', values: ['East Asia & Pacific'], sourceWidgetId: 'by-region' },
+      ],
+      ['year', 'incomeLevel'],
+    );
+    // The year is replaced; the region has no control, so both region filters apply.
+    expect(merged.filters).toEqual([
+      { field: 'gdp', op: 'gt', value: 0 },
+      { field: 'region', op: 'eq', value: 'South Asia' },
+      { field: 'year', op: 'in', value: [2010] },
+      { field: 'region', op: 'in', value: ['East Asia & Pacific'] },
+    ]);
+  });
+
   it('returns the widget query itself when no filter applies, so nothing is fetched again', () => {
     expect(mergeQuery(populationByIncome, [])).toBe(populationByIncome);
   });

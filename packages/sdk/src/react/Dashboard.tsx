@@ -5,7 +5,9 @@ import type { DashboardConfig } from '../core/types';
 import { useDashKit } from './context';
 import { BreakpointContext } from './breakpoint-context';
 import { DashboardGrid } from './DashboardGrid';
+import { ControlledFieldsContext } from './controlled-fields-context';
 import { FilterBar } from './FilterBar';
+import { FilterControls } from './FilterControls';
 import { useDashboardConfig } from './hooks/use-dashboard-config';
 import { useMeasuredWidth } from './hooks/use-measured-width';
 import { DashboardReadyContext } from './ready-context';
@@ -79,13 +81,20 @@ export function DashboardLoader({
   );
 }
 
+/** The fields of the dashboard's filter controls, the same list while the controls stay. */
+export const useControlledFields = ({ filterControls }: DashboardConfig) =>
+  useMemo(() => filterControls?.map(({ field }) => field) ?? [], [filterControls]);
+
 function DashboardContent({ config }: { config: DashboardConfig }) {
   const widgets = useDashboardWidgets(config);
   return (
     <>
       <DashboardHeader config={config} />
+      {config.filterControls && <FilterControls controls={config.filterControls} />}
       <FilterBar />
-      <DashboardGrid widgets={widgets} layouts={config.layouts} />
+      <ControlledFieldsContext.Provider value={useControlledFields(config)}>
+        <DashboardGrid widgets={widgets} layouts={config.layouts} />
+      </ControlledFieldsContext.Provider>
     </>
   );
 }

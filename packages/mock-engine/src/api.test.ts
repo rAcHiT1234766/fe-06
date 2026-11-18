@@ -176,6 +176,16 @@ describe('demo API', () => {
     expect((await call('GET', '/dashboards/overview', { token: asha })).body).toEqual(saved.body);
   });
 
+  it('stores the dashboard’s filter controls', async () => {
+    const asha = await tokenFor('asha');
+    const body = {
+      ...dashboardNamed('controlled', 'Controlled'),
+      filterControls: [{ field: 'region' }, { field: 'incomeLevel', label: 'Income' }],
+    };
+    const saved = await call('PUT', '/dashboards/controlled', { token: asha, body });
+    expect(saved).toMatchObject({ status: 200, body });
+  });
+
   it('stores the field a widget drills down to', async () => {
     const asha = await tokenFor('asha');
     const dashboard = dashboardNamed('drilling', 'Drilling');
@@ -218,6 +228,29 @@ describe('demo API', () => {
         );
         return { ...dashboard, widgets };
       })(),
+    ],
+    [
+      'a filter control on a field that is not a dimension',
+      { ...createStarterDashboard(2024), filterControls: [{ field: 'gdp' }] },
+    ],
+    [
+      'two filter controls on one field',
+      {
+        ...createStarterDashboard(2024),
+        filterControls: [{ field: 'region' }, { field: 'region' }],
+      },
+    ],
+    [
+      'filter controls that are not a list',
+      { ...createStarterDashboard(2024), filterControls: {} },
+    ],
+    [
+      'a filter control on a field with a default filter',
+      {
+        ...createStarterDashboard(2024),
+        filterControls: [{ field: 'year' }],
+        defaultFilters: [{ field: 'year', op: 'eq', value: 2024 }],
+      },
     ],
     [
       'a drill-down to a field that is not a dimension',

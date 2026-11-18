@@ -37,6 +37,19 @@
   gap: var(--dk-space-2);
 }
 
+/* Each list keeps a readable width and the row wraps, so a phone shows them one under another. */
+.dk-filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--dk-space-3);
+}
+
+.dk-filter-controls > .dk-field {
+  flex: 0 1 14rem;
+  min-width: 10rem;
+}
+
 .dk-chips {
   display: flex;
   flex-wrap: wrap;

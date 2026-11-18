@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { ownQuery } from '../../core/drill-down';
 import { filtersFor } from '../../core/filter-store';
 import { mergeQuery } from '../../core/merge-query';
 import { queryKey, type QueryClient } from '../../core/query-client';
 import type { DashKitError, QueryResult, WidgetConfig } from '../../core/types';
 import { useDashKit } from '../context';
+import { ControlledFieldsContext } from '../controlled-fields-context';
 import { useActiveFilters } from './use-cross-filter';
 
 interface WidgetData {
@@ -25,9 +26,15 @@ interface Loaded {
 export function useWidgetData(widget: WidgetConfig): WidgetData {
   const { client } = useDashKit();
   const activeFilters = useActiveFilters();
+  const controlledFields = useContext(ControlledFieldsContext);
   const query = useMemo(
-    () => mergeQuery(ownQuery(widget, activeFilters), filtersFor(activeFilters, widget)),
-    [widget, activeFilters],
+    () =>
+      mergeQuery(
+        ownQuery(widget, activeFilters),
+        filtersFor(activeFilters, widget),
+        controlledFields,
+      ),
+    [widget, activeFilters, controlledFields],
   );
   const key = queryKey(query);
   const [loaded, setLoaded] = useState<Loaded>();

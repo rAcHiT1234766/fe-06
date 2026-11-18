@@ -68,6 +68,26 @@ describe('createFilterStore', () => {
     expect(store.getFilters()).toEqual([{ ...southAsia, values: ['North America'] }]);
   });
 
+  it('sets a field’s selection from a filter control, replacing a click’s, and clears it', () => {
+    const store = createFilterStore([southAsia]);
+    const listener = vi.fn();
+    store.subscribe(listener);
+    store.select('region', ['East Asia & Pacific'], 'filter-control');
+    expect(store.getFilters()).toEqual([
+      { field: 'region', values: ['East Asia & Pacific'], sourceWidgetId: 'filter-control' },
+    ]);
+    store.select('year', [2010], 'filter-control');
+    expect(store.getFilters()).toHaveLength(2);
+    store.select('region', [], 'filter-control');
+    expect(store.getFilters()).toEqual([
+      { field: 'year', values: [2010], sourceWidgetId: 'filter-control' },
+    ]);
+    expect(listener).toHaveBeenCalledTimes(3);
+    // Clearing a field with no selection changes nothing, so nobody is told of a change.
+    store.select('country', [], 'filter-control');
+    expect(listener).toHaveBeenCalledTimes(3);
+  });
+
   it('removes one field or every filter', () => {
     const store = createFilterStore([southAsia]);
     store.toggle('year', 2024, 'trend');

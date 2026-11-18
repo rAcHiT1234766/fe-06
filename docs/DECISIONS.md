@@ -373,3 +373,13 @@ The author asked for five features the requirements do not list. Each is recorde
   After drilling in from a button in the widget, the focus moves to **All regions**; after leaving with Enter or Space, which give a click with no pointer and a `detail` of 0, it moves to the value drilled into, in the data table. A click on the canvas leaves the focus where it was, and so does a mouse click on **All regions**, since the data table it would focus covers the chart.
 - **Offered for bar, pie and table widgets.**
   Their clicks pick one value. A line usually runs over years and a KPI has nothing to click; changing a widget to either drops `drillDown`, as grouping by the drill-down field itself does.
+- **A filter control writes the same selections as a click.**
+  A list above the grid sets the selection on its field in the filter store, from the source `filter-control`. Chips, **Clear all**, the host's `onFilterChange` and the API's permission checks all apply unchanged, a click on a chart shows in the list, and a host that sets a region sees it chosen there.
+- **A field with a control is a setting of the dashboard.**
+  Every widget of the overview shows 2024, so a Year list that only narrowed them would empty all of them for any other year. A selection on a field with a control therefore replaces each listening widget's own filters on that field, and choosing 2010 shows 2010. On fields without a control a selection still narrows, so a click never turns a widget about one region into one about another. A widget that must keep its own filter sets `crossFilter.listen: false`.
+- **No control on a field with a default filter.**
+  Default filters narrow every widget, including those that ignore cross-filters, so **All** in a control on the same field would still show only what the default lets through. The builder does not offer the field, and both the builder and the API refuse such a dashboard.
+- **The list shows what is selected, even before its values arrive.**
+  A value set by the host or a click is shown at once, and several selected values show as "2 selected", so the list never claims **All** while the widgets are filtered.
+- **One native `<select>` per control.**
+  It is labelled, works with the keyboard and screen readers on every platform, and needs no dependency. The values come from one grouped query per field, so the API's row scope decides them: Ravi's Region list offers his two regions only.

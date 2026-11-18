@@ -273,6 +273,39 @@ describe('DashboardBuilder', () => {
     ).toBeNull();
   });
 
+  it('adds filter controls above the dashboard, which are saved with it', async () => {
+    const client = await copyOverview('asha', 'with-controls');
+    const onSave = vi.fn();
+    await renderEditing('asha', { dashboardId: 'with-controls', onSave });
+    const picker = within(
+      await screen.findByRole('group', { name: 'Filters above the dashboard' }),
+    );
+    expect(screen.queryByRole('group', { name: 'Filters' })).toBeNull();
+
+    fireEvent.click(picker.getByLabelText('Year'));
+    fireEvent.click(picker.getByLabelText('Region'));
+    const controls = within(screen.getByRole('group', { name: 'Filters' }));
+    expect(
+      controls
+        .getAllByRole<HTMLSelectElement>('combobox')
+        .map((select) => select.labels?.[0]?.textContent),
+    ).toEqual(['Year', 'Region']);
+    fireEvent.click(picker.getByLabelText('Year'));
+    expect(controls.getAllByRole('combobox')).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await screen.findByText('Saved');
+    expect(screen.queryByRole('group', { name: 'Filters above the dashboard' })).toBeNull();
+    expect(
+      within(screen.getByRole('group', { name: 'Filters' })).getByLabelText('Region'),
+    ).toBeTruthy();
+    const [stored] = onSave.mock.calls[0] as [DashboardConfig];
+    expect(stored.filterControls).toEqual([{ field: 'region' }]);
+    expect((await client.loadDashboard('with-controls')).filterControls).toEqual([
+      { field: 'region' },
+    ]);
+  });
+
   it('FR-5.5 splits a table into pages of the size an editor chooses', async () => {
     await renderEditing('asha');
     const panel = await openSettings('Countries');

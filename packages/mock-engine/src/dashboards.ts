@@ -1,4 +1,4 @@
-import type { DashboardConfig, LayoutItem, WidgetConfig } from '@dashkit/sdk';
+import type { DashboardConfig, FilterControl, LayoutItem, WidgetConfig } from '@dashkit/sdk';
 import { MAX_ROWS, parseQuery } from './parse-query.ts';
 import { dimensions } from './schema.ts';
 import { invalidRequest, isOneOf, isRecord } from './validation.ts';
@@ -92,6 +92,11 @@ export function createStarterDashboard(latestYear: number): DashboardConfig {
 const isWholeNumber = (value: unknown, min: number, max = Infinity) =>
   typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max;
 
+const isFilterControl = (value: unknown): value is FilterControl =>
+  isRecord(value) &&
+  isOneOf(Object.keys(dimensions), value.field) &&
+  (value.label === undefined || typeof value.label === 'string');
+
 // The same limits the builder checks: a minimum width fits the twelve-column grid.
 const isLayoutItem = (value: unknown): value is LayoutItem =>
   isRecord(value) &&
@@ -132,6 +137,24 @@ export function parseDashboardConfig(body: unknown, id: string): DashboardConfig
   });
   if (new Set(widgetIds).size !== widgetIds.length) {
     throw invalidRequest('Widget ids must be unique');
+  }
+
+  const { filterControls } = body;
+  if (filterControls !== undefined) {
+    if (!Array.isArray(filterControls) || !filterControls.every(isFilterControl)) {
+      throw invalidRequest('"filterControls" must list dimensions, each with an optional label');
+    }
+    const fields = filterControls.map(({ field }) => field);
+    if (new Set(fields).size !== fields.length) {
+      throw invalidRequest('A field can have only one filter control');
+    }
+    const { defaultFilters } = body;
+    if (
+      Array.isArray(defaultFilters) &&
+      defaultFilters.some((filter) => isRecord(filter) && isOneOf(fields, filter.field))
+    ) {
+      throw invalidRequest('A field cannot have both a filter control and a default filter');
+    }
   }
 
   const lg = isRecord(body.layouts) ? body.layouts.lg : undefined;

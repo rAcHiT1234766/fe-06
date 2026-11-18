@@ -6,6 +6,7 @@ import {
   duplicateWidget,
   nextWidgetId,
   removeWidget,
+  toggleFilterControl,
   updateWidget,
   withYearRule,
 } from './edit-dashboard';
@@ -103,6 +104,20 @@ describe('editing a dashboard', () => {
   it('returns the same dashboard when the grid reports the layout unchanged', () => {
     const unmoved = dashboard.layouts.lg.map((item) => ({ ...item, minW: 2, minH: 2 }));
     expect(arrangeWidgets(dashboard, unmoved)).toBe(dashboard);
+  });
+});
+
+describe('toggleFilterControl', () => {
+  it('adds a filter control after the others, and removes it again', () => {
+    const withRegion = toggleFilterControl(dashboard, 'region');
+    expect(withRegion.filterControls).toEqual([{ field: 'region' }]);
+    const withBoth = toggleFilterControl(withRegion, 'incomeLevel');
+    expect(withBoth.filterControls).toEqual([{ field: 'region' }, { field: 'incomeLevel' }]);
+    expect(toggleFilterControl(withBoth, 'region').filterControls).toEqual([
+      { field: 'incomeLevel' },
+    ]);
+    // Without controls, the config has no empty list left behind.
+    expect(toggleFilterControl(withRegion, 'region')).toEqual(dashboard);
   });
 });
 

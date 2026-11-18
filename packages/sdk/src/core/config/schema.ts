@@ -36,9 +36,27 @@ const quoted = (text: string) => `"${text}"`;
  * What stops a dashboard from being saved, worded for the person editing it. The API rejects
  * the same mistakes; checking first lets the builder name every problem at once.
  */
-export function validateDashboard({ title, widgets, layouts }: DashboardConfig): string[] {
+export function validateDashboard({
+  title,
+  widgets,
+  layouts,
+  filterControls = [],
+  defaultFilters = [],
+}: DashboardConfig): string[] {
   const problems: string[] = [];
   if (title.trim() === '') problems.push('The dashboard needs a title.');
+  const controlFields = filterControls.map(({ field }) => field);
+  for (const field of new Set(
+    controlFields.filter((f, index) => controlFields.indexOf(f) !== index),
+  )) {
+    problems.push(`More than one filter control is on ${quoted(field)}.`);
+  }
+  // "All" in the control would still show only what the default filter lets through.
+  for (const field of new Set(controlFields)) {
+    if (defaultFilters.some((filter) => filter.field === field)) {
+      problems.push(`${quoted(field)} cannot have both a filter control and a default filter.`);
+    }
+  }
   if (widgets.some((widget) => widget.title.trim() === '')) {
     problems.push('Every widget needs a title.');
   }

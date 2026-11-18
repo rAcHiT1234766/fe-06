@@ -1,6 +1,27 @@
-import type { DashboardConfig, LayoutItem, Query, WidgetConfig, WidgetType } from '../types';
+import type {
+  DashboardConfig,
+  DimensionField,
+  LayoutItem,
+  Query,
+  WidgetConfig,
+  WidgetType,
+} from '../types';
 
 const bottomOf = (layout: LayoutItem[]) => Math.max(0, ...layout.map(({ y, h }) => y + h));
+
+/** Adds a filter control on `field` after the others, or removes the one there is. */
+export function toggleFilterControl(
+  config: DashboardConfig,
+  field: DimensionField,
+): DashboardConfig {
+  const controls = config.filterControls ?? [];
+  const next = controls.some((control) => control.field === field)
+    ? controls.filter((control) => control.field !== field)
+    : [...controls, { field }];
+  const changed: DashboardConfig = { ...config, filterControls: next };
+  if (next.length === 0) delete changed.filterControls;
+  return changed;
+}
 
 /** The first free id of the form `bar-1`, `bar-2` and so on. */
 export function nextWidgetId({ widgets }: DashboardConfig, type: WidgetType) {

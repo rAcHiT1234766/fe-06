@@ -38,6 +38,24 @@ describe('validateDashboard', () => {
     expect(validateDashboard({ ...dashboard, widgets: [], layouts: { lg: [] } })).toEqual([]);
   });
 
+  it('refuses a filter control on a field the dashboard already filters by default', () => {
+    const config: DashboardConfig = {
+      ...dashboard,
+      filterControls: [{ field: 'year' }],
+      defaultFilters: [{ field: 'year', op: 'eq', value: 2024 }],
+    };
+    expect(validateDashboard(config)).toEqual([
+      '"year" cannot have both a filter control and a default filter.',
+    ]);
+  });
+
+  it('names a field with more than one filter control', () => {
+    const controls = [{ field: 'region' as const }, { field: 'region' as const, label: 'Area' }];
+    expect(validateDashboard({ ...dashboard, filterControls: controls })).toEqual([
+      'More than one filter control is on "region".',
+    ]);
+  });
+
   it('asks for titles, once for all the widgets that lack one', () => {
     const untitled = {
       ...dashboard,

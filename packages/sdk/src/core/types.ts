@@ -144,6 +144,20 @@ export interface WidgetConfig {
 }
 
 /**
+ * A list above the grid that filters the whole dashboard by one field, as a click on a chart does.
+ * It offers the field's values within the user's scope, and "All". The field becomes a setting of
+ * the dashboard: a selection on it, from the list, a click or the host, replaces each listening
+ * widget's own filters on that field, so a Year list moves widgets that show 2024 to the year
+ * chosen. A widget with `crossFilter.listen: false` keeps its own.
+ */
+export interface FilterControl {
+  /** The field the control filters by. */
+  field: DimensionField;
+  /** The control's label. Without one, the field's name, such as "Region". */
+  label?: string;
+}
+
+/**
  * Everything needed to show one dashboard, as plain JSON. The viewer renders it, the builder edits
  * a copy of it, and the API stores it unchanged.
  */
@@ -162,6 +176,12 @@ export interface DashboardConfig {
   layouts: { lg: LayoutItem[] } & Partial<Record<Exclude<Breakpoint, 'lg'>, LayoutItem[]>>;
   /** Applied to every widget and not shown as removable chips. */
   defaultFilters?: Filter[];
+  /**
+   * Lists above the grid, one per field, that set the dashboard's filters. A choice replaces any
+   * selection on that field, a click on a chart shows in the list, and "All" removes the filter.
+   * A field cannot have both a filter control and a default filter.
+   */
+  filterControls?: FilterControl[];
   /** When the dashboard was last saved, as an ISO 8601 time. Set by the API. */
   updatedAt?: string;
   /** Who last saved it: the `sub` of their token. Set by the API. */
