@@ -27,9 +27,9 @@ with the targets; the throttled runs show how much headroom there is.
 
 | Requirement  | What was measured                                                                | Result                                                                                     | Target                         | Met           |
 | ------------ | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------ | ------------- |
-| NFR-P1       | npm build as a host bundles it: minified, every dependency except React included | 214.6 kB gzipped                                                                           | ≤ 300 kB                       | Yes           |
-| NFR-P1       | `dist/index.js` alone, dependencies external                                     | 16.7 kB gzipped                                                                            | (context)                      |               |
-| NFR-P2       | Script-tag build, `dist/dashkit.js`, everything included                         | 281.7 kB gzipped                                                                           | ≤ 500 kB                       | Yes           |
+| NFR-P1       | npm build as a host bundles it: minified, every dependency except React included | 215.6 kB gzipped                                                                           | ≤ 300 kB                       | Yes           |
+| NFR-P1       | `dist/index.js` alone, dependencies external                                     | 17.9 kB gzipped                                                                            | (context)                      |               |
+| NFR-P2       | Script-tag build, `dist/dashkit.js`, everything included                         | 282.7 kB gzipped                                                                           | ≤ 500 kB                       | Yes           |
 | NFR-P3       | Mount to first chart finished, animation on                                      | median 155 ms, worst 637 ms                                                                | ≤ 1.5 s                        | Yes           |
 | NFR-P3       | Same, reduced motion                                                             | median 103 ms, worst 123 ms                                                                | ≤ 1.5 s                        | Yes           |
 | NFR-P3       | Same, animation on, CPU 4× slower                                                | median 1281 ms, worst 1489 ms                                                              | ≤ 1.5 s                        | Yes           |
@@ -78,7 +78,9 @@ briefly, and brought the median to 257 ms and the North America case to 249 ms.
 ![Gzipped size of each package in dashkit.js: echarts 124.6 kB, react-dom 62.2 kB, zrender 55.3 kB, the SDK's own code 15.0 kB, react-grid-layout 10.0 kB, react-draggable 5.8 kB, react 3.0 kB, react-resizable 2.9 kB, and 5.0 kB of six small packages and bundler glue.](images/bundle-breakdown.png)
 
 The breakdown was made once, by attributing every byte of the minified bundle to its source file
-through the bundle's source map, and compressing each package's share on its own.
+through the bundle's source map, and compressing each package's share on its own. It shows the
+build before tables could be paged and the builder showed its save status in colour; those changes
+added no dependency and 1.0 kB gzipped to the whole bundle, all of it the SDK's own code.
 
 | Package                                                       | Minified     | Share | Gzipped      |
 | ------------------------------------------------------------- | ------------ | ----- | ------------ |

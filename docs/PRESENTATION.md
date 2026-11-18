@@ -131,8 +131,8 @@ a series' own defaults override the chart's. Setting a short transition on every
 | End-to-end tests                         | 51 passed: 9 user flows in Chromium, Firefox and WebKit; 11 axe accessibility checks and 13 Storybook checks in Chromium |
 | Permission matrix                        | No out-of-scope row for any demo user                                                                                    |
 | Installed from the packed tarball        | Types check on React 18 and 19                                                                                           |
-| npm build, as a host bundles it          | 214.6 kB gzipped (target 300)                                                                                            |
-| Script-tag build                         | 281.7 kB gzipped (target 500)                                                                                            |
+| npm build, as a host bundles it          | 215.6 kB gzipped (target 300)                                                                                            |
+| Script-tag build                         | 282.7 kB gzipped (target 500)                                                                                            |
 | Mount to first chart                     | median 155 ms (target 1.5 s)                                                                                             |
 | Cross-filter, click to every chart drawn | median 257 ms (target 300 ms)                                                                                            |
 | Identical queries from 10 widgets        | 5 requests for 5 distinct queries                                                                                        |

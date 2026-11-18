@@ -189,8 +189,8 @@ decisions behind them. Every decision made along the way is in [docs/DECISIONS.m
 | Unit, component and type tests (Vitest)  | 347 passed, the component tests on both React 19 and React 18                                                                |
 | End-to-end tests (Playwright)            | 51 passed: 9 user flows in Chromium, Firefox and WebKit, and 11 axe accessibility checks and 13 Storybook checks in Chromium |
 | Installed package                        | Installs and type-checks in fresh projects on React 18 and 19                                                                |
-| Bundle, npm build as a host bundles it   | 214.6 kB gzipped (target 300 kB)                                                                                             |
-| Bundle, script tag                       | 281.7 kB gzipped (target 500 kB)                                                                                             |
+| Bundle, npm build as a host bundles it   | 215.6 kB gzipped (target 300 kB)                                                                                             |
+| Bundle, script tag                       | 282.7 kB gzipped (target 500 kB)                                                                                             |
 | Mount to first chart                     | median 155 ms (target 1.5 s)                                                                                                 |
 | Cross-filter, click to every chart drawn | median 257 ms (target 300 ms)                                                                                                |
 

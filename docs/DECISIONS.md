@@ -272,3 +272,36 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
   Mapping the requirements to the tests found five without one. FR-1.3 is now an element test that renders `<dashkit-dashboard>` and the React builder side by side and compares their markup. FR-1.4 is part of `check:package`, which looks in each build for strings only React or ECharts contain. FR-6.4 to FR-6.6 are a Storybook end-to-end spec that runs against the static build, as deployed, in Chromium only, because the widgets themselves are tested in all three browsers.
 - **The presentation's two hard problems are the ones recorded here.**
   Styling inside a shadow root (Phase 5) and the cross-filter latency (Phase 6) each had a measured failure, a cause found and a test that now guards the fix, so the slides can show real numbers rather than a story.
+
+## After Phase 7 — Finishing the public options
+
+- **Coverage is measured with `@vitest/coverage-v8`** (agreed).
+  It is Vitest's own provider, pinned to Vitest's version as Vitest requires, and a development dependency only. V8 records coverage while the code runs, so nothing in the code is rewritten to measure it.
+- **Only the SDK's core and the query engine are gated, each at the whole percentages first measured.**
+  They hold the logic every widget and every permission rests on, and their tests are written against inputs and outputs, where a missed branch is a missed case. Interface code is measured and reported but not gated, because its tests check what a user sees and does rather than which lines ran. CI runs `pnpm test:coverage` in place of `pnpm test`.
+- **At tablet width, widgets that share a row at `lg` stay side by side, the widest giving up columns.**
+  The four-column `sm` grid stays: dashboards may already provide `sm` layouts in four columns. Only neighbours from the same `lg` row are narrowed, so a widget from the next row never squeezes the row above.
+- **Tablet dashboards shorten horizontal bar labels, as phones did.**
+  At half of a tablet's width, long region names took nearly all of the bar chart's width. The full names stay in the tooltip and the data table.
+- **A layout item's `minW` and `minH` can raise its widget type's minimum, never lower it.**
+  A dashboard author can stop a widget being made too small for its content, but cannot let a chart shrink below the room its axes need. The grid does not report minimum sizes back after a drag or resize, so `arrangeWidgets` carries each item's own over, and a duplicated widget keeps the one it copied.
+- **Tables page on the client, over the rows the query returned.**
+  A query returns at most 1,000 rows and the API has no offset, so paging in the browser needs no request and no API change. `pageSize` must be 1 to 1,000; the builder and the API both refuse anything else, and the API now checks layout minimums against the builder's ranges too.
+- **The page is stored with the result it belongs to.**
+  A new result, as after a filter, then shows its first page in the same render, with no effect resetting it a frame later and no state set during render.
+- **Pager buttons use `aria-disabled`, not `disabled`.**
+  A disabled button loses the focus, so pressing Next on the last page would leave a keyboard user on the page body.
+- **The demo's own dashboard keeps its table unpaged.**
+  The cross-filter test and the demo script read every row of it; a Paged story in Storybook shows the feature, and the end-to-end tests page through it.
+- **The status colours are used as text, so the contrast check covers them.**
+  "Saved" and "Unsaved changes" sit on the background, and error titles on a widget's surface, so success and warning are checked on the background and danger on the surface. Each status has an icon and words, so the colour is never the only signal.
+- **The demo plays a fictional host product.**
+  DashKit is for analytics inside someone else's product, and a bare toolbar above a dashboard never showed that. The product has a top bar with the customer's logo and the signed-in user, navigation to four pages, and the dashboard on Analytics. Home, Orders and Settings say they belong to the host and show no figures, so the demo invents no data.
+- **The demo's controls sit in their own bar, the same in every brand.**
+  Switching user, brand and mode is the presenter's business, not the product's; a bar that never takes the brand cannot be mistaken for part of it. The labels are unchanged, so the tests and the demo script still find them.
+- **The host styles itself from the brand it gives the dashboard.**
+  Switching brand then restyles the whole product, as a white-label customer would see it. Text uses only the colour pairs the theme's contrast check covers, so every brand that passes the check passes in the product too.
+- **Below 1,500 px the navigation shares the top bar; above, it is a sidebar.**
+  The dashboard measures its own width. At 1280 px, the size the demo script records at, a sidebar would leave it under 1,200 px and switch it to eight columns, so the sidebar waits for a screen wide enough to keep twelve.
+- **The page lives in the address.**
+  Back and Forward work, a page can be opened by its link, and after a move the focus goes to the new page's heading, so a screen reader starts there as after a page load.
