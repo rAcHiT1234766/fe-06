@@ -195,6 +195,35 @@ describe('demo API', () => {
     }
   });
 
+  it('accepts a map grouped by country, and refuses one grouped by anything else', async () => {
+    const asha = await tokenFor('asha');
+    const withMap = (dimensions: string[]) => ({
+      ...dashboardNamed('with-map', 'With a map'),
+      widgets: [
+        {
+          id: 'map',
+          type: 'map',
+          title: 'Population by country',
+          query: { ...populationQuery, dimensions },
+        },
+      ],
+      layouts: { lg: [{ i: 'map', x: 0, y: 0, w: 12, h: 6 }] },
+    });
+    const put = (body: unknown) => call('PUT', '/dashboards/with-map', { token: asha, body });
+    expect((await put(withMap(['country']))).status).toBe(200);
+    for (const dimensions of [['region'], ['country', 'year'], []]) {
+      expect(await put(withMap(dimensions))).toEqual({
+        status: 400,
+        body: {
+          error: {
+            code: 'INVALID_QUERY',
+            message: 'A map widget needs exactly one dimension: country',
+          },
+        },
+      });
+    }
+  });
+
   it('stores the dashboard’s filter controls', async () => {
     const asha = await tokenFor('asha');
     const body = {
@@ -285,7 +314,7 @@ describe('demo API', () => {
       'an unknown widget type',
       {
         ...createStarterDashboard(2024),
-        widgets: [{ id: 'a', type: 'map', title: 'A', query: populationQuery }],
+        widgets: [{ id: 'a', type: 'radar', title: 'A', query: populationQuery }],
       },
     ],
   ])('NFR-S3 refuses to save a dashboard with %s', async (_case, body) => {

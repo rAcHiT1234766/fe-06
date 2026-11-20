@@ -14,7 +14,8 @@ export interface WidgetStoryArgs extends HostArgs {
 
 export const widgetArgTypes = {
   widgetId: {
-    description: 'The widget, as saved on the "World development overview" dashboard.',
+    description:
+      'The widget, as saved on the "World development overview" or "Population explorer" dashboard.',
     control: false,
   },
   year: {
@@ -36,7 +37,9 @@ export const renderWidget: NonNullable<Meta<WidgetStoryArgs>['render']> = (
   { widgetId, year, emit, pageSize },
   { loaded },
 ) => {
-  const { widgets } = loaded.dashboard as DashboardConfig;
+  const widgets = [loaded.dashboard, loaded.explorer].flatMap(
+    (dashboard) => (dashboard as DashboardConfig).widgets,
+  );
   const saved = widgets.find((candidate) => candidate.id === widgetId)!;
   const widget = {
     ...saved,

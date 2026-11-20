@@ -16,6 +16,7 @@ import { findLowContrastPairs } from '../core/theme/contrast';
 import { createTheme, resolveTheme } from '../core/theme/create-theme';
 import type { ActiveFilter, DashKitError, DashKitOptions } from '../core/types';
 import { DashKitContext } from './context';
+import { isProduction } from './environment';
 
 /** Props for {@link DashKitProvider}. Pass `token`, `getToken`, or both. */
 export interface DashKitProviderProps extends Pick<
@@ -30,10 +31,6 @@ export interface DashKitProviderProps extends Pick<
   /** The dashboards and builders that use this connection, theme and set of filters. */
   children: ReactNode;
 }
-
-// The host's bundler replaces this at build time, the same convention React relies on. Declaring it
-// here keeps the browser source independent of Node's types.
-declare const process: { env: { NODE_ENV?: string } };
 
 const DARK_MODE_QUERY = '(prefers-color-scheme: dark)';
 
@@ -103,7 +100,7 @@ export function DashKitProvider({
   );
 
   useEffect(() => {
-    if (process.env.NODE_ENV === 'production') return;
+    if (isProduction()) return;
     const lowContrastPairs = findLowContrastPairs(resolvedTheme.colors);
     if (lowContrastPairs.length > 0) {
       console.warn(

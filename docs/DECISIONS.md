@@ -395,3 +395,25 @@ The author asked for five features the requirements do not list. Each is recorde
   The question names the dashboard, the focus starts on **Keep**, and after a deletion the picker shows the first remaining dashboard. With only one left there is no **Delete dashboard**, so a host always has something to show.
 - **A second starter dashboard.**
   Every tenant now also starts with the Population explorer, which shows filter controls and drill-down without any editing. It uses population and life expectancy only, which every demo user may query, so Kofi, who may not query GDP, sees all of it.
+- **A map widget draws borders the host registers.**
+  The demo's world borders are 164 kB, or 54 kB compressed, twice the size of the SDK's own code, and a host may want other areas altogether, such as states or sales territories. `registerMap(name, geoJson)` takes any GeoJSON whose areas are named as the data names them, and a widget's `options.map` picks one, `world` by default. The demo loads its file beside the app, so a page without a map never downloads it.
+- **Until its borders arrive, a map is a table.**
+  The figures are the same, so a slow file, or a host that never registers one, still shows the data rather than an error. In development the console says which map is missing after five seconds.
+- **Natural Earth's 1:110m countries, named as the World Bank names them.**
+  Natural Earth is in the public domain and needs no account. `pnpm map:build` fetches release 5.1.2, matches each country to the World Bank's list by its ISO code rather than its name, since the two sources spell many differently ("Egypt" and "Egypt, Arab Rep."), and rounds coordinates to two decimal places, finer than the scale draws. Antarctica is left out: it has no data and would take a fifth of the map's height. Six areas are drawn without data, such as Western Sahara and Taiwan, which the World Bank does not list separately. At this scale 47 small countries, such as Singapore and the Maldives, have no shape; their figures are still in the map's data table and its CSV.
+- **A map groups by country alone.**
+  Its areas are countries, so the builder sets the grouping to country when a widget becomes a map and offers no grouping, sorting or row limit, and both the builder and the API refuse a map grouped by anything else.
+- **Five classes of equal size, not of equal width.**
+  Each class starts at a quantile, so each holds about a fifth of the countries. With equal widths, India and China, above 1.4 billion people each, would leave nearly every other country in the palest class. Where values repeat, there are fewer classes rather than empty ones.
+- **One hue, from near the surface to beyond the chart colour.**
+  The classes run from a fifth of the way between the surface and the theme's first chart colour, through that colour, to halfway between it and the text colour. Stopping at the chart colour, as the first version did, left the top two classes hard to tell apart. In dark mode the text is light, so the largest values are the lightest, which stand out most on a dark surface. The OKLab lightness of the five classes falls or rises at every step in every brand, by at least 0.067.
+- **Theme colours ECharts cannot blend are converted first.**
+  A theme may use any CSS colour, such as the `oklch()` colours of Tailwind 4, which ECharts cannot mix. The browser draws one pixel in the colour and reads it back as `rgba()`.
+- **The map keeps its proportions, and does not zoom or pan.**
+  Without `preserveAspect`, ECharts stretched the map to fill the widget, squashing it on a phone. Zooming with the wheel would catch the page's scrolling, and the smallest countries are in the data table anyway. A hovered country keeps its class colour and gains an outline.
+- **The classes sit beside a wide map and above a narrow one.**
+  A narrow map is short, so legend, map and then any room to spare read from the top down rather than leaving a gap between the map and its legend.
+- **Clicks on countries without data select nothing.**
+  ECharts reports them after the countries with data, with no row behind them, so the click is ignored rather than filtering every widget to nothing.
+- **The map's chart code is in every bundle.**
+  ECharts' map and its colour classes add about 25 kB compressed to the SDK as a host bundles it, 245.8 kB of the 300 kB budget, whether or not a dashboard has a map. Loading them only when a map appears would add a second file to the package and a wait before the first map; with the budget met, the single file stays.

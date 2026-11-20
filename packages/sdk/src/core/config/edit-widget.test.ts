@@ -89,6 +89,24 @@ describe('changeWidgetType', () => {
     expect(bar.query).not.toHaveProperty('orderBy');
     expect(changeWidgetType(countries, 'table', byIncome, 2024)).toBe(countries);
   });
+
+  it('FR-5.5 groups a map by country alone, with every country and its own filters', () => {
+    const map = changeWidgetType(gdpByRegion, 'map', byIncome, 2024);
+    expect(map).toEqual({
+      id: 'gdp-by-region',
+      type: 'map',
+      title: 'GDP by region',
+      query: {
+        dataset: 'wdi',
+        measures: [{ field: 'gdp', agg: 'sum' }],
+        dimensions: ['country'],
+        filters: [in2024, southAsia],
+      },
+      crossFilter: { emit: false },
+    });
+    const kpi = changeWidgetType(gdpByRegion, 'kpi', byIncome, 2024);
+    expect(changeWidgetType(kpi, 'map', byIncome, 2024).query.dimensions).toEqual(['country']);
+  });
 });
 
 describe('editing one setting', () => {

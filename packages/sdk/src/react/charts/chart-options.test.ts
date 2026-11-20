@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { QueryResult, WidgetConfig } from '../../core/types';
-import { buildBarOption, buildLineOption, buildPieOption } from './chart-options';
+import {
+  buildBarOption,
+  buildLineOption,
+  buildPieOption,
+  createMapOptionBuilder,
+  mapClassColors,
+  quantileBreaks,
+} from './chart-options';
 
 const populationByRegion: QueryResult = {
   columns: [
@@ -140,6 +147,106 @@ describe('chart option builders', () => {
     expect(option.legend).toMatchObject({ show: false });
     expect(buildPieOption(gdpByYear, widget('pie', { showLegend: true })).legend).toMatchObject({
       show: true,
+    });
+  });
+});
+
+describe('quantileBreaks', () => {
+  it('starts five classes of about equal size', () => {
+    const values = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+    expect(quantileBreaks(values)).toEqual([3, 5, 7, 9]);
+  });
+
+  it('makes fewer classes rather than empty ones', () => {
+    expect(quantileBreaks([1, 1, 1, 1, 1, 1, 1, 1, 2, 2])).toEqual([2]);
+    expect(quantileBreaks([5])).toEqual([]);
+    expect(quantileBreaks([])).toEqual([]);
+  });
+});
+
+describe('createMapOptionBuilder', () => {
+  const colors = {
+    chart: ['#4f46e5'],
+    surface: '#ffffff',
+    surfaceRaised: '#f1f5f9',
+    text: '#0f172a',
+    textMuted: '#475569',
+  };
+  const buildMapOption = createMapOptionBuilder(colors);
+
+  const byCountry = (values: (number | null)[]): QueryResult => ({
+    columns: [
+      { name: 'country', role: 'dimension', label: 'Country' },
+      { name: 'population', role: 'measure', label: 'Population', format: 'number' },
+    ],
+    rows: values.map((population, index) => ({ country: `Country ${index + 1}`, population })),
+    meta: { rowCount: values.length, truncated: false, durationMs: 1 },
+  });
+
+  type MapSeries = Series & { map: string; top: number; left: number };
+  const mapSeries = (option: object) => seriesOf(option)[0] as MapSeries;
+  const piecesOf = (option: object) =>
+    (option as { visualMap: { pieces: { color: string; label: string }[] } }).visualMap.pieces;
+
+  it('colours countries in quantile classes, labelled by their bounds', () => {
+    const option = buildMapOption(byCountry([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), widget('map'));
+    const colorsOfClasses = mapClassColors(5, colors);
+    expect(piecesOf(option)).toEqual([
+      { lt: 3, color: colorsOfClasses[0], label: 'Under 3' },
+      { gte: 3, lt: 5, color: colorsOfClasses[1], label: '3 to 5' },
+      { gte: 5, lt: 7, color: colorsOfClasses[2], label: '5 to 7' },
+      { gte: 7, lt: 9, color: colorsOfClasses[3], label: '7 to 9' },
+      { gte: 9, color: colorsOfClasses[4], label: '9 and over' },
+    ]);
+  });
+
+  it('runs the classes from near the surface, through the chart colour, towards the text', () => {
+    expect(mapClassColors(5, colors)).toEqual([
+      // 20%, 47% and 73% of the way from white to the chart colour,
+      'rgba(220,218,250,1)',
+      'rgba(173,169,243,1)',
+      'rgba(126,119,236,1)',
+      // the chart colour itself, exactly, though the arithmetic rounds past it,
+      'rgba(79,70,229,1)',
+      // and halfway to the text colour.
+      'rgba(47,47,136,1)',
+    ]);
+    expect(mapClassColors(2, colors)).toEqual(['rgba(220,218,250,1)', 'rgba(47,47,136,1)']);
+  });
+
+  it('names each area after its country and leaves a missing value uncoloured', () => {
+    const series = mapSeries(buildMapOption(byCountry([5, null]), widget('map')));
+    expect(series.map).toBe('world');
+    expect(series.data).toEqual([
+      { name: 'Country 1', value: 5 },
+      { name: 'Country 2', value: '-' },
+    ]);
+    expect(series.tooltip.valueFormatter(Number.NaN)).toBe('—');
+    expect(mapSeries(buildMapOption(byCountry([5]), widget('map', { map: 'europe' }))).map).toBe(
+      'europe',
+    );
+  });
+
+  it('shows one class for a single value, and every class in a colour it cannot blend', () => {
+    const option = buildMapOption(byCountry([5]), widget('map'));
+    expect(piecesOf(option)).toEqual([{ color: '#4f46e5', label: 'All values' }]);
+    const oklch = 'oklch(60% 0.2 270)';
+    expect(mapClassColors(3, { ...colors, chart: [oklch] })).toEqual([oklch, oklch, oklch]);
+  });
+
+  it('FR-4.3 marks the selected countries, and puts the classes above a narrow map', () => {
+    const selection = { values: ['Country 2'], outlineColor: '#000000' };
+    const option = buildMapOption(byCountry([5, 6]), widget('map'), selection, true);
+    const series = mapSeries(option);
+    expect(series.data).toEqual([
+      { name: 'Country 1', value: 5, itemStyle: { opacity: 0.35 } },
+      { name: 'Country 2', value: 6, itemStyle: { borderColor: '#000000', borderWidth: 2 } },
+    ]);
+    expect([series.top, series.left]).toEqual([108, 8]);
+    expect(option.visualMap).toMatchObject({ top: 8, left: 8 });
+    expect(mapSeries(buildMapOption(byCountry([5, 6]), widget('map')))).toMatchObject({
+      top: 8,
+      left: 128,
     });
   });
 });

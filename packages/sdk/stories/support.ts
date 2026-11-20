@@ -18,11 +18,12 @@ export async function signIn(userId: string) {
     body: JSON.stringify({ userId }),
   });
   const { token } = (await response.json()) as { token: string };
-  const dashboard: DashboardConfig = await new QueryClient({
-    apiUrl: API_URL,
-    token,
-  }).loadDashboard('overview');
-  return { token, dashboard };
+  const client = new QueryClient({ apiUrl: API_URL, token });
+  const [dashboard, explorer]: DashboardConfig[] = await Promise.all([
+    client.loadDashboard('overview'),
+    client.loadDashboard('population'),
+  ]);
+  return { token, dashboard, explorer };
 }
 
 /** The theme for a brand and colour mode from the toolbar. `brand` keeps the brand's own mode. */

@@ -85,7 +85,7 @@ flowchart TD
   MQ --> QC["QueryClient<br/>cache and in-flight sharing by query,<br/>token on every request, one renewal after 401"]
   QC -- "POST /query" --> API["API: verify token → parse query →<br/>keep rows in the token's regions →<br/>apply filters → group → aggregate → sort → limit"]
   API --> QC
-  QC --> V["View chosen by the widget registry:<br/>bar, line, pie (ECharts), table, KPI"]
+  QC --> V["View chosen by the widget registry:<br/>bar, line, pie, map (ECharts), table, KPI"]
 ```
 
 - **One path to the network.** Widgets declare a `Query`; only the query client sends requests. It

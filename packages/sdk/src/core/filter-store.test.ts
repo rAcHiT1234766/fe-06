@@ -128,9 +128,10 @@ describe('filtersFor', () => {
 });
 
 describe('emittedField', () => {
-  it('FR-4.8 lets bar and pie widgets emit their first dimension unless switched off', () => {
+  it('FR-4.8 lets bar, pie and map widgets emit their first dimension unless switched off', () => {
     expect(emittedField(widget())).toBe('region');
     expect(emittedField(widget({ type: 'pie' }))).toBe('region');
+    expect(emittedField(widget({ type: 'map' }))).toBe('region');
     expect(emittedField(widget({ crossFilter: { emit: false } }))).toBeUndefined();
   });
 

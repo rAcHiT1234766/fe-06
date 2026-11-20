@@ -18,6 +18,7 @@
     "build-storybook": "pnpm --filter @dashkit/sdk build-storybook",
     "size": "pnpm --filter @dashkit/sdk size",
     "data:fetch": "node scripts/fetch-worldbank.ts",
+    "map:build": "node scripts/build-world-map.ts",
     "check:package": "node scripts/check-package.ts",
     "perf": "playwright test --config playwright.perf.config.ts"
   },

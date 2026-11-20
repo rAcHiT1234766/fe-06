@@ -1,5 +1,10 @@
-import { BarChart, LineChart, PieChart } from 'echarts/charts';
-import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components';
+import { BarChart, LineChart, MapChart, PieChart } from 'echarts/charts';
+import {
+  GridComponent,
+  LegendComponent,
+  TooltipComponent,
+  VisualMapPiecewiseComponent,
+} from 'echarts/components';
 import {
   init,
   use as registerChartModules,
@@ -15,9 +20,11 @@ registerChartModules([
   BarChart,
   LineChart,
   PieChart,
+  MapChart,
   GridComponent,
   LegendComponent,
   TooltipComponent,
+  VisualMapPiecewiseComponent,
   CanvasRenderer,
 ]);
 

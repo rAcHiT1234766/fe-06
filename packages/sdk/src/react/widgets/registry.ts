@@ -1,6 +1,14 @@
 import type { ComponentType } from 'react';
 import type { WidgetConfig, WidgetType } from '../../core/types';
-import { BarView, KpiView, LineView, PieView, TableView, type WidgetViewProps } from './views';
+import {
+  BarView,
+  KpiView,
+  LineView,
+  MapView,
+  PieView,
+  TableView,
+  type WidgetViewProps,
+} from './views';
 
 /** A setting the config panel offers, besides the title and the type that every widget has. */
 export type ConfigField =
@@ -106,5 +114,21 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
     },
     // A single number has nothing to click, group or sort.
     configFields: ['measure', 'aggregation', 'listen'],
+  },
+  map: {
+    label: 'Map',
+    view: MapView,
+    defaultSize: { w: 8, h: 5 },
+    minSize: { minW: 4, minH: 4 },
+    starter: {
+      title: 'Population by country',
+      query: {
+        dataset: 'wdi',
+        measures: [{ field: 'population', agg: 'sum' }],
+        dimensions: ['country'],
+      },
+    },
+    // Each value sits on its country, so there is nothing to group by, sort or cut short.
+    configFields: ['measure', 'aggregation', 'emit', 'listen'],
   },
 };

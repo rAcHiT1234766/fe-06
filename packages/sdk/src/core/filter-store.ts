@@ -80,9 +80,9 @@ export function filtersFor(filters: ActiveFilter[], widget: WidgetConfig): Activ
   return filters.filter((filter) => filter.sourceWidgetId !== widget.id);
 }
 
-/** Whether clicks on the widget filter the others. Bar and pie widgets do unless told otherwise. */
+/** Whether clicks on the widget filter the others. Bar, pie and map widgets do unless told otherwise. */
 export const emitsFilters = (widget: WidgetConfig) =>
-  widget.crossFilter?.emit ?? (widget.type === 'bar' || widget.type === 'pie');
+  widget.crossFilter?.emit ?? ['bar', 'pie', 'map'].includes(widget.type);
 
 /** The field a click on this widget filters by, or `undefined` when the widget does not emit. */
 export function emittedField(widget: WidgetConfig): DimensionField | undefined {

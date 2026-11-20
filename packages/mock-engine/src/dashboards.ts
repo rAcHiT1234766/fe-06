@@ -3,7 +3,7 @@ import { MAX_ROWS, parseQuery } from './parse-query.ts';
 import { dimensions } from './schema.ts';
 import { invalidRequest, isOneOf, isRecord } from './validation.ts';
 
-const WIDGET_TYPES: WidgetConfig['type'][] = ['bar', 'line', 'pie', 'table', 'kpi'];
+const WIDGET_TYPES: WidgetConfig['type'][] = ['bar', 'line', 'pie', 'table', 'kpi', 'map'];
 
 /** The dashboard every tenant starts with. The same layout shows different data to each user. */
 export function createStarterDashboard(latestYear: number): DashboardConfig {
@@ -90,8 +90,8 @@ export function createStarterDashboard(latestYear: number): DashboardConfig {
 }
 
 /**
- * The second dashboard every tenant starts with: filter controls above the grid, and a chart of
- * regions that drills down to countries. Population and life expectancy only, which every demo
+ * The second dashboard every tenant starts with: filter controls above the grid, a chart of regions
+ * that drills down to countries, and a map, which the host draws once it registers the borders. Population and life expectancy only, which every demo
  * user may query.
  */
 export function createExplorerDashboard(latestYear: number): DashboardConfig {
@@ -102,7 +102,7 @@ export function createExplorerDashboard(latestYear: number): DashboardConfig {
     id: 'population',
     schemaVersion: 1,
     title: 'Population explorer',
-    description: `Population and life expectancy in ${latestYear}, or the year chosen. Click a region to see its countries.`,
+    description: `Population and life expectancy in ${latestYear}, or the year chosen. Click a region to see its countries, or a country to see it alone.`,
     filterControls: [{ field: 'region' }, { field: 'incomeLevel' }, { field: 'year' }],
     widgets: [
       {
@@ -129,6 +129,17 @@ export function createExplorerDashboard(latestYear: number): DashboardConfig {
           dimensions: ['region'],
           filters: inLatestYear,
           orderBy: [{ field: 'population', direction: 'desc' }],
+        },
+      },
+      {
+        id: 'population-map',
+        type: 'map',
+        title: 'Population by country',
+        query: {
+          dataset: 'wdi',
+          measures: [population],
+          dimensions: ['country'],
+          filters: inLatestYear,
         },
       },
       {
@@ -162,8 +173,9 @@ export function createExplorerDashboard(latestYear: number): DashboardConfig {
         { i: 'population', x: 0, y: 0, w: 3, h: 3 },
         { i: 'life-expectancy', x: 0, y: 3, w: 3, h: 3 },
         { i: 'population-by-region', x: 3, y: 0, w: 9, h: 6 },
-        { i: 'population-by-income', x: 0, y: 6, w: 4, h: 6 },
-        { i: 'most-populous', x: 4, y: 6, w: 8, h: 6 },
+        { i: 'population-map', x: 0, y: 6, w: 12, h: 7 },
+        { i: 'population-by-income', x: 0, y: 13, w: 4, h: 6 },
+        { i: 'most-populous', x: 4, y: 13, w: 8, h: 6 },
       ],
     },
   };
@@ -204,7 +216,11 @@ export function parseDashboardConfig(body: unknown, id: string): DashboardConfig
     if (!isOneOf(WIDGET_TYPES, widget.type)) {
       throw invalidRequest(`Unknown widget type ${JSON.stringify(widget.type)}`);
     }
-    parseQuery(widget.query);
+    const query = parseQuery(widget.query);
+    // A map puts each value on a country, so it can only group by country.
+    if (widget.type === 'map' && query.dimensions.join() !== 'country') {
+      throw invalidRequest('A map widget needs exactly one dimension: country');
+    }
     const pageSize = isRecord(widget.options) ? widget.options.pageSize : undefined;
     if (pageSize !== undefined && !isWholeNumber(pageSize, 1, MAX_ROWS)) {
       throw invalidRequest(`"pageSize" must be a whole number from 1 to ${MAX_ROWS}`);

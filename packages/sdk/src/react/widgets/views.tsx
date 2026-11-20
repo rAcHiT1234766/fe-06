@@ -1,15 +1,19 @@
-import { useContext, useLayoutEffect, useMemo, useRef } from 'react';
+import { useContext, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { formatValue } from '../../core/format';
 import type { QueryResult, WidgetConfig } from '../../core/types';
 import {
   buildBarOption,
   buildLineOption,
   buildPieOption,
+  createMapOptionBuilder,
   type BuildChartOption,
 } from '../charts/chart-options';
+import { toBlendableColor } from '../charts/blendable-color';
+import { useIsMapRegistered } from '../charts/maps';
 import { BreakpointContext } from '../breakpoint-context';
 import { buildEChartsTheme } from '../charts/echarts-theme';
 import { useDashKit } from '../context';
+import { isProduction } from '../environment';
 import { useSelection } from '../hooks/use-cross-filter';
 import { useEChart } from '../hooks/use-echart';
 import { DataTable } from './DataTable';
@@ -58,8 +62,11 @@ function ChartView({
     option,
     chartTheme,
     selection &&
-      ((rowIndex, isAdditive) =>
-        selection.toggle(result.rows[rowIndex]?.[selection.field] ?? null, isAdditive)),
+      ((rowIndex, isAdditive) => {
+        // A map also reports clicks on countries with no row, which select nothing.
+        const row = result.rows[rowIndex];
+        if (row) selection.toggle(row[selection.field] ?? null, isAdditive);
+      }),
     () => timing.finished(widget.id, 'chart'),
   );
   return (
@@ -126,4 +133,36 @@ export const LineView = (props: WidgetViewProps) => (
 export const PieView = (props: WidgetViewProps) => (
   <ChartView {...props} buildOption={buildPieOption} />
 );
+/**
+ * A map of countries. Until the host has registered its borders, the same figures show as a table,
+ * and in development the console says which map is missing.
+ */
+export function MapView(props: WidgetViewProps) {
+  const { theme } = useDashKit();
+  const name = props.widget.options?.map ?? 'world';
+  const isRegistered = useIsMapRegistered(name);
+  const buildOption = useMemo(() => {
+    const { chart, surface, text } = theme.colors;
+    return createMapOptionBuilder({
+      ...theme.colors,
+      chart: chart.slice(0, 1).map(toBlendableColor),
+      surface: toBlendableColor(surface),
+      text: toBlendableColor(text),
+    });
+  }, [theme.colors]);
+  useEffect(() => {
+    if (isRegistered || isProduction()) return;
+    const timer = setTimeout(
+      () => console.warn(`DashKit: no map named "${name}" has been registered with registerMap().`),
+      5000,
+    );
+    return () => clearTimeout(timer);
+  }, [isRegistered, name]);
+  return isRegistered ? (
+    <ChartView {...props} buildOption={buildOption} />
+  ) : (
+    <TableView {...props} />
+  );
+}
+
 export { KpiView, TableView, type WidgetViewProps };

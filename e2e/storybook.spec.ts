@@ -28,6 +28,8 @@ const populated: Record<string, (page: Page) => Promise<void>> = {
   'pie-chart': (page) => expect(page.locator('.dk-chart canvas').first()).toBeVisible(),
   table: (page) => expect(page.getByRole('table').locator('tbody tr').first()).toBeVisible(),
   kpi: (page) => expect(page.locator('.dk-kpi-value')).toHaveText(/\d/),
+  // The story registers the demo's borders, so the map is drawn rather than shown as a table.
+  map: (page) => expect(page.locator('.dk-chart canvas').first()).toBeVisible(),
 };
 
 for (const widget of Object.keys(populated)) {

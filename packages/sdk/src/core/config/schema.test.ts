@@ -109,6 +109,25 @@ describe('validateDashboard', () => {
     ]);
   });
 
+  it('asks a map to group by country and nothing else', () => {
+    const [, bar] = dashboard.widgets;
+    const mapBy = (query: Query) =>
+      validateDashboard({
+        ...dashboard,
+        widgets: [dashboard.widgets[0]!, { ...bar!, type: 'map', query }],
+      });
+    expect(mapBy({ ...gdp, dimensions: ['country'] })).toEqual([]);
+    for (const query of [
+      gdp,
+      { ...gdp, dimensions: ['region'] },
+      { ...gdp, dimensions: ['country', 'year'] },
+    ] satisfies Query[]) {
+      expect(mapBy(query)).toEqual([
+        '"GDP by region" is a map, which needs exactly one dimension: country.',
+      ]);
+    }
+  });
+
   it('asks for minimum sizes that fit the grid', () => {
     const [kpi, bar] = dashboard.layouts.lg;
     const sized = (minimums: [object, object]) => ({

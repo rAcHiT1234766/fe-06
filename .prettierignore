@@ -1,3 +1,5 @@
 pnpm-lock.yaml
 docs/PROJECT_REQUIREMENTS.md
 docs/IMPLEMENTATION_GUIDE.md
+# Written by scripts/build-world-map.ts, one country per line.
+apps/demo/public/maps/

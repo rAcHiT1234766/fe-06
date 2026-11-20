@@ -41,6 +41,12 @@ export function changeWidgetType(
     delete query.dimensions;
     delete query.orderBy;
     delete query.limit;
+  } else if (type === 'map') {
+    // A map puts each value on its country, so it groups by country and nothing else, and shows
+    // every country there is.
+    query.dimensions = ['country'];
+    delete query.orderBy;
+    delete query.limit;
   } else {
     const dimensions = query.dimensions?.length
       ? query.dimensions

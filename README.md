@@ -37,8 +37,9 @@ own navigation, styled from the customer's brand like the dashboard it embeds, w
   the grid, to clear it. Keyboard users press Tab to reach a chart's data table and Enter on a
   value.
 - **Dashboard**: switch to the Population explorer, with lists above the grid that filter by
-  region, income level or year, and a chart of regions that drills down to countries when clicked.
-  Editors also create and delete dashboards here.
+  region, income level or year, a chart of regions that drills down to countries when clicked, and
+  a map of the world's countries, where a click on a country filters the rest. Editors also create
+  and delete dashboards here.
 - **Edit dashboard** (Asha or Elena): drag widgets by their handle, resize them from the corner,
   add widgets, change their settings, and save. Reload the page to see the saved version.
 - **Brand** and **Mode**: three customer brands, each in light, dark or following the system. The
@@ -75,8 +76,10 @@ Saved dashboards live in the demo API's memory, so restarting `pnpm dev` resets 
   inside the user's scope.
 - **Responsive to its container**, from a 360 px phone to a wide screen, with 44 px touch targets
   on touch screens.
-- **Five widget types** (bar, line, pie, table, KPI) on ECharts, each with loading, empty and error
-  states, and a data table behind every chart for keyboard and screen-reader users.
+- **Six widget types** (bar, line, pie, table, KPI and map) on ECharts, each with loading, empty
+  and error states, and a data table behind every chart for keyboard and screen-reader users. Maps
+  draw borders the host registers, so the SDK carries no geography; the demo's come from Natural
+  Earth.
 - **Typed for TypeScript and JSX**, React 18 and 19.
 
 ## Quick start

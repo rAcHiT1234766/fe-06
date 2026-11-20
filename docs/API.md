@@ -117,6 +117,27 @@ offered for the last dashboard. While a builder under the same provider has unsa
 picker waits, so they are never lost to a switch. A switch clears the cross-filters, which belong to
 the widgets of the dashboard they were made on, and the host's `onFilterChange` hears it.
 
+### `registerMap(name, geoJson)`
+
+Map widgets draw borders the host supplies, so the SDK carries no geography of its own and a host
+can use any map whose areas match a dimension's values. `geoJson` is a GeoJSON `FeatureCollection`
+whose features each have `properties.name` set to a country's name as the data spells it, such as
+`"Egypt, Arab Rep."`. A map widget draws the borders registered under its `options.map`, or
+`world`; until they are registered it shows its figures as a table, so the file can load after the
+dashboard:
+
+```ts
+import { registerMap } from '@dashkit/sdk';
+
+fetch('/maps/world.json')
+  .then((response) => response.json())
+  .then((map) => registerMap('world', map));
+```
+
+The demo's `world.json` comes from `pnpm map:build`, which takes Natural Earth's public-domain
+1:110m countries and names each one as the World Bank does. At that scale 47 small countries, such
+as Singapore and the Maldives, have no shape; their figures are still in the map's data table.
+
 ## The custom element
 
 The script-tag build `dist/dashkit.js` bundles React and every dependency. Loading it defines
@@ -182,6 +203,9 @@ it:
 | `setFilters(filters)`, `clearFilters()`, `refresh()` | As on the element.                                                      |
 | `unmount()`                                          | Removes the dashboard and releases its charts, observers and listeners. |
 
+The script also puts `registerMap` on the `DashKit` global, as `DashKit.registerMap(name, geoJson)`,
+for pages with map widgets.
+
 ## Types
 
 The npm entry exports these types; the Storybook API reference lists every property.
@@ -189,7 +213,8 @@ The npm entry exports these types; the Storybook API reference lists every prope
 | Type                                                                                 | What it is                                                                                                                  |
 | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
 | `DashboardConfig`, `WidgetConfig`, `LayoutItem`, `FilterControl`, `DashboardSummary` | A dashboard as JSON, see [Dashboard config](#dashboard-config); `{ id, title }` as the API lists it.                        |
-| `WidgetType`, `Breakpoint`                                                           | `bar`, `line`, `pie`, `table`, `kpi`; `lg`, `md`, `sm`, `xs`.                                                               |
+| `WidgetType`, `Breakpoint`                                                           | `bar`, `line`, `pie`, `table`, `kpi`, `map`; `lg`, `md`, `sm`, `xs`.                                                        |
+| `MapGeoJson`                                                                         | The borders `registerMap` takes: `{ type: 'FeatureCollection', features }`.                                                 |
 | `Query`, `Filter`, `QueryResult`                                                     | A request for aggregated data and its answer; see [HTTP API](#http-api).                                                    |
 | `DimensionField`, `MeasureField`, `Aggregation`, `FilterOperator`, `Scalar`          | The vocabulary of a query; see [Data model](#data-model).                                                                   |
 | `ActiveFilter`                                                                       | A cross-filter: `{ field, values, sourceWidgetId }`.                                                                        |
@@ -395,10 +420,10 @@ copy of it, and the API stores what the builder saves unchanged apart from `upda
 | `id`                     | yes      | Must match the address it is saved under.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `schemaVersion`          | yes      | `1`. The SDK refuses to show a newer version.                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `title`, `description`   | title    | Shown in the dashboard's header. The title may not be empty.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `widgets`                | yes      | Each with a unique `id`, a `type`, a `title`, a `query`, and optionally `description`, `options`, `drillDown` and `crossFilter`.                                                                                                                                                                                                                                                                                                                                                                            |
-| `widgets[].options`      | no       | `orientation` and `stacked` for bar charts; `donut` for pies; `showLegend` for bar, line and pie charts, where the legend otherwise shows only for several measures, and never for a pie, whose slices are labelled. `pageSize` for tables, which then show that many rows at a time, with Previous and Next buttons.                                                                                                                                                                                       |
+| `widgets`                | yes      | Each with a unique `id`, a `type`, a `title`, a `query`, and optionally `description`, `options`, `drillDown` and `crossFilter`. A `map` groups by `country` alone, so its query's `dimensions` must be `["country"]`.                                                                                                                                                                                                                                                                                      |
+| `widgets[].options`      | no       | `orientation` and `stacked` for bar charts; `donut` for pies; `showLegend` for bar, line and pie charts, where the legend otherwise shows only for several measures, and never for a pie, whose slices are labelled. `pageSize` for tables, which then show that many rows at a time, with Previous and Next buttons. `map` for maps: the name of the borders, as registered with `registerMap`; `world` if not set.                                                                                        |
 | `widgets[].drillDown`    | no       | A dimension to show within the widget's own selection, such as `"country"` on a chart of regions: a click then shows that region's countries in the widget, the other widgets filter by the region, and a link above the chart leads back. Only a widget that emits cross-filters drills down, and only to a field other than its own.                                                                                                                                                                      |
-| `widgets[].crossFilter`  | no       | `emit` (default true for bar and pie, false otherwise) and `listen` (default true).                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `widgets[].crossFilter`  | no       | `emit` (default true for bar, pie and map, false otherwise) and `listen` (default true).                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `layouts.lg`             | yes      | Exactly one `{ i, x, y, w, h }` item per widget. Optional numbers `minW` and `minH` set the smallest size the builder allows for that widget, in columns and rows; they can raise the widget type's own minimum but not lower it.                                                                                                                                                                                                                                                                           |
 | `layouts.md`, `sm`, `xs` | no       | Layouts for narrower containers. The builder saves only `lg`.                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `defaultFilters`         | no       | `Filter`s applied to every widget, including those that ignore cross-filters, and not shown as chips.                                                                                                                                                                                                                                                                                                                                                                                                       |

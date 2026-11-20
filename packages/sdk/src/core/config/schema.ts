@@ -87,9 +87,12 @@ export function validateDashboard({
   }
 
   const isRowCount = (count: number) => Number.isInteger(count) && count >= 1 && count <= MAX_ROWS;
-  for (const { id, title: widgetTitle, query, options } of widgets) {
+  for (const { id, type, title: widgetTitle, query, options } of widgets) {
     const name = quoted(widgetTitle || id);
     if (query.measures.length === 0) problems.push(`${name} needs a measure.`);
+    if (type === 'map' && (query.dimensions?.length !== 1 || query.dimensions[0] !== 'country')) {
+      problems.push(`${name} is a map, which needs exactly one dimension: country.`);
+    }
     if (query.limit !== undefined && !isRowCount(query.limit)) {
       problems.push(`${name} needs a row limit from 1 to ${MAX_ROWS}, or none.`);
     }
