@@ -225,8 +225,9 @@ test('NFR-P5 frames while dragging and resizing with 12 widgets', async ({ brows
     }
 
     // Each drag starts 300 pixels down the window, whatever sits above the grid, so the pointer stays
-    // inside the window. Past its edge the browser scrolls the page during the drag, and a widget
-    // being resized grows with every pixel scrolled, which measures a different thing.
+    // away from its edge. Within 50 pixels of it the grid scrolls the page 12 pixels a frame during a
+    // drag, and a widget being resized grows with every pixel scrolled, which measures a different
+    // thing.
     async function startAt(locator: Locator) {
       const box = (await locator.boundingBox())!;
       await page.evaluate((offset) => window.scrollBy(0, offset), box.y + box.height / 2 - 300);
