@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { cpus, release, totalmem, type as osType } from 'node:os';
-import { expect, test, type Browser, type Page } from '@playwright/test';
+import { expect, test, type Browser, type Locator, type Page } from '@playwright/test';
 
 const API_URL = 'http://localhost:4000';
 
@@ -224,15 +224,23 @@ test('NFR-P5 frames while dragging and resizing with 12 widgets', async ({ brows
       await page.mouse.up();
     }
 
-    const handle = (await page.getByTitle('Drag to move').first().boundingBox())!;
-    const start = { x: handle.x + handle.width / 2, y: handle.y + handle.height / 2 };
+    // Each drag starts 300 pixels down the window, whatever sits above the grid, so the pointer stays
+    // inside the window. Past its edge the browser scrolls the page during the drag, and a widget
+    // being resized grows with every pixel scrolled, which measures a different thing.
+    async function startAt(locator: Locator) {
+      const box = (await locator.boundingBox())!;
+      await page.evaluate((offset) => window.scrollBy(0, offset), box.y + box.height / 2 - 300);
+      const moved = (await locator.boundingBox())!;
+      return { x: moved.x + moved.width / 2, y: moved.y + moved.height / 2 };
+    }
+
+    const start = await startAt(page.getByTitle('Drag to move').first());
     await recordFrames();
     await slowDrag(start, { x: start.x + 600, y: start.y + 250 });
     const dragGaps = await stopFrames();
     await settle(page);
 
-    const resize = (await page.locator('.react-resizable-handle').first().boundingBox())!;
-    const corner = { x: resize.x + resize.width / 2, y: resize.y + resize.height / 2 };
+    const corner = await startAt(page.locator('.react-resizable-handle').first());
     await recordFrames();
     await slowDrag(corner, { x: corner.x + 300, y: corner.y + 150 });
     const resizeGaps = await stopFrames();
