@@ -1,3 +1,4 @@
+import { slugify } from './slug';
 import type { QueryResult, Scalar } from './types';
 
 // A spreadsheet runs a cell that starts with one of these as a formula, so a text cell that does is
@@ -25,12 +26,4 @@ export function toCsv({ columns, rows }: QueryResult): string {
 }
 
 /** A file name from a widget's title: letters and digits only, accents dropped, words joined by dashes. */
-export function csvFileName(title: string): string {
-  const words = title
-    .normalize('NFKD')
-    .replace(/\p{Mn}/gu, '')
-    .toLowerCase()
-    .split(/[^a-z0-9]+/)
-    .filter(Boolean);
-  return `${words.join('-') || 'data'}.csv`;
-}
+export const csvFileName = (title: string) => `${slugify(title, 'data')}.csv`;

@@ -1,4 +1,5 @@
 import { createContext, useContext } from 'react';
+import type { DraftRegistry } from '../core/draft-registry';
 import type { FilterStore } from '../core/filter-store';
 import type { QueryClient } from '../core/query-client';
 import type { RenderTiming } from '../core/render-timing';
@@ -14,6 +15,8 @@ interface DashKitContextValue {
   timing: RenderTiming;
   /** Whether widgets offer their data as a CSV download. */
   allowExport: boolean;
+  /** Whether a builder has unsaved changes, which a dashboard picker waits for. */
+  drafts: DraftRegistry;
 }
 
 export const DashKitContext = createContext<DashKitContextValue | null>(null);

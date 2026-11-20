@@ -1,7 +1,11 @@
 import type { DashboardConfig, MeasureField, TokenClaims } from '@dashkit/sdk';
 import { signDemoToken, verifyToken } from './auth.ts';
 import { mayQueryMeasure } from './column-scope.ts';
-import { createStarterDashboard, parseDashboardConfig } from './dashboards.ts';
+import {
+  createExplorerDashboard,
+  createStarterDashboard,
+  parseDashboardConfig,
+} from './dashboards.ts';
 import { ApiError } from './errors.ts';
 import { executeQuery } from './execute-query.ts';
 import { aggregations, dimensions, measures } from './schema.ts';
@@ -36,7 +40,7 @@ async function readJson(request: Request): Promise<unknown> {
   }
 }
 
-/** Creates an API with its own in-memory dashboards, every tenant starting with the same overview. */
+/** Creates an API with its own in-memory dashboards, every tenant starting with the same two. */
 export function createApi(tokenSecret: string): MockApi {
   // Keyed by tenant as well as id, so one tenant's id can never reach another tenant's dashboard.
   const dashboards = new Map<string, DashboardConfig>();
@@ -44,8 +48,12 @@ export function createApi(tokenSecret: string): MockApi {
 
   const latestYear = Math.max(...snapshotRows.map((row) => row.year));
   for (const { tenantId } of Object.values(demoUsers)) {
-    const starter = createStarterDashboard(latestYear);
-    dashboards.set(storeKey(tenantId, starter.id), starter);
+    for (const starter of [
+      createStarterDashboard(latestYear),
+      createExplorerDashboard(latestYear),
+    ]) {
+      dashboards.set(storeKey(tenantId, starter.id), starter);
+    }
   }
 
   async function handleDashboard(request: Request, id: string, claims: TokenClaims) {

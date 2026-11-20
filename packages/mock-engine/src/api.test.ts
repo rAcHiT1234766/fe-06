@@ -3,7 +3,8 @@ import { base64url, decodeJwt } from 'jose';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApi, type MockApi } from './api.ts';
 import { createRandomSecret } from './auth.ts';
-import { createStarterDashboard } from './dashboards.ts';
+import { createExplorerDashboard, createStarterDashboard } from './dashboards.ts';
+import { demoUsers } from './users.ts';
 
 const BASE_URL = 'http://api.test';
 
@@ -130,6 +131,7 @@ describe('demo API', () => {
     const ravi = await tokenFor('ravi');
     expect((await call('GET', '/dashboards?tenantId=eurostat', { token: ravi })).body).toEqual([
       { id: 'overview', title: 'World development overview' },
+      { id: 'population', title: 'Population explorer' },
     ]);
     expect(
       (await call('GET', '/dashboards/euro-only?tenantId=eurostat', { token: ravi })).status,
@@ -174,6 +176,23 @@ describe('demo API', () => {
     const saved = await call('PUT', '/dashboards/overview', { token: asha, body: edited });
     expect(saved).toMatchObject({ status: 200, body: { ...edited, updatedBy: 'asha' } });
     expect((await call('GET', '/dashboards/overview', { token: asha })).body).toEqual(saved.body);
+  });
+
+  it('starts each tenant with two dashboards that pass its checks, the second open to every user', async () => {
+    const asha = await tokenFor('asha');
+    for (const id of ['overview', 'population']) {
+      const { body } = await call('GET', `/dashboards/${id}`, { token: asha });
+      expect(await call('PUT', `/dashboards/${id}`, { token: asha, body })).toMatchObject({
+        status: 200,
+        body,
+      });
+    }
+    for (const userId of Object.keys(demoUsers)) {
+      const token = await tokenFor(userId);
+      for (const { query } of createExplorerDashboard(2024).widgets) {
+        expect((await call('POST', '/query', { token, body: query })).status).toBe(200);
+      }
+    }
   });
 
   it('stores the dashboard’s filter controls', async () => {

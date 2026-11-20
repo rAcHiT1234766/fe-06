@@ -7,6 +7,7 @@ import type {
   ThemeInput,
 } from '../core/types';
 import { DashboardBuilder } from '../react/DashboardBuilder';
+import { DashboardPicker } from '../react/DashboardPicker';
 import { DashKitProvider } from '../react/DashKitProvider';
 import { DashboardReadyContext } from '../react/ready-context';
 import hostStyles from './host.css?inline';
@@ -24,6 +25,9 @@ export const TAG_NAME: string = 'dashkit-dashboard';
 
 // Properties a page may set before this script has loaded and defined the element.
 const UPGRADED_PROPERTIES = ['theme', 'config', 'getToken'] as const;
+
+// A boolean attribute is on when present, except as "false", which React 18 writes for false.
+const isOn = (value: string | null) => value !== null && value !== 'false';
 
 /** The attributes `<dashkit-dashboard>` reads. Objects and functions are set as properties. */
 export interface DashKitElementAttributes {
@@ -43,6 +47,12 @@ export interface DashKitElementAttributes {
    * custom element as that text.
    */
   'allow-export'?: boolean | '' | 'false' | undefined;
+  /**
+   * Present, it shows a list of the tenant's dashboards above the dashboard, as the
+   * `dashboardPicker` option does. A choice sets `dashboard-id` and dispatches
+   * `dashkit:dashboardchange`. It is not shown while the `config` property supplies the dashboard.
+   */
+  'dashboard-picker'?: boolean | '' | 'false' | undefined;
 }
 
 /**
@@ -54,6 +64,8 @@ export interface DashKitElementEventMap extends HTMLElementEventMap {
   'dashkit:ready': CustomEvent<undefined>;
   /** The active cross-filters changed, by a click or through `setFilters`. */
   'dashkit:filterchange': CustomEvent<ActiveFilter[]>;
+  /** A dashboard was chosen, created or shown instead in the picker; the detail is its id. */
+  'dashkit:dashboardchange': CustomEvent<string>;
   /** An editor saved the dashboard; the detail is the config as stored. */
   'dashkit:save': CustomEvent<DashboardConfig>;
   /** A request failed for good, or the dashboard could not be read. */
@@ -67,10 +79,10 @@ type Listener<K extends keyof DashKitElementEventMap> = (
 
 /**
  * `<dashkit-dashboard>`: a dashboard in one tag, for pages without React. Strings go in
- * attributes (`api-url`, `dashboard-id`, `token`, `mode`, `color-scheme`, and the boolean
- * `allow-export`); objects and functions go in properties (`theme`, `config`, `getToken`). It
- * reports through the `dashkit:ready`,
- * `dashkit:filterchange`, `dashkit:save` and `dashkit:error` events, which bubble out of its
+ * attributes (`api-url`, `dashboard-id`, `token`, `mode`, `color-scheme`, and the booleans
+ * `allow-export` and `dashboard-picker`); objects and functions go in properties (`theme`,
+ * `config`, `getToken`). It reports through the `dashkit:ready`, `dashkit:filterchange`,
+ * `dashkit:dashboardchange`, `dashkit:save` and `dashkit:error` events, which bubble out of its
  * shadow root.
  */
 export class DashKitElement extends HTMLElement {
@@ -81,6 +93,7 @@ export class DashKitElement extends HTMLElement {
     'mode',
     'color-scheme',
     'allow-export',
+    'dashboard-picker',
   ];
 
   #root: Root | undefined;
@@ -241,6 +254,12 @@ export class DashKitElement extends HTMLElement {
 
   readonly #onSave = (config: DashboardConfig) => this.#emit('dashkit:save', config);
 
+  // Setting the attribute renders the chosen dashboard, as a page setting it would.
+  readonly #onDashboardChange = (dashboardId: string) => {
+    this.setAttribute('dashboard-id', dashboardId);
+    this.#emit('dashkit:dashboardchange', dashboardId);
+  };
+
   readonly #onError = ({ code, message }: DashKitError) =>
     this.#emit('dashkit:error', { code, message });
 
@@ -283,11 +302,14 @@ export class DashKitElement extends HTMLElement {
         {...(token ? { token } : {})}
         {...(this.#getToken ? { getToken: this.#getToken } : {})}
         {...(theme ? { theme } : {})}
-        allowExport={![null, 'false'].includes(this.getAttribute('allow-export'))}
+        allowExport={isOn(this.getAttribute('allow-export'))}
         {...(this.#hostFilters ? { filters: this.#hostFilters } : {})}
         onFilterChange={this.#onFilterChange}
         onError={this.#onError}
       >
+        {!this.#config && dashboardId && isOn(this.getAttribute('dashboard-picker')) && (
+          <DashboardPicker value={dashboardId} onChange={this.#onDashboardChange} />
+        )}
         <DashboardReadyContext.Provider value={this.#onReady}>
           <DashboardBuilder
             {...source}

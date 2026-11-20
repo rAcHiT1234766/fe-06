@@ -67,6 +67,11 @@
   background: color-mix(in srgb, var(--dk-color-primary) 85%, var(--dk-color-text));
 }
 
+.dk-button-danger {
+  border-color: var(--dk-color-danger);
+  color: var(--dk-color-danger);
+}
+
 .dk-button:disabled,
 .dk-button[aria-disabled='true'] {
   cursor: default;

@@ -1,6 +1,11 @@
 import { demoBrands } from '@dashkit/mock-engine/brands';
 import { demoUsers } from '@dashkit/mock-engine/users';
-import { DashboardBuilder, DashKitProvider, type DashKitTheme } from '@dashkit/sdk';
+import {
+  DashboardBuilder,
+  DashboardPicker,
+  DashKitProvider,
+  type DashKitTheme,
+} from '@dashkit/sdk';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PAGES, useCurrentPage, useShownMode } from './host-state';
 import { AppBar, AppNav, brandStyle, HostPage } from './Shell';
@@ -38,6 +43,7 @@ function describeUser(userId: string) {
 
 export function App() {
   const [userId, setUserId] = useState('asha');
+  const [dashboardId, setDashboardId] = useState('overview');
   const [token, setToken] = useState<string>();
   const [signInError, setSignInError] = useState<string>();
   const [isTampered, setIsTampered] = useState(false);
@@ -96,7 +102,14 @@ export function App() {
         </p>
         <label>
           Signed in as
-          <select value={userId} onChange={(event) => setUserId(event.target.value)}>
+          <select
+            value={userId}
+            onChange={(event) => {
+              setUserId(event.target.value);
+              // Every tenant has the overview; a dashboard another user created may not exist.
+              setDashboardId('overview');
+            }}
+          >
             {Object.keys(demoUsers).map((id) => (
               <option key={id} value={id}>
                 {describeUser(id)}
@@ -158,7 +171,8 @@ export function App() {
                 theme={theme}
                 allowExport
               >
-                <DashboardBuilder dashboardId="overview" />
+                <DashboardPicker value={dashboardId} onChange={setDashboardId} />
+                <DashboardBuilder dashboardId={dashboardId} />
               </DashKitProvider>
             )}
           </>

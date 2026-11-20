@@ -30,12 +30,15 @@ own navigation, styled from the customer's brand like the dashboard it embeds, w
 
 - **Signed in as**: switch between Asha (Acme Global, editor, every region), Ravi (AsiaInsights,
   viewer, South Asia and East Asia & Pacific) and Elena (EuroStat Co, editor, Europe & Central
-  Asia). Each gets their own token, their own dashboard and only their own regions' rows. Kofi
+  Asia). Each gets their own token, their own dashboards and only their own regions' rows. Kofi
   (Acme Global, editor, every region) may not query GDP: the API refuses the two widgets that need
   it, and his builder never offers it.
 - **Click a bar or a pie slice** to filter the other widgets; click it again, or use the chip above
   the grid, to clear it. Keyboard users press Tab to reach a chart's data table and Enter on a
   value.
+- **Dashboard**: switch to the Population explorer, with lists above the grid that filter by
+  region, income level or year, and a chart of regions that drills down to countries when clicked.
+  Editors also create and delete dashboards here.
 - **Edit dashboard** (Asha or Elena): drag widgets by their handle, resize them from the corner,
   add widgets, change their settings, and save. Reload the page to see the saved version.
 - **Brand** and **Mode**: three customer brands, each in light, dark or following the system. The
@@ -66,6 +69,8 @@ Saved dashboards live in the demo API's memory, so restarting `pnpm dev` resets 
   change.
 - **A dashboard builder** for editors: drag or use the keyboard to move and resize, add,
   configure, undo, save. Viewers never see it, and the API refuses their writes anyway.
+- **Several dashboards** per tenant, with a picker to switch between them and, for editors, to
+  create and delete them.
 - **CSV export**, when the host allows it: each widget downloads the rows it shows, only ever
   inside the user's scope.
 - **Responsive to its container**, from a 360 px phone to a wide screen, with 44 px touch targets

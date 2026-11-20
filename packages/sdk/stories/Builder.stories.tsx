@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
-import { DashboardBuilder, type DashboardConfig } from '../src';
+import { DashboardBuilder, DashboardPicker, type DashboardConfig } from '../src';
 
 /**
  * Editors arrange widgets by their handle, resize them from the bottom-right corner, add widgets
@@ -55,3 +56,24 @@ export const ConfigPanel: Story = {
  * without any edit controls, and the API would refuse a save from him in any case.
  */
 export const Viewer: Story = { globals: { user: 'ravi' } };
+
+// The host keeps the id of the dashboard shown, and the picker changes it.
+function PickerHost() {
+  const [dashboardId, setDashboardId] = useState('overview');
+  return (
+    <>
+      <DashboardPicker value={dashboardId} onChange={setDashboardId} />
+      <DashboardBuilder dashboardId={dashboardId} />
+    </>
+  );
+}
+
+/**
+ * `DashboardPicker` above the builder lists the tenant's dashboards. Editors also get **New
+ * dashboard**, which asks for a title, and **Delete dashboard**, which asks first. While the builder
+ * has unsaved changes the picker waits, so they are never lost to a switch.
+ */
+export const SeveralDashboards: Story = {
+  name: 'Several dashboards',
+  render: () => <PickerHost />,
+};

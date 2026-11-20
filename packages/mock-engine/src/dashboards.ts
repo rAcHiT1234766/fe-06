@@ -89,6 +89,86 @@ export function createStarterDashboard(latestYear: number): DashboardConfig {
   };
 }
 
+/**
+ * The second dashboard every tenant starts with: filter controls above the grid, and a chart of
+ * regions that drills down to countries. Population and life expectancy only, which every demo
+ * user may query.
+ */
+export function createExplorerDashboard(latestYear: number): DashboardConfig {
+  const inLatestYear = [{ field: 'year' as const, op: 'eq' as const, value: latestYear }];
+  const population = { field: 'population' as const, agg: 'sum' as const };
+  const lifeExpectancy = { field: 'lifeExpectancy' as const, agg: 'avg' as const };
+  return {
+    id: 'population',
+    schemaVersion: 1,
+    title: 'Population explorer',
+    description: `Population and life expectancy in ${latestYear}, or the year chosen. Click a region to see its countries.`,
+    filterControls: [{ field: 'region' }, { field: 'incomeLevel' }, { field: 'year' }],
+    widgets: [
+      {
+        id: 'population',
+        type: 'kpi',
+        title: 'Population',
+        query: { dataset: 'wdi', measures: [population], filters: inLatestYear },
+      },
+      {
+        id: 'life-expectancy',
+        type: 'kpi',
+        title: 'Average life expectancy',
+        query: { dataset: 'wdi', measures: [lifeExpectancy], filters: inLatestYear },
+      },
+      {
+        id: 'population-by-region',
+        type: 'bar',
+        title: 'Population by region',
+        options: { orientation: 'horizontal' },
+        drillDown: 'country',
+        query: {
+          dataset: 'wdi',
+          measures: [population],
+          dimensions: ['region'],
+          filters: inLatestYear,
+          orderBy: [{ field: 'population', direction: 'desc' }],
+        },
+      },
+      {
+        id: 'population-by-income',
+        type: 'pie',
+        title: 'Population by income level',
+        options: { donut: true },
+        query: {
+          dataset: 'wdi',
+          measures: [population],
+          dimensions: ['incomeLevel'],
+          filters: inLatestYear,
+        },
+      },
+      {
+        id: 'most-populous',
+        type: 'table',
+        title: 'Countries by population',
+        options: { pageSize: 10 },
+        query: {
+          dataset: 'wdi',
+          measures: [population, lifeExpectancy],
+          dimensions: ['country', 'region'],
+          filters: inLatestYear,
+          orderBy: [{ field: 'population', direction: 'desc' }],
+        },
+      },
+    ],
+    layouts: {
+      lg: [
+        { i: 'population', x: 0, y: 0, w: 3, h: 3 },
+        { i: 'life-expectancy', x: 0, y: 3, w: 3, h: 3 },
+        { i: 'population-by-region', x: 3, y: 0, w: 9, h: 6 },
+        { i: 'population-by-income', x: 0, y: 6, w: 4, h: 6 },
+        { i: 'most-populous', x: 4, y: 6, w: 8, h: 6 },
+      ],
+    },
+  };
+}
+
 const isWholeNumber = (value: unknown, min: number, max = Infinity) =>
   typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max;
 

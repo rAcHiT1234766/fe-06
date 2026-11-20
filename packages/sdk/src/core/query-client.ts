@@ -1,6 +1,7 @@
 import type {
   Aggregation,
   DashboardConfig,
+  DashboardSummary,
   DashKitError,
   DimensionField,
   MeasureField,
@@ -92,6 +93,7 @@ export class QueryClient {
   #token: string | undefined;
   #tokenRenewal: Promise<string> | undefined;
   readonly #results = new Map<string, Promise<QueryResult>>();
+  readonly #dashboardListeners = new Set<() => void>();
 
   constructor({ apiUrl, token }: QueryClientOptions) {
     this.#apiUrl = apiUrl.replace(/\/$/, '');
@@ -142,9 +144,38 @@ export class QueryClient {
   }
 
   /** Stores the dashboard under its id. Only editors may; the API answers anyone else with 403. */
-  saveDashboard(config: DashboardConfig): Promise<DashboardConfig> {
+  async saveDashboard(config: DashboardConfig): Promise<DashboardConfig> {
     const path = `/dashboards/${encodeURIComponent(config.id)}`;
-    return this.#request<DashboardConfig>(path, { method: 'PUT', body: JSON.stringify(config) });
+    const body = JSON.stringify(config);
+    const stored = await this.#request<DashboardConfig>(path, { method: 'PUT', body });
+    this.#dashboardsChanged();
+    return stored;
+  }
+
+  /** The dashboards of the token's tenant, by id and title. */
+  listDashboards(signal?: AbortSignal): Promise<DashboardSummary[]> {
+    return untilAborted(
+      this.#request<DashboardSummary[]>('/dashboards', { method: 'GET' }),
+      signal,
+    );
+  }
+
+  /** Deletes the dashboard. Only editors may; the API answers anyone else with 403. */
+  async deleteDashboard(id: string): Promise<void> {
+    await this.#request<undefined>(`/dashboards/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    this.#dashboardsChanged();
+  }
+
+  /** Calls `listener` after each dashboard saved or deleted through this client. */
+  subscribeToDashboards(listener: () => void): () => void {
+    this.#dashboardListeners.add(listener);
+    return () => {
+      this.#dashboardListeners.delete(listener);
+    };
+  }
+
+  #dashboardsChanged() {
+    for (const listener of this.#dashboardListeners) listener();
   }
 
   async #request<T>(path: string, init: RequestInit): Promise<T> {
@@ -163,6 +194,8 @@ export class QueryClient {
       response = await this.#send(path, init, await this.#renewToken());
     }
     if (!response.ok) throw await toRequestError(response);
+    // A deletion answers with no content.
+    if (response.status === 204) return undefined as T;
     try {
       return (await response.json()) as T;
     } catch (cause) {

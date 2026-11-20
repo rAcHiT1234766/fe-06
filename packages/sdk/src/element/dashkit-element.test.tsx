@@ -246,6 +246,39 @@ describe('<dashkit-dashboard>', () => {
     expect(downloads(element)).toEqual([]);
   });
 
+  it('switches dashboards from the picker of the dashboard-picker attribute, and tells the page', async () => {
+    const changes = collect<string>('dashkit:dashboardchange');
+    const element = await addDashboard('ravi', { 'dashboard-picker': '' });
+    await showsCountries(element);
+    const list = await inside(element).findByLabelText<HTMLSelectElement>('Dashboard');
+    await waitFor(() => expect(list.options).toHaveLength(2));
+
+    act(() => {
+      fireEvent.change(list, { target: { value: 'population' } });
+    });
+    expect(element.getAttribute('dashboard-id')).toBe('population');
+    expect(changes).toEqual(['population']);
+    expect(
+      await inside(element).findByRole('heading', { level: 2, name: 'Population explorer' }),
+    ).toBeTruthy();
+
+    act(() => element.setAttribute('dashboard-picker', 'false'));
+    expect(inside(element).queryByLabelText('Dashboard')).toBeNull();
+  });
+
+  it('shows no picker for a dashboard set through the config property', async () => {
+    const element = await addDashboard('asha', { 'dashboard-picker': '' });
+    const config = await new QueryClient({
+      apiUrl: API_URL,
+      token: await demoToken('asha'),
+    }).loadDashboard('overview');
+    act(() => {
+      element.config = config;
+    });
+    await showsCountries(element);
+    expect(inside(element).queryByLabelText('Dashboard')).toBeNull();
+  });
+
   it('shows nothing until it knows the API and the dashboard', () => {
     const element = addElement({ 'api-url': API_URL, token: 'any' });
     expect(element.shadowRoot?.querySelector('.dk-root')).toBeNull();

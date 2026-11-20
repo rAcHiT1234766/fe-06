@@ -6,6 +6,13 @@
   padding: var(--dk-space-3) var(--dk-space-2);
 }
 
+/* The dashboard's padding on a phone, below the 600px of its sm breakpoint. */
+@container (width < 600px) {
+  .dk-dashboard-picker > * {
+    margin-inline: var(--dk-space-2);
+  }
+}
+
 /* A narrow widget gives its content the room that padding would take. */
 @container (width < 20rem) {
   .dk-widget-header,

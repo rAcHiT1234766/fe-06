@@ -118,3 +118,41 @@
   gap: var(--dk-space-2);
   margin-inline-start: auto;
 }
+
+.dk-dashboard-picker {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dk-space-2);
+}
+
+/* In line with the dashboard below, inside the same padding. */
+.dk-dashboard-picker > * {
+  margin-inline: var(--dk-space-4);
+}
+
+.dk-dashboard-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dk-space-2);
+}
+
+.dk-dashboard-picker-row > .dk-input {
+  flex: 0 1 18rem;
+  min-width: 10rem;
+}
+
+.dk-dashboard-picker-question,
+.dk-dashboard-picker-note,
+.dk-dashboard-picker-problem {
+  margin: 0;
+}
+
+.dk-dashboard-picker-note {
+  color: var(--dk-color-text-muted);
+}
+
+.dk-dashboard-picker-problem {
+  color: var(--dk-color-danger);
+}

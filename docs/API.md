@@ -94,6 +94,29 @@ each one in its settings panel, undo and redo, and save or cancel. From the keyb
 keys move a widget whose handle has the focus, and Shift with the arrow keys resizes it. Editing needs a container at least 900 px wide;
 on a narrower one the builder says so and shows the dashboard.
 
+### `DashboardPicker`
+
+A list of the tenant's dashboards, to show another one. The host keeps the id of the dashboard
+shown and passes it to both the picker and the dashboard:
+
+```tsx
+const [dashboardId, setDashboardId] = useState('overview');
+
+<DashboardPicker value={dashboardId} onChange={setDashboardId} />
+<DashboardBuilder dashboardId={dashboardId} />
+```
+
+| Prop       | Type                            | Description                                                                  |
+| ---------- | ------------------------------- | ---------------------------------------------------------------------------- |
+| `value`    | `string`                        | The id of the dashboard shown.                                               |
+| `onChange` | `(dashboardId: string) => void` | Called with the dashboard chosen, created, or shown in place of one deleted. |
+
+Editors also get **New dashboard**, which asks for a title and stores an empty dashboard under an
+id made from it, such as `sales-in-asia`, and **Delete dashboard**, which asks first and is not
+offered for the last dashboard. While a builder under the same provider has unsaved changes the
+picker waits, so they are never lost to a switch. A switch clears the cross-filters, which belong to
+the widgets of the dashboard they were made on, and the host's `onFilterChange` hears it.
+
 ## The custom element
 
 The script-tag build `dist/dashkit.js` bundles React and every dependency. Loading it defines
@@ -118,24 +141,26 @@ The dashboard renders in a shadow root, so the page's CSS cannot change it and i
 change the page. The element loads nothing until it has an API URL, a dashboard and a token or
 `getToken`, so properties may be set after the element is in the page.
 
-| Kind      | Name                   | Type                           | Description                                                                              |
-| --------- | ---------------------- | ------------------------------ | ---------------------------------------------------------------------------------------- |
-| Attribute | `api-url`              | string                         | Base URL of the data API.                                                                |
-| Attribute | `dashboard-id`         | string                         | The saved dashboard to show, unless `config` supplies one.                               |
-| Attribute | `token`                | string                         | An embed token, for pages that do not set `getToken`.                                    |
-| Attribute | `mode`                 | `view` \| `edit`               | `edit` opens the builder when the token's role is `editor`.                              |
-| Attribute | `color-scheme`         | `light` \| `dark` \| `auto`    | Overrides the theme's `mode`.                                                            |
-| Attribute | `allow-export`         | boolean                        | Present, each widget offers its data as a CSV download. `"false"` counts as absent.      |
-| Property  | `theme`                | `ThemeInput`                   | The theme, as `DashKitProvider` takes it.                                                |
-| Property  | `config`               | `DashboardConfig`              | A dashboard to show directly, in place of `dashboard-id`.                                |
-| Property  | `getToken`             | `() => Promise<string>`        | Called on start and once after a 401 response to get a fresh token.                      |
-| Method    | `setFilters(filters)`  |                                | Replaces the active cross-filters, as a click on a chart would.                          |
-| Method    | `clearFilters()`       |                                | Removes every active cross-filter.                                                       |
-| Method    | `refresh()`            |                                | Forgets every cached result and loads the dashboard and its data again, keeping filters. |
-| Event     | `dashkit:ready`        | `CustomEvent<undefined>`       | The dashboard first shows its content or its error. Again after `refresh()`.             |
-| Event     | `dashkit:filterchange` | `CustomEvent<ActiveFilter[]>`  | The filters changed, by a click or through `setFilters`.                                 |
-| Event     | `dashkit:save`         | `CustomEvent<DashboardConfig>` | An editor saved; the detail is the config as stored.                                     |
-| Event     | `dashkit:error`        | `CustomEvent<DashKitError>`    | A request failed for good, or the dashboard could not be read.                           |
+| Kind      | Name                      | Type                           | Description                                                                                                                           |
+| --------- | ------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Attribute | `api-url`                 | string                         | Base URL of the data API.                                                                                                             |
+| Attribute | `dashboard-id`            | string                         | The saved dashboard to show, unless `config` supplies one.                                                                            |
+| Attribute | `token`                   | string                         | An embed token, for pages that do not set `getToken`.                                                                                 |
+| Attribute | `mode`                    | `view` \| `edit`               | `edit` opens the builder when the token's role is `editor`.                                                                           |
+| Attribute | `color-scheme`            | `light` \| `dark` \| `auto`    | Overrides the theme's `mode`.                                                                                                         |
+| Attribute | `allow-export`            | boolean                        | Present, each widget offers its data as a CSV download. `"false"` counts as absent.                                                   |
+| Attribute | `dashboard-picker`        | boolean                        | Present, a `DashboardPicker` sits above the dashboard; a choice sets `dashboard-id`. Not shown while `config` supplies the dashboard. |
+| Property  | `theme`                   | `ThemeInput`                   | The theme, as `DashKitProvider` takes it.                                                                                             |
+| Property  | `config`                  | `DashboardConfig`              | A dashboard to show directly, in place of `dashboard-id`.                                                                             |
+| Property  | `getToken`                | `() => Promise<string>`        | Called on start and once after a 401 response to get a fresh token.                                                                   |
+| Method    | `setFilters(filters)`     |                                | Replaces the active cross-filters, as a click on a chart would.                                                                       |
+| Method    | `clearFilters()`          |                                | Removes every active cross-filter.                                                                                                    |
+| Method    | `refresh()`               |                                | Forgets every cached result and loads the dashboard and its data again, keeping filters.                                              |
+| Event     | `dashkit:ready`           | `CustomEvent<undefined>`       | The dashboard first shows its content or its error. Again after `refresh()`.                                                          |
+| Event     | `dashkit:filterchange`    | `CustomEvent<ActiveFilter[]>`  | The filters changed, by a click or through `setFilters`.                                                                              |
+| Event     | `dashkit:dashboardchange` | `CustomEvent<string>`          | A dashboard was chosen, created or shown instead in the picker; the detail is its id.                                                 |
+| Event     | `dashkit:save`            | `CustomEvent<DashboardConfig>` | An editor saved; the detail is the config as stored.                                                                                  |
+| Event     | `dashkit:error`           | `CustomEvent<DashKitError>`    | A request failed for good, or the dashboard could not be read.                                                                        |
 
 Every event bubbles and crosses the shadow root, so a listener on the element or on `document`
 hears it. With the element entry imported, TypeScript knows each event's `detail` type,
@@ -145,8 +170,10 @@ hears it. With the element entry imported, TypeScript knows each event's `detail
 
 For pages that would rather call a function than write the tag. It adds a `<dashkit-dashboard>`
 to `container`, applies `options` (a `DashKitOptions`: `apiUrl`, `token` or `getToken`,
-`dashboardId` or `config`, `mode`, `theme`, `allowExport`, and the `onFilterChange`, `onSave`
-and `onError` callbacks), and returns a handle:
+`dashboardId` or `config`, `mode`, `theme`, `allowExport`, `dashboardPicker`, and the
+`onFilterChange`, `onDashboardChange`, `onSave` and `onError` callbacks), and returns a handle.
+A dashboard chosen in the picker becomes the handle's `dashboardId`, so a later `update()` keeps
+it:
 
 | Member                                               | Description                                                             |
 | ---------------------------------------------------- | ----------------------------------------------------------------------- |
@@ -159,19 +186,19 @@ and `onError` callbacks), and returns a handle:
 
 The npm entry exports these types; the Storybook API reference lists every property.
 
-| Type                                                                        | What it is                                                                                                                  |
-| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `DashboardConfig`, `WidgetConfig`, `LayoutItem`, `FilterControl`            | A dashboard as JSON; see [Dashboard config](#dashboard-config).                                                             |
-| `WidgetType`, `Breakpoint`                                                  | `bar`, `line`, `pie`, `table`, `kpi`; `lg`, `md`, `sm`, `xs`.                                                               |
-| `Query`, `Filter`, `QueryResult`                                            | A request for aggregated data and its answer; see [HTTP API](#http-api).                                                    |
-| `DimensionField`, `MeasureField`, `Aggregation`, `FilterOperator`, `Scalar` | The vocabulary of a query; see [Data model](#data-model).                                                                   |
-| `ActiveFilter`                                                              | A cross-filter: `{ field, values, sourceWidgetId }`.                                                                        |
-| `DashKitTheme`, `ThemeInput`, `ColorTokens`, `DeepPartial`                  | A complete theme, the partial one hosts pass, and its colours.                                                              |
-| `TokenClaims`                                                               | What a verified embed token says: `sub`, `tenantId`, `role`, `scopes`, `iat`, `exp`.                                        |
-| `DashKitError`                                                              | `{ code, message }`, with `code` one of `UNAUTHENTICATED`, `FORBIDDEN`, `INVALID_QUERY`, `NOT_FOUND`, `NETWORK`, `UNKNOWN`. |
-| `DashKitOptions`, `DashKitHandle`                                           | The options of `DashKit.mount()` and the handle it returns.                                                                 |
-| `DashKitElement`, `DashKitElementAttributes`, `DashKitElementEventMap`      | The custom element, its attributes and its events.                                                                          |
-| `DashKitProviderProps`, `DashboardProps`, `DashboardBuilderProps`           | The components' props.                                                                                                      |
+| Type                                                                                 | What it is                                                                                                                  |
+| ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `DashboardConfig`, `WidgetConfig`, `LayoutItem`, `FilterControl`, `DashboardSummary` | A dashboard as JSON, see [Dashboard config](#dashboard-config); `{ id, title }` as the API lists it.                        |
+| `WidgetType`, `Breakpoint`                                                           | `bar`, `line`, `pie`, `table`, `kpi`; `lg`, `md`, `sm`, `xs`.                                                               |
+| `Query`, `Filter`, `QueryResult`                                                     | A request for aggregated data and its answer; see [HTTP API](#http-api).                                                    |
+| `DimensionField`, `MeasureField`, `Aggregation`, `FilterOperator`, `Scalar`          | The vocabulary of a query; see [Data model](#data-model).                                                                   |
+| `ActiveFilter`                                                                       | A cross-filter: `{ field, values, sourceWidgetId }`.                                                                        |
+| `DashKitTheme`, `ThemeInput`, `ColorTokens`, `DeepPartial`                           | A complete theme, the partial one hosts pass, and its colours.                                                              |
+| `TokenClaims`                                                                        | What a verified embed token says: `sub`, `tenantId`, `role`, `scopes`, `iat`, `exp`.                                        |
+| `DashKitError`                                                                       | `{ code, message }`, with `code` one of `UNAUTHENTICATED`, `FORBIDDEN`, `INVALID_QUERY`, `NOT_FOUND`, `NETWORK`, `UNKNOWN`. |
+| `DashKitOptions`, `DashKitHandle`                                                    | The options of `DashKit.mount()` and the handle it returns.                                                                 |
+| `DashKitElement`, `DashKitElementAttributes`, `DashKitElementEventMap`               | The custom element, its attributes and its events.                                                                          |
+| `DashKitProviderProps`, `DashboardProps`, `DashboardBuilderProps`                    | The components' props.                                                                                                      |
 
 ## HTTP API
 

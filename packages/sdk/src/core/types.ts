@@ -143,6 +143,14 @@ export interface WidgetConfig {
   };
 }
 
+/** A saved dashboard as the API lists it. */
+export interface DashboardSummary {
+  /** What `dashboardId` and the `dashboard-id` attribute refer to. */
+  id: string;
+  /** The dashboard's title, as the picker lists it. */
+  title: string;
+}
+
 /**
  * A list above the grid that filters the whole dashboard by one field, as a click on a chart does.
  * It offers the field's values within the user's scope, and "All". The field becomes a setting of
@@ -319,6 +327,13 @@ export interface DashKitOptions {
    * the user's scope. Off unless set, since some products must not let data leave them.
    */
   allowExport?: boolean;
+  /**
+   * Shows a list of the tenant's dashboards above the dashboard to switch between them, with
+   * **New dashboard** and **Delete dashboard** for editors. Off unless set.
+   */
+  dashboardPicker?: boolean;
+  /** Called with the id of the dashboard chosen, created or shown instead in the picker. */
+  onDashboardChange?: (dashboardId: string) => void;
   /** Called with the new filters after every change, whether from a click or from the host. */
   onFilterChange?: (filters: ActiveFilter[]) => void;
   /** Called with the config as stored after an editor saves. */

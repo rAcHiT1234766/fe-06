@@ -119,6 +119,33 @@ describe('QueryClient', () => {
     await expect(client.saveDashboard(overview)).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });
 
+  it('lists the tenant’s dashboards, deletes one, and tells subscribers of each change', async () => {
+    const client = new QueryClient({ apiUrl: API_URL, token: await demoToken('asha') });
+    const changed = vi.fn();
+    const unsubscribe = client.subscribeToDashboards(changed);
+    const overview = await client.loadDashboard('overview');
+
+    await client.saveDashboard({ ...overview, id: 'listed', title: 'Listed' });
+    expect(await client.listDashboards()).toContainEqual({ id: 'listed', title: 'Listed' });
+    await client.deleteDashboard('listed');
+    expect((await client.listDashboards()).map(({ id }) => id)).not.toContain('listed');
+    expect(changed).toHaveBeenCalledTimes(2);
+
+    unsubscribe();
+    await client.saveDashboard({ ...overview, id: 'unheard', title: 'Unheard' });
+    await client.deleteDashboard('unheard');
+    expect(changed).toHaveBeenCalledTimes(2);
+  });
+
+  it('passes on the refusal when a viewer tries to delete, and reports no change', async () => {
+    const client = new QueryClient({ apiUrl: API_URL, token: await demoToken('ravi') });
+    const changed = vi.fn();
+    client.subscribeToDashboards(changed);
+    await expect(client.deleteDashboard('overview')).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    expect(changed).not.toHaveBeenCalled();
+    expect((await client.listDashboards()).map(({ id }) => id)).toContain('overview');
+  });
+
   it('FR-5.5 loads the fields a user may choose from', async () => {
     const client = new QueryClient({ apiUrl: API_URL, token: await demoToken('elena') });
     const catalog = await client.loadFieldCatalog();

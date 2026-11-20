@@ -8,6 +8,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
+import { createDraftRegistry } from '../core/draft-registry';
 import { createFilterStore } from '../core/filter-store';
 import { QueryClient } from '../core/query-client';
 import { RenderTiming } from '../core/render-timing';
@@ -92,6 +93,7 @@ export function DashKitProvider({
     [filterStore],
   );
   const [timing] = useState(() => new RenderTiming());
+  const [drafts] = useState(createDraftRegistry);
   useEffect(() => filterStore.subscribe(() => timing.filtersChanged()), [filterStore, timing]);
 
   const prefersDark = useSyncExternalStore(subscribeToColorScheme, systemPrefersDark);
@@ -111,8 +113,8 @@ export function DashKitProvider({
   }, [resolvedTheme]);
 
   const value = useMemo(
-    () => ({ client, filterStore, theme: resolvedTheme, reportError, timing, allowExport }),
-    [client, filterStore, resolvedTheme, reportError, timing, allowExport],
+    () => ({ client, filterStore, theme: resolvedTheme, reportError, timing, allowExport, drafts }),
+    [client, filterStore, resolvedTheme, reportError, timing, allowExport, drafts],
   );
   return <DashKitContext.Provider value={value}>{children}</DashKitContext.Provider>;
 }

@@ -88,6 +88,23 @@ describe('DashKit.mount()', () => {
     expect(inside(handle).queryAllByRole('button', { name: /as CSV$/ })).toEqual([]);
   });
 
+  it('switches dashboards with dashboardPicker, and keeps the choice through later updates', async () => {
+    const onDashboardChange = vi.fn();
+    const { handle } = await mountDashboard({ dashboardPicker: true, onDashboardChange });
+    const list = await inside(handle).findByLabelText<HTMLSelectElement>('Dashboard');
+    await waitFor(() => expect(list.options).toHaveLength(2));
+
+    act(() => {
+      fireEvent.change(list, { target: { value: 'population' } });
+    });
+    expect(onDashboardChange).toHaveBeenCalledWith('population');
+    act(() => handle.update({ allowExport: true }));
+    expect(handle.element.getAttribute('dashboard-id')).toBe('population');
+
+    act(() => handle.update({ dashboardPicker: false }));
+    expect(inside(handle).queryByLabelText('Dashboard')).toBeNull();
+  });
+
   it('NFR-C4 unmount() removes the dashboard and tears it down', async () => {
     const { container, handle } = await mountDashboard();
     await inside(handle).findByRole('table', { name: 'Countries' });

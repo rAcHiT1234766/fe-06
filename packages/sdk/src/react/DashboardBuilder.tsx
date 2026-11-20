@@ -1,4 +1,12 @@
-import { useContext, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useContext,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react';
 import {
   addWidget,
   arrangeWidgets,
@@ -87,7 +95,7 @@ interface BuilderProps {
 }
 
 function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
-  const { client } = useDashKit();
+  const { client, drafts } = useDashKit();
   const isEditor = useClientValue(loadRole).value === 'editor';
   const [saved, setSaved] = useState<Replacement>();
   const [draft, setDraft] = useState<Draft | undefined>(
@@ -119,6 +127,7 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
   const fieldCatalog = useClientValue(loadFieldCatalog, isEditing);
   const selected = draftConfig?.widgets.find(({ id }) => id === selectedId);
   useUnsavedChangesWarning(hasUnsavedChanges);
+  useEffect(() => (hasUnsavedChanges ? drafts.hold() : undefined), [drafts, hasUnsavedChanges]);
 
   // Cancel and Save disappear with the builder, so the focus moves to Edit dashboard. A layout
   // effect moves it in the same update that removes them, so it never rests on the page body.
@@ -403,6 +412,8 @@ export function DashboardBuilder(props: DashboardBuilderProps) {
     <DashboardLoader {...props}>
       {(config) => (
         <Builder
+          // Another dashboard starts with a fresh builder: no draft, history or open settings.
+          key={config.id}
           loadedConfig={config}
           isStartingInEdit={props.mode === 'edit'}
           onSave={props.onSave}

@@ -32,6 +32,7 @@ function apply(element: DashKitElement, options: DashKitOptions) {
     else if (element.getAttribute(attribute) !== value) element.setAttribute(attribute, value);
   }
   element.toggleAttribute('allow-export', options.allowExport === true);
+  element.toggleAttribute('dashboard-picker', options.dashboardPicker === true);
   if (element.theme !== options.theme) element.theme = options.theme;
   if (element.config !== options.config) element.config = options.config;
   if (element.getToken !== options.getToken) element.getToken = options.getToken;
@@ -49,6 +50,11 @@ export function mount(container: Element, options: DashKitOptions): DashKitHandl
   element.addEventListener('dashkit:filterchange', (event) =>
     current.onFilterChange?.(event.detail),
   );
+  // The picker sets the element's dashboard-id itself, so a later update() must not set it back.
+  element.addEventListener('dashkit:dashboardchange', (event) => {
+    current = { ...current, dashboardId: event.detail };
+    current.onDashboardChange?.(event.detail);
+  });
   element.addEventListener('dashkit:save', (event) => current.onSave?.(event.detail));
   element.addEventListener('dashkit:error', (event) => current.onError?.(event.detail));
 

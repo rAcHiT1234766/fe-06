@@ -383,3 +383,15 @@ The author asked for five features the requirements do not list. Each is recorde
   A value set by the host or a click is shown at once, and several selected values show as "2 selected", so the list never claims **All** while the widgets are filtered.
 - **One native `<select>` per control.**
   It is labelled, works with the keyboard and screen readers on every platform, and needs no dependency. The values come from one grouped query per field, so the API's row scope decides them: Ravi's Region list offers his two regions only.
+- **The host keeps the dashboard shown; the picker only proposes.**
+  `DashboardPicker` takes `value` and `onChange`, as a form control does, so a host can keep the id in its URL or its own state, put the picker anywhere, or leave it out and switch dashboards its own way. The element keeps the id in its `dashboard-id` attribute and reports `dashkit:dashboardchange`; `mount()` takes the new id into its options, so a later `update()` does not switch back.
+- **No switch while there are unsaved changes.**
+  A builder under the same provider tells a small registry while its draft differs from the saved dashboard, and the picker disables itself and says why. Asking with `window.confirm` would block the page and look like the browser rather than the host's product, and switching silently would lose the edits.
+- **A switch clears the cross-filters.**
+  A selection names the widget it came from, and another dashboard may have a widget with the same id, which would then take it for its own selection and drill down. The host hears the cleared filters through `onFilterChange`.
+- **A new dashboard's id comes from its title.**
+  "Sales in Asia" becomes `sales-in-asia`, or `sales-in-asia-2` if that is taken, using the same rules as CSV file names, so ids stay readable in URLs. The list is read again just before the id is chosen, because `PUT` replaces a dashboard that already has the id.
+- **Deleting asks first, and the last dashboard stays.**
+  The question names the dashboard, the focus starts on **Keep**, and after a deletion the picker shows the first remaining dashboard. With only one left there is no **Delete dashboard**, so a host always has something to show.
+- **A second starter dashboard.**
+  Every tenant now also starts with the Population explorer, which shows filter controls and drill-down without any editing. It uses population and life expectancy only, which every demo user may query, so Kofi, who may not query GDP, sees all of it.
