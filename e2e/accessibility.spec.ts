@@ -80,6 +80,40 @@ test('NFR-A1 the dashboard with an active filter has no serious violations', asy
   await expectNoSeriousViolations(page);
 });
 
+test('NFR-A1 the Population explorer, drilled into a region, in every brand and mode, has no serious violations', async ({
+  page,
+}) => {
+  await showDashboard(page);
+  await page
+    .getByLabel('Dashboard', { exact: true })
+    .selectOption({ label: 'Population explorer' });
+  await expect(page.getByRole('img', { name: 'Population by country chart' })).toBeVisible();
+  // The region chart then lists South Asia's countries, with a link back and the lists above.
+  const southAsia = dataOf(page, 'Population by region').getByRole('button', {
+    name: 'Filter by South Asia',
+  });
+  await southAsia.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('button', { name: 'All regions' })).toBeVisible();
+  for (const brand of BRANDS) {
+    for (const mode of ['light', 'dark']) {
+      await page.getByLabel('Brand').selectOption(brand);
+      await page.getByLabel('Mode').selectOption(mode);
+      await expectNoSeriousViolations(page);
+    }
+  }
+});
+
+test('NFR-A1 the dashboard picker, asking before a deletion, has no serious violations', async ({
+  page,
+}) => {
+  await showDashboard(page);
+  await page.getByRole('button', { name: 'Delete dashboard' }).click();
+  await expect(page.getByRole('button', { name: 'Keep' })).toBeFocused();
+  await expectNoSeriousViolations(page);
+  await page.getByRole('button', { name: 'Keep' }).click();
+});
+
 test('NFR-A1 the session-invalid state has no serious violations', async ({ page }) => {
   await showDashboard(page);
   await page.getByRole('button', { name: 'Tamper with token' }).click();
