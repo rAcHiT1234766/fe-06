@@ -127,24 +127,25 @@ a series' own defaults override the chart's. Setting a short transition on every
 
 **On the slide:**
 
-| Check                                    | Result                                                                                                                    |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Unit, component and type tests           | 410 passed, the component tests on React 19 and 18                                                                        |
-| End-to-end tests                         | 78 passed: 17 user flows in Chromium, Firefox and WebKit; 13 axe accessibility checks and 14 Storybook checks in Chromium |
-| Permission matrix                        | No out-of-scope row for any demo user, and no query on a measure outside the user's scope                                 |
-| Coverage, SDK core and query engine      | 99.4% and 97.2% of lines; CI fails if either drops below its gate                                                         |
-| Installed from the packed tarball        | Types check on React 18 and 19                                                                                            |
-| npm build, as a host bundles it          | 217.6 kB gzipped (target 300)                                                                                             |
-| Script-tag build                         | 284.6 kB gzipped (target 500)                                                                                             |
-| Mount to first chart                     | median 155 ms (target 1.5 s)                                                                                              |
-| Cross-filter, click to every chart drawn | median 257 ms (target 300 ms)                                                                                             |
-| Identical queries from 10 widgets        | 5 requests for 5 distinct queries                                                                                         |
+| Check                                    | Result                                                                                                                     |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Unit, component and type tests           | 512 passed, the component tests on React 19 and 18                                                                         |
+| End-to-end tests                         | 102 passed: 24 user flows in Chromium, Firefox and WebKit; 15 axe accessibility checks and 15 Storybook checks in Chromium |
+| Permission matrix                        | No out-of-scope row for any demo user, and no query on a measure outside the user's scope                                  |
+| Coverage, SDK core and query engine      | 99.6% and 97.8% of lines; CI fails if either drops below its gate                                                          |
+| Installed from the packed tarball        | Types check on React 18 and 19                                                                                             |
+| npm build, as a host bundles it          | 245.8 kB gzipped (target 300)                                                                                              |
+| Script-tag build                         | 313.4 kB gzipped (target 500)                                                                                              |
+| Mount to first chart                     | median 155 ms (target 1.5 s)                                                                                               |
+| Cross-filter, click to every chart drawn | median 257 ms (target 300 ms)                                                                                              |
+| Identical queries from 10 widgets        | 5 requests for 5 distinct queries                                                                                          |
 
 **Say:** "All of this runs in CI on every push, apart from the performance run, which depends on
 the machine. Two targets are missed on a CPU slowed four times: a cross-filter takes 534 ms there,
 and resizing drops a few frames. Both are in the performance report with the reason. A re-run after
 the stretch items found no slowdown from them; that day the machine was slower, and the mount on a
-slowed CPU missed its 1.5 seconds as well."
+slowed CPU missed its 1.5 seconds as well. Another after the five extra features found no slowdown
+from those either."
 
 ## 9. What is missing, and what comes next (9:00–9:45)
 
@@ -152,12 +153,15 @@ slowed CPU missed its 1.5 seconds as well."
 
 - Built after the must-haves: all four stretch items. Column-level scope, selecting several values
   with Ctrl- or Cmd-click, undo and redo, and moving and resizing widgets from the keyboard.
+- Built beyond the requirements: CSV export, drill-down from a region to its countries, filter
+  lists above the grid, several dashboards with a picker, and a map of any measure by country.
 - The demo API keeps dashboards in memory and signs its own demo tokens.
 - Next: persistent storage, and cross-filtering within 300 ms on slow devices.
 
 **Say:** "Everything the brief marked as must-have is built and tested, and so are the four
 stretch items: column-level scope, which completes the security model; selecting several values
-with Ctrl- or Cmd-click; undo and redo; and a keyboard way to move and resize widgets. What is
+with Ctrl- or Cmd-click; undo and redo; and a keyboard way to move and resize widgets. Beyond
+the brief there is CSV export, drill-down, filter lists, a dashboard picker and a map. What is
 missing is the production back end: the demo API is a stand-in, and a real deployment would store
 dashboards in a database and let the host's backend sign tokens."
 

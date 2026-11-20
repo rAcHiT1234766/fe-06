@@ -198,16 +198,16 @@ decisions behind them. Every decision made along the way is in [docs/DECISIONS.m
 
 ## Tests and performance
 
-| Check                                    | Result                                                                                                                        |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Unit, component and type tests (Vitest)  | 410 passed, the component tests on both React 19 and React 18                                                                 |
-| End-to-end tests (Playwright)            | 78 passed: 17 user flows in Chromium, Firefox and WebKit, and 13 axe accessibility checks and 14 Storybook checks in Chromium |
-| Coverage, SDK core and query engine      | 99.4% and 97.2% of lines; CI fails if either drops below its gate                                                             |
-| Installed package                        | Installs and type-checks in fresh projects on React 18 and 19                                                                 |
-| Bundle, npm build as a host bundles it   | 217.6 kB gzipped (target 300 kB)                                                                                              |
-| Bundle, script tag                       | 284.6 kB gzipped (target 500 kB)                                                                                              |
-| Mount to first chart                     | median 155 ms (target 1.5 s)                                                                                                  |
-| Cross-filter, click to every chart drawn | median 257 ms (target 300 ms)                                                                                                 |
+| Check                                    | Result                                                                                                                         |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Unit, component and type tests (Vitest)  | 512 passed, the component tests on both React 19 and React 18                                                                  |
+| End-to-end tests (Playwright)            | 102 passed: 24 user flows in Chromium, Firefox and WebKit, and 15 axe accessibility checks and 15 Storybook checks in Chromium |
+| Coverage, SDK core and query engine      | 99.6% and 97.8% of lines; CI fails if either drops below its gate                                                              |
+| Installed package                        | Installs and type-checks in fresh projects on React 18 and 19                                                                  |
+| Bundle, npm build as a host bundles it   | 245.8 kB gzipped (target 300 kB)                                                                                               |
+| Bundle, script tag                       | 313.4 kB gzipped (target 500 kB)                                                                                               |
+| Mount to first chart                     | median 155 ms (target 1.5 s)                                                                                                   |
+| Cross-filter, click to every chart drawn | median 257 ms (target 300 ms)                                                                                                  |
 
 ```sh
 pnpm lint && pnpm typecheck && pnpm test   # static checks, unit and component tests

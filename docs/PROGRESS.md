@@ -1,5 +1,105 @@
 # Progress
 
+## After Phase 7 — Beyond the requirements (18 to 21 November 2026)
+
+Five features the requirements do not ask for were added at the author's request: CSV export,
+drill-down from a region to its countries, filter lists above the grid, several dashboards with a
+picker, and a map widget. [DECISIONS.md](DECISIONS.md) and [LEARNING_LOG.md](LEARNING_LOG.md)
+record each under "After Phase 7 — Beyond the requirements". What remains still needs the author's
+accounts or the author in person: pushing to GitHub, deploying to Render, recording the backup
+video, presenting and answering the reflection.
+
+### Commits
+
+| Commit    | Change                                                                    |
+| --------- | ------------------------------------------------------------------------- |
+| `d669eb9` | A widget's data downloads as a CSV file, when the host allows it          |
+| `0b60937` | A click on a region drills down to its countries                          |
+| `217c644` | Filter lists above the grid filter every widget                           |
+| `2c4e9ce` | A picker switches, creates and deletes dashboards                         |
+| `570ce15` | A map widget shows a measure by country                                   |
+| `44c80cb` | The performance test starts each drag at the same height in the window    |
+| `c278550` | axe checks the Population explorer, drilled down, and the picker          |
+| `cbb62eb` | The drag test's comment on why the page scrolls; it named the wrong cause |
+| `f9edd8c` | That comment corrected: Chrome's autoscroll moves the page, not the grid  |
+
+### Check results
+
+| Check                  | Result                                                                                                                                                                                                                |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm install`         | pass from a fresh clone, frozen lockfile                                                                                                                                                                              |
+| `pnpm lint`            | pass, zero warnings                                                                                                                                                                                                   |
+| `pnpm typecheck`       | pass in every package                                                                                                                                                                                                 |
+| `pnpm test:coverage`   | 53 files, 512 tests passed: 297 in the SDK, the same 116 component tests again on React 18, 95 in the mock engine, 4 in the API. Lines covered: 99.6% of the SDK core and 97.8% of the query engine, above both gates |
+| `pnpm test:e2e`        | 102 passed: 24 user flows in Chromium, Firefox and WebKit, and 15 axe checks and 15 Storybook checks in Chromium; 60 skipped (the same 30 outside Chromium)                                                           |
+| `pnpm build`           | pass                                                                                                                                                                                                                  |
+| `pnpm build-storybook` | pass; JSDoc found on all 39 public exports and their members                                                                                                                                                          |
+| `pnpm size` (gzipped)  | npm `dist/index.js` 25.4 kB; as bundled by a host 245.8 kB (target 300); `dashkit.js` 313.4 kB (target 500)                                                                                                           |
+| `pnpm check:package`   | each build carries the libraries it should; the packed SDK installs and type-checks on React 18 and 19, strictest and default settings                                                                                |
+| `pnpm perf`            | no slowdown from the five features: from fresh clones of `9637048` and `c278550`, mount medians of 149 and 165 ms and cross-filter medians of 251 and 256 ms; [PERFORMANCE.md](PERFORMANCE.md) has the table          |
+
+These ran on a fresh clone of `c278550`, the last change to code apart from the drag test's
+comment. [TEST_REPORT.md](TEST_REPORT.md) has the output.
+
+### Each commit
+
+Before each of `d669eb9` to `570ce15` was committed, the working repository passed Prettier, lint,
+typecheck, the unit tests with coverage, build, size, build-storybook, `check:package` and the full
+`test:e2e`, with the ports checked free first. `570ce15` and `c278550` were checked from fresh
+clones: a frozen-lockfile install, lint, typecheck, the unit tests with coverage, build,
+build-storybook, size, `check:package`, `test:e2e` and `perf`, and every check passed. The last row
+below is from that clone.
+
+| Commit    | Unit tests                   | End to end, passed |
+| --------- | ---------------------------- | ------------------ |
+| `d669eb9` | 429, under the coverage gate | 84                 |
+| `0b60937` | 451, under the coverage gate | 87                 |
+| `217c644` | 471, under the coverage gate | 90                 |
+| `2c4e9ce` | 496, under the coverage gate | 93                 |
+| `570ce15` | 512, under the coverage gate | 100                |
+| `c278550` | 512, under the coverage gate | 102                |
+
+`44c80cb`, `cbb62eb` and `f9edd8c` change only the performance test, which `pnpm perf` ran at
+`c278550`.
+
+The first performance run at `570ce15` reported resizing much slower than before. It was the test:
+the filter lists and the picker put the grid 96 pixels lower, so the resize drag reached the
+bottom of the window, where Chrome scrolls the page while the button is held. The test now starts
+each drag at the same height; [PERFORMANCE.md](PERFORMANCE.md) has the measurements.
+
+The demo script was run again at `cbb62eb`: all eleven steps against production builds of the API,
+the demo and Storybook, served as the Blueprint deploys them, passed 25 of 25 checks with no page
+errors.
+
+### Known gaps
+
+These replace the list in the section below.
+
+- Two performance targets are missed on a CPU slowed four times, though met at full speed: a
+  cross-filter (NFR-P4; median 549 ms in the last run) and smooth resizing (NFR-P5; 9 of 197
+  frames over 50 ms). Mounting on a slowed CPU met its 1.5 s in the last run (median 1226 ms) but
+  missed it on 18 November, so it is close to the line.
+- In Chrome, holding a resize corner near the bottom of the window scrolls the page, and the widget
+  grows with the scroll, far past the pointer. It was the same before these features.
+- Nothing has been tested on the deployed services yet, Lighthouse included, and Render's build
+  image has not been tried.
+- A free Render API sleeps after about 15 minutes idle and keeps dashboards in memory, so a saved
+  dashboard, or one created with the picker, lasts until the service restarts.
+- The map's chart code is in every build, whether or not a host shows a map;
+  [DECISIONS.md](DECISIONS.md) has the sizes.
+- The end-to-end map test clicks India at a fixed point of the 1280-pixel window, so a change to
+  the map's layout would move it.
+- Screen readers in browse mode keep the arrow keys for reading, so a screen reader user switches
+  to focus mode to move a widget from its handle.
+- An edit reversed by hand, rather than with Undo, still counts as unsaved, since changes are
+  detected by identity.
+- Some unit test files print `AbortError`, `Network error` and `ENOTFOUND api.test` lines when a
+  test ends with requests still in flight (15 in the last run). Nothing fails.
+- The demo app builds into one 1,000.6 kB chunk (326.9 kB gzipped) and Vite warns about its size;
+  it also loads the 164 kB map borders. This is the demo only; the SDK's own sizes are in the table
+  above.
+- The zip export in the project root is not part of the project and must not be committed.
+
 ## After Phase 7 — Finishing the public options (18 November 2026)
 
 After Phase 7 the options that the public types offered but the SDK did not yet apply were

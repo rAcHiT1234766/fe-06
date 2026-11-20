@@ -1,9 +1,10 @@
 # Test report
 
-Every result on this page comes from runs on 18 November 2026 at commit `9637048`, the last change
-to code, on the machine described in [PERFORMANCE.md](PERFORMANCE.md) (Windows 11, Intel Core
-i5-1135G7, 16 GB). Each commit since Phase 7 was also checked from its own fresh clone;
-[PROGRESS.md](PROGRESS.md) has those results. Performance numbers are on that page.
+Every result on this page comes from runs on 21 November 2026 on a fresh clone of commit
+`c278550`, the last change to code apart from a comment in the performance test, on the machine
+described in [PERFORMANCE.md](PERFORMANCE.md) (Windows 11, Intel Core i5-1135G7, 16 GB).
+[PROGRESS.md](PROGRESS.md) has the results of each commit before it. Performance numbers are on
+that page.
 
 | Tool       | Version                                                   |
 | ---------- | --------------------------------------------------------- |
@@ -21,11 +22,11 @@ i5-1135G7, 16 GB). Each commit since Phase 7 was also checked from its own fresh
 | --------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | Lint                  | `pnpm lint`            | Pass, no warnings                                                                                                        |
 | Types                 | `pnpm typecheck`       | Pass in every package                                                                                                    |
-| Unit, component, type | `pnpm test:coverage`   | 37 files, 410 tests passed, no type errors; coverage above every gate                                                    |
-| End to end            | `pnpm test:e2e`        | 78 passed, 54 skipped (the accessibility and Storybook checks run in Chromium only), in 3.9 minutes                      |
+| Unit, component, type | `pnpm test:coverage`   | 53 files, 512 tests passed, no type errors; coverage above every gate                                                    |
+| End to end            | `pnpm test:e2e`        | 102 passed, 60 skipped (the accessibility and Storybook checks run in Chromium only), in 5.0 minutes                     |
 | Build                 | `pnpm build`           | Pass                                                                                                                     |
-| Storybook             | `pnpm build-storybook` | Pass; the API reference generator found JSDoc on all 33 public exports and their members                                 |
-| Bundle size           | `pnpm size`            | 217.6 kB gzipped as a host bundles the npm build (target 300); 284.6 kB for `dashkit.js` (target 500)                    |
+| Storybook             | `pnpm build-storybook` | Pass; the API reference generator found JSDoc on all 39 public exports and their members                                 |
+| Bundle size           | `pnpm size`            | 245.8 kB gzipped as a host bundles the npm build (target 300); 313.4 kB for `dashkit.js` (target 500)                    |
 | Installed package     | `pnpm check:package`   | Each build carries the libraries it should, and the packed SDK installs into four fresh projects and type-checks in each |
 
 CI runs all of these on every push, the end-to-end tests in all three browsers.
@@ -36,22 +37,22 @@ CI runs all of these on every push, the end-to-end tests in all three browsers.
 measuring coverage:
 
 ```text
- Test Files  37 passed (37)
-      Tests  410 passed (410)
+ Test Files  53 passed (53)
+      Tests  512 passed (512)
  Type Errors  no errors
-   Duration  61.11s (tests 54%, environment 25%, setup 9%, import 9%, typecheck 1%, worker 1%, transform 1%)
+   Duration  76.10s (tests 44%, environment 24%, import 17%, setup 10%, transform 3%, typecheck 1%, worker 1%)
 ```
 
-| Project                | Area                                                                                                                                                                                                            |   Tests |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------: |
-| `sdk`                  | Core: query client 17, widget edits 14, filter store 13, layouts 12, theme 11, dashboard edits 10, number formats 9, config schema 7, undo history 5, render timing 5, query merging 4, no hard-coded colours 1 |     108 |
-| `sdk`                  | Chart options 11, keyboard arrangement 7, ECharts theme 1                                                                                                                                                       |      19 |
-| `sdk`                  | Components on React 19: builder 26, element 14, dashboard 13, cross-filtering 13, ECharts hook 9, responsive 7, `DashKit.mount()` 5, table paging 3                                                             |      90 |
-| `sdk`                  | Type tests: the public API 9, core types 4                                                                                                                                                                      |      13 |
-| `sdk on React 18`      | The same 90 component tests, against React 18.3.1                                                                                                                                                               |      90 |
-| `@dashkit/mock-engine` | Permission matrix 38, query execution 28, API routes 20                                                                                                                                                         |      86 |
-| `@dashkit/mock-api`    | The HTTP server: CORS for listed and other origins, preflight, and passing the token and body through                                                                                                           |       4 |
-| **Total**              |                                                                                                                                                                                                                 | **410** |
+| Project                | Area                                                                                                                                                                                                                                                                                             |   Tests |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------: |
+| `sdk`                  | Core: query client 19, widget edits 17, filter store 14, layouts 12, dashboard edits 11, theme 11, config schema 10, number formats 9, drill-down queries 8, CSV files 7, undo history 5, render timing 5, query merging 5, ids from titles 3, unsaved-draft registry 1, no hard-coded colours 1 |     138 |
+| `sdk`                  | Chart options 18, keyboard arrangement 7, colours for map classes 3, map registration 1, ECharts theme 1                                                                                                                                                                                         |      30 |
+| `sdk`                  | Components on React 19: builder 28, element 17, dashboard 13, cross-filtering 13, ECharts hook 9, `DashKit.mount()` 7, responsive 7, dashboard picker 6, CSV export 4, drill-down 4, filter controls 4, table paging 3, map widget 1                                                             |     116 |
+| `sdk`                  | Type tests: the public API 9, core types 4                                                                                                                                                                                                                                                       |      13 |
+| `sdk on React 18`      | The same 116 component tests, against React 18.3.1                                                                                                                                                                                                                                               |     116 |
+| `@dashkit/mock-engine` | Permission matrix 38, API routes 29, query execution 28                                                                                                                                                                                                                                          |      95 |
+| `@dashkit/mock-api`    | The HTTP server: CORS for listed and other origins, preflight, and passing the token and body through                                                                                                                                                                                            |       4 |
+| **Total**              |                                                                                                                                                                                                                                                                                                  | **512** |
 
 What they cover, against the plan in the implementation guide:
 
@@ -77,11 +78,17 @@ What they cover, against the plan in the implementation guide:
   container breakpoints, and the custom element's attributes, properties, events and lifecycle. One test
   renders the element and the React component side by side and requires the same markup, which
   shows that both entry points come from the same code (FR-1.3).
+- **Beyond the requirements.** CSV files as a spreadsheet reads them, formula-like text included;
+  the drilled-down query and the widget that shows it, with where the focus goes; filter controls
+  and the replacement of a widget's own filter on their field; the picker's switching, creating and
+  deleting, and its wait while a builder has unsaved changes; and the map's colour classes, its
+  borders arriving after the data, and clicks on countries with no data. The API refuses a map
+  grouped by anything but country.
 - **Types.** `expectTypeOf` tests check that the public types accept correct use and reject wrong
   use, such as passing both `dashboardId` and `config`, or reading the wrong `detail` type from a
   `dashkit:*` event.
 
-Some files print `AbortError`, `Network error` and `ENOTFOUND api.test` lines (9 in this run)
+Some files print `AbortError`, `Network error` and `ENOTFOUND api.test` lines (15 in this run)
 when a test ends with requests still in flight. They are noise from the test DOM shutting down;
 no test fails because of them.
 
@@ -94,9 +101,9 @@ rather than which lines ran.
 
 | Area                                        | Statements | Branches | Functions |  Lines | Gate               |
 | ------------------------------------------- | ---------: | -------: | --------: | -----: | ------------------ |
-| SDK core, `packages/sdk/src/core`           |     97.98% |   95.08% |    97.86% | 99.44% | 97 / 93 / 97 / 99  |
-| Query engine, `packages/mock-engine/src`    |     95.61% |   93.63% |      100% | 97.19% | 95 / 93 / 100 / 97 |
-| Everything measured, the interface code too |     96.03% |   91.04% |    96.63% | 97.67% | none               |
+| SDK core, `packages/sdk/src/core`           |     98.39% |   95.17% |    98.34% | 99.55% | 97 / 93 / 97 / 99  |
+| Query engine, `packages/mock-engine/src`    |     96.23% |   94.58% |      100% | 97.78% | 95 / 93 / 100 / 97 |
+| Everything measured, the interface code too |     96.73% |   91.98% |    96.93% | 98.17% | none               |
 
 ## The installed package
 
@@ -143,12 +150,19 @@ builds Storybook and serves the static files, as they are deployed, for the Stor
 | The demo's host product: on a wide screen the navigation is a sidebar and the dashboard keeps twelve columns      |   pass   |  pass   |  pass   |
 | The demo's host product moves between its own pages and the one with the dashboard                                |   pass   |  pass   |  pass   |
 | The demo's host product takes the brand and mode it gives the dashboard, and names the user                       |   pass   |  pass   |  pass   |
-| 13 accessibility checks (below)                                                                                   |   pass   | skipped | skipped |
-| 14 Storybook checks, FR-6.4 to FR-6.6 (below)                                                                     |   pass   | skipped | skipped |
+| CSV export: a user downloads a widget's data, only ever inside their scope                                        |   pass   |  pass   |  pass   |
+| CSV export: the script-tag element downloads from inside its shadow root                                          |   pass   |  pass   |  pass   |
+| Drill-down: a click shows a region's countries, and keyboard users keep their place                               |   pass   |  pass   |  pass   |
+| Filter controls: a list above the grid filters every widget, and shows chart clicks                               |   pass   |  pass   |  pass   |
+| Dashboard picker: switch, create and delete dashboards                                                            |   pass   |  pass   |  pass   |
+| Map: a click on a country filters the dashboard by it                                                             |   pass   |  pass   |  pass   |
+| NFR-A1 Map: keyboard users filter by a country from the map's data table                                          |   pass   |  pass   |  pass   |
+| 15 accessibility checks (below)                                                                                   |   pass   | skipped | skipped |
+| 15 Storybook checks, FR-6.4 to FR-6.6 (below)                                                                     |   pass   | skipped | skipped |
 
 ```text
-  54 skipped
-  78 passed (3.9m)
+  60 skipped
+  102 passed (5.0m)
 ```
 
 ### Accessibility
@@ -161,6 +175,9 @@ test fails on any violation rated serious or critical. Every check passed:
   (2 checks);
 - the dashboard with an active cross-filter;
 - the "Session invalid" state after the token is tampered with;
+- the Population explorer, with its filter lists, its map and its region chart drilled into South
+  Asia, in every brand and mode;
+- the dashboard picker while it asks before deleting a dashboard;
 - the builder with a widget's settings panel open;
 - the plain HTML page, checked inside the element's shadow root;
 - the phone layout at 360 × 780.
@@ -177,7 +194,7 @@ keys, and the builder's component tests check where the focus goes after each ac
 `pnpm build-storybook` builds every story and docs page. The end-to-end run then serves the
 static build and checks, in Chromium, failing on any uncaught page error:
 
-- each of the five widgets' Default, Loading, Empty and Error stories shows that state (FR-6.4; 5
+- each of the six widgets' Default, Loading, Empty and Error stories shows that state (FR-6.4; 6
   checks), and the paged table story moves between pages;
 - the theming playground applies its radius control, the cross-filtering page filters from a
   chart's data table, switching the toolbar's user from Asha to Ravi cuts the regions from seven to
@@ -192,7 +209,8 @@ check was a one-off script, not part of CI.
 
 - **Charts are not compared pixel by pixel.** Chart options are unit-tested, and the end-to-end
   tests check what the charts do (filtering, highlighting) rather than how they look. The one pixel
-  comparison is the hostile-CSS test of the element.
+  comparison is the hostile-CSS test of the element. The map is clicked once, where India is on the
+  desktop window every browser here uses.
 - **Performance is measured, not gated.** `pnpm perf` takes several minutes and depends on the
   machine, so it runs by hand; CI gates only the bundle sizes. Two targets are missed on a CPU
   slowed four times; see [PERFORMANCE.md](PERFORMANCE.md).

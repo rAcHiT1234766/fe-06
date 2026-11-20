@@ -91,6 +91,61 @@ slower and erratic: one measured a cross-filter at 334 ms and failed. The likely
 editor and other tools watching that folder while the builds write to it, though that was not
 proven. Measure from a clean clone, with nothing else busy.
 
+## Re-measured after the features beyond the requirements
+
+CSV export, drill-down, filter controls, the dashboard picker and the map widget were checked for a
+slowdown on 21 November 2026: `pnpm perf` ran at `9637048`, the code measured in the section
+above, and at `c278550`, the last change to code apart from a comment in this test, one after the
+other and each from a fresh clone. Both ran the drag and resize test as `c278550` has it; why it
+changed is below.
+
+| Measurement, medians                                     |  `9637048` |  `c278550` | Target                 |
+| -------------------------------------------------------- | ---------: | ---------: | ---------------------- |
+| Mount to first chart finished, animation on              |     149 ms |     165 ms | ≤ 1.5 s                |
+| Same, reduced motion                                     |     102 ms |      87 ms | ≤ 1.5 s                |
+| Same, animation on, CPU 4× slower                        |    1267 ms |    1226 ms | ≤ 1.5 s                |
+| Filter by a region not seen before, animation on         |     251 ms |     256 ms | ≤ 300 ms               |
+| Clear the filter, animation on                           |     239 ms |     237 ms | ≤ 300 ms               |
+| Filter by a region not seen before, CPU 4× slower        |     513 ms |     549 ms | ≤ 300 ms               |
+| Resize with 12 widgets, CPU 4× slower: frames over 50 ms |   8 of 215 |   9 of 197 | No visible jank        |
+| Identical queries from 10 widgets                        | 5 requests | 5 requests | One per distinct query |
+
+The two are within the spread between runs, so the five features did not slow the dashboard. The
+machine was faster than on 18 November: both commits mounted within 1.5 s on the slowed CPU this
+time. A cross-filter on the slowed CPU still misses its 300 ms at both.
+
+### The resize test measured the page around the grid
+
+The first run at `570ce15`, the map's commit, found resizing on the slowed CPU much worse than at
+`9637048`: 72 of 156 frames over 50 ms instead of 12 of 218, and at full speed a 95th percentile of
+33.3 ms instead of 16.8 ms. Repeated runs agreed. Measuring each commit in between put most of the
+rise at `2c4e9ce`, the dashboard picker, and some at `217c644`, the filter controls; removing the
+picker from the demo took it back to the level before that commit.
+
+What the two commits share is room above the grid: the builder's row of filter-control
+checkboxes, the picker, and the note the picker shows while there are unsaved changes put the grid
+96 pixels lower. The test took its start point from wherever the widget's resize corner was, then
+dragged it 150 pixels down, so the drag that ended at 715 pixels in the 720-pixel window now ended
+at 811, outside it.
+
+While the mouse button is held, Chrome scrolls the page once the pointer comes within about 20
+pixels of the window's edge, as it does to extend a text selection, because the grid's drag library
+does not cancel the mouse press; and the widget being resized grows with every pixel scrolled. In a
+probe at `570ce15`, the page started scrolling when the pointer reached 701 pixels, a quarter of the
+way through the drag, and scrolled 5218 pixels; with the mouse press cancelled, it did not scroll
+at all and 4 of 200 frames were over 50 ms. At `9637048` the drag reached that band only in its
+last tenth, and the page scrolled 142 pixels.
+
+The test now scrolls each drag's start point to 300 pixels down the window first, so it measures
+the same drag whatever sits above the grid. With that change, `9637048` and `570ce15` gave the same
+frames in two rounds each: 10 of about 210 over 50 ms on the slowed CPU. The table above uses the
+changed test for both commits, so the rows are comparable with each other but not with the tables
+above, which used the old one.
+
+A user who holds a resize corner near the bottom of the window in Chrome sees the same: the page
+scrolls and the widget grows with it. That is the browser's behaviour and was the same at
+`9637048`; the test no longer measures it.
+
 ## Cross-filter latency before and after the brief transitions
 
 The first measurement of NFR-P4 missed: a median of 549 ms with animation on, against 42 ms with
@@ -109,7 +164,10 @@ briefly, and brought the median to 257 ms and the North America case to 249 ms.
 The breakdown was made once, by attributing every byte of the minified bundle to its source file
 through the bundle's source map, and compressing each package's share on its own. It shows the
 build at the end of Phase 7. What came after, from paged tables to multi-select, added no dependency
-and 2.9 kB gzipped to the whole bundle, while `dist/index.js` alone grew from 16.7 to 20.1 kB.
+and 2.9 kB gzipped to the whole bundle, while `dist/index.js` alone grew from 16.7 to 20.1 kB. The
+features beyond the requirements then added 28.8 kB, to 313.4 kB, most of it ECharts' map and its
+colour classes, and `dist/index.js` grew to 25.4 kB; the npm build as a host bundles it went from
+217.6 to 245.8 kB.
 
 | Package                                                       | Minified     | Share | Gzipped      |
 | ------------------------------------------------------------- | ------------ | ----- | ------------ |
@@ -125,7 +183,8 @@ and 2.9 kB gzipped to the whole bundle, while `dist/index.js` alone grew from 16
 | **Whole bundle**                                              | **873.7 kB** |       | **281.7 kB** |
 
 ECharts and its renderer are 62% of the script-tag build, even though only the bar, line and pie
-charts, the grid, legend and tooltip components, and the canvas renderer are registered. The npm
+charts, the grid, legend and tooltip components, and the canvas renderer are registered; the map
+chart and its colour classes have been registered since. The npm
 build keeps React, ECharts and the grid library as the host's dependencies, so a host that already
 uses any of them does not ship them twice.
 
