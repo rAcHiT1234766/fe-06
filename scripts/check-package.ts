@@ -32,10 +32,13 @@ const tarball = readdirSync(workDir).find((name) => name.endsWith('.tgz'))!;
 const packedFiles = packed.files.map(({ path }) => path).sort();
 const expectedFiles = [
   'README.md',
+  'dist/chunks/maps.js',
   'dist/dashkit.js',
   'dist/element.d.ts',
   'dist/index.d.ts',
   'dist/index.js',
+  'dist/map.d.ts',
+  'dist/map.js',
   'package.json',
 ];
 check(
@@ -44,7 +47,7 @@ check(
 );
 
 // FR-6.1: no `any` in the published types. Comments may use the word.
-for (const file of ['index.d.ts', 'element.d.ts']) {
+for (const file of ['index.d.ts', 'map.d.ts', 'element.d.ts']) {
   const code = readFileSync(new URL(`dist/${file}`, sdkDir), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/\/\/.*$/gm, '');
@@ -72,6 +75,12 @@ check(
   !npmBuild.includes('react.dev/errors') && !npmBuild.includes('__ec_inner_'),
   'dist/index.js must not bundle React or ECharts.',
 );
+// The map's chart code comes with the map entry only, so a host that shows no map leaves it out.
+const mapBuild = readFileSync(new URL('dist/map.js', sdkDir), 'utf8');
+check(
+  !/\bMapChart\b/.test(npmBuild) && /\bMapChart\b.*from "echarts\/charts"/.test(mapBuild),
+  'dist/map.js, and not dist/index.js, must import the map chart from the host project.',
+);
 const scriptBuild = readFileSync(new URL('dist/dashkit.js', sdkDir), 'utf8');
 check(
   scriptBuild.startsWith('var DashKit=(function'),
@@ -97,10 +106,15 @@ import {
 } from '@dashkit/sdk';
 import type { DashKitElement } from '@dashkit/sdk/element';
 import '@dashkit/sdk/element';
+import { registerMap, type MapGeoJson } from '@dashkit/sdk/map';
 
 const theme: ThemeInput = { mode: 'auto', light: { primary: '#4f46e5' }, shape: { radius: 12 } };
 const getToken = async () => 'token-from-my-backend';
 const onSave = (config: DashboardConfig) => console.log(config.updatedAt);
+const world: MapGeoJson = { type: 'FeatureCollection', features: [] };
+registerMap('world', world);
+// @ts-expect-error borders are a FeatureCollection
+registerMap('world', { type: 'Feature', features: [] });
 
 export const options: DashKitOptions = {
   apiUrl: 'https://api.example.com',
@@ -159,6 +173,7 @@ const handle = window.DashKit?.mount(document.body, {
 });
 handle?.update({ mode: 'edit' });
 handle?.unmount();
+window.DashKit?.registerMap('world', { type: 'FeatureCollection', features: [] });
 `;
 
 const strictest = {
@@ -224,11 +239,11 @@ for (const react of ['18', '19']) {
 
   // The exports map leads each entry to a file that exists.
   const resolved = run(
-    `node --input-type=module -e "for (const entry of ['@dashkit/sdk', '@dashkit/sdk/element']) console.log(import.meta.resolve(entry))"`,
+    `node --input-type=module -e "for (const entry of ['@dashkit/sdk', '@dashkit/sdk/map', '@dashkit/sdk/element']) console.log(import.meta.resolve(entry))"`,
     project,
   );
   check(
-    /dist\/index\.js\s+\S*dist\/dashkit\.js/.test(resolved),
+    /dist\/index\.js\s+\S*dist\/map\.js\s+\S*dist\/dashkit\.js/.test(resolved),
     `With React ${react}, the entries resolve to:\n${resolved}`,
   );
 }

@@ -1,7 +1,7 @@
 // The types of `import '@dashkit/sdk/element'`. That import only defines <dashkit-dashboard>, so
 // this file holds declarations alone, and the element build publishes it unchanged as
-// dist/element.d.ts. Its imports name ./index.js, which is src/index.ts here and the published
-// index.d.ts there.
+// dist/element.d.ts. Its imports name ./index.js and ./map.js, which are src/index.ts and
+// src/map.ts here and the published index.d.ts and map.d.ts there.
 import type { DetailedHTMLProps, HTMLAttributes } from 'react';
 import type {
   DashKitElement,
@@ -9,6 +9,7 @@ import type {
   DashKitHandle,
   DashKitOptions,
 } from './index.js';
+import type { MapGeoJson } from './map.js';
 
 export type {
   DashKitElement,
@@ -21,6 +22,12 @@ export type {
 export interface DashKitGlobal {
   /** Shows a dashboard inside `container` by adding a `<dashkit-dashboard>` element to it. */
   mount(container: Element, options: DashKitOptions): DashKitHandle;
+  /**
+   * Makes country borders available to map widgets under `name`, as `registerMap` from
+   * `@dashkit/sdk/map` does. The script carries the map's chart code, since one file cannot leave
+   * it out.
+   */
+  registerMap(name: string, geoJson: MapGeoJson): void;
 }
 
 declare global {

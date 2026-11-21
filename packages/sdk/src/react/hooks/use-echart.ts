@@ -1,10 +1,5 @@
-import { BarChart, LineChart, MapChart, PieChart } from 'echarts/charts';
-import {
-  GridComponent,
-  LegendComponent,
-  TooltipComponent,
-  VisualMapPiecewiseComponent,
-} from 'echarts/components';
+import { BarChart, LineChart, PieChart } from 'echarts/charts';
+import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components';
 import {
   init,
   use as registerChartModules,
@@ -16,16 +11,15 @@ import { useContext, useEffect, useRef } from 'react';
 import type { ChartOption } from '../charts/chart-options';
 import { ResizingContext } from '../resizing-context';
 
-// Registering only what the widgets draw keeps the rest of ECharts out of the bundle.
+// Registering only what the widgets draw keeps the rest of ECharts out of the bundle. The map's
+// modules come with the map entry, `registerMap`, since only a host with map widgets needs them.
 registerChartModules([
   BarChart,
   LineChart,
   PieChart,
-  MapChart,
   GridComponent,
   LegendComponent,
   TooltipComponent,
-  VisualMapPiecewiseComponent,
   CanvasRenderer,
 ]);
 

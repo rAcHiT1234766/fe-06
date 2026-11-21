@@ -124,10 +124,13 @@ can use any map whose areas match a dimension's values. `geoJson` is a GeoJSON `
 whose features each have `properties.name` set to a country's name as the data spells it, such as
 `"Egypt, Arab Rep."`. A map widget draws the borders registered under its `options.map`, or
 `world`; until they are registered it shows its figures as a table, so the file can load after the
-dashboard:
+dashboard.
+
+`registerMap` comes from the map entry, `@dashkit/sdk/map`, which also brings ECharts' map chart.
+A host that shows no map never imports it, and its bundle leaves that code out:
 
 ```ts
-import { registerMap } from '@dashkit/sdk';
+import { registerMap } from '@dashkit/sdk/map';
 
 fetch('/maps/world.json')
   .then((response) => response.json())
@@ -204,11 +207,13 @@ it:
 | `unmount()`                                          | Removes the dashboard and releases its charts, observers and listeners. |
 
 The script also puts `registerMap` on the `DashKit` global, as `DashKit.registerMap(name, geoJson)`,
-for pages with map widgets.
+for pages with map widgets. One script cannot leave part of itself out, so it always carries the
+map's chart code.
 
 ## Types
 
-The npm entry exports these types; the Storybook API reference lists every property.
+The npm entry exports these types, and the map entry `MapGeoJson`; the Storybook API reference
+lists every property.
 
 | Type                                                                                 | What it is                                                                                                                  |
 | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |

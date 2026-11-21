@@ -416,4 +416,15 @@ The author asked for five features the requirements do not list. Each is recorde
 - **Clicks on countries without data select nothing.**
   ECharts reports them after the countries with data, with no row behind them, so the click is ignored rather than filtering every widget to nothing.
 - **The map's chart code is in every bundle.**
-  ECharts' map and its colour classes add about 25 kB compressed to the SDK as a host bundles it, 245.8 kB of the 300 kB budget, whether or not a dashboard has a map. Loading them only when a map appears would add a second file to the package and a wait before the first map; with the budget met, the single file stays.
+  ECharts' map and its colour classes add about 25 kB compressed to the SDK as a host bundles it, 245.8 kB of the 300 kB budget, whether or not a dashboard has a map. Loading them only when a map appears would add a second file to the package and a wait before the first map; with the budget met, the single file stays. Changed later: the map is now an entry of its own, see "Closing the known gaps" below.
+
+## After Phase 7 — Closing the known gaps
+
+- **The map is an entry of its own, `@dashkit/sdk/map`** (agreed).
+  `registerMap` and `MapGeoJson` moved there from `@dashkit/sdk`, and registering a map also registers ECharts' map chart and its colour classes. A host that shows no map never imports the entry, so its bundle leaves them out: 222.6 kB compressed, against 246.3 kB before. A host with maps ships 246.2 kB. A map widget already showed its figures as a table until `registerMap` was called, so nothing else had to change. Moving an export changes the public API, which was agreed before the change.
+- **What both entries use is one shared file, with no hash in its name.**
+  The list of registered maps has to be a single copy, or a map widget would never hear of borders the map entry registered. The build puts it in `dist/chunks/maps.js`, whose name stays the same from one version to the next, and the package check expects it.
+- **The script-tag build keeps the map.**
+  One classic script cannot leave part of itself out, so `dashkit.js` still carries the map's chart code. `DashKit.registerMap` was already on the global but missing from its types; `DashKitGlobal` now declares it.
+- **A host's bundle with the map is measured as one app that imports both entries.**
+  Given the two entries as separate inputs, the bundler split their shared code into chunks and the total grew by 3 kB, which an app importing both into its own code does not see.

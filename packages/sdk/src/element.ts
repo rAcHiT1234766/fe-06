@@ -8,4 +8,4 @@ if (!customElements.get(TAG_NAME)) {
 }
 
 export { mount, type DashKitHandle } from './element/mount';
-export { registerMap, type MapGeoJson } from './react/charts/maps';
+export { registerMap, type MapGeoJson } from './map';

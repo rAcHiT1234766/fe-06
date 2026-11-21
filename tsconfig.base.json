@@ -19,7 +19,8 @@
     "skipLibCheck": true,
     "noEmit": true,
     "paths": {
-      "@dashkit/sdk": ["./packages/sdk/src/index.ts"]
+      "@dashkit/sdk": ["./packages/sdk/src/index.ts"],
+      "@dashkit/sdk/map": ["./packages/sdk/src/map.ts"]
     }
   }
 }

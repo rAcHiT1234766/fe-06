@@ -1,5 +1,5 @@
-// Writes the API reference page from the package's public types: every export of the npm entry
-// and of the element entry, with its JSDoc, signature and properties. It fails when an export, or
+// Writes the API reference page from the package's public types: every export of the npm entry,
+// the map entry and the element entry, with its JSDoc, signature and properties. It fails when an export, or
 // any of its properties or methods, has no JSDoc (FR-6.2), so neither the reference nor the
 // editor tooltips can fall behind the code.
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -13,7 +13,7 @@ const configFile = ts.readConfigFile(`${packageDir}tsconfig.build.json`, (path) 
   ts.sys.readFile(path),
 );
 const { options } = ts.parseJsonConfigFileContent(configFile.config, ts.sys, packageDir);
-const entries = { npm: 'src/index.ts', element: 'src/element-types.ts' };
+const entries = { npm: 'src/index.ts', map: 'src/map.ts', element: 'src/element-types.ts' };
 const program = ts.createProgram(
   Object.values(entries).map((entry) => `${packageDir}${entry}`),
   options,
@@ -154,6 +154,13 @@ for (const kind of ['Components', 'The custom element', 'Types']) {
     .sort((a, b) => a.name.localeCompare(b.name));
   sections.push(`## ${kind}`, ...symbols.map((symbol) => describe(symbol, '@dashkit/sdk')));
 }
+const mapExports = exportsOf(entries.map).sort(
+  (a, b) => kindOf(a).localeCompare(kindOf(b)) || a.name.localeCompare(b.name),
+);
+sections.push(
+  "## `@dashkit/sdk/map`\n\nThe map entry. Map widgets draw the borders registered with it, and a host that shows no map never imports it, so its bundle leaves out the map's chart code.",
+  ...mapExports.map((symbol) => describe(symbol, '@dashkit/sdk/map')),
+);
 // The element entry re-exports the element's types; only what it adds is listed again.
 const elementOnly = exportsOf(entries.element).filter((symbol) => !npmNames.has(symbol.name));
 sections.push(
@@ -178,5 +185,6 @@ if (missingDocs.length > 0) {
     new URL('property-docs.json', outputDir),
     `${JSON.stringify(propertyDocs, null, 2)}\n`,
   );
-  console.log(`API reference: ${npmExports.length + elementOnly.length} exports documented.`);
+  const count = npmExports.length + mapExports.length + elementOnly.length;
+  console.log(`API reference: ${count} exports documented.`);
 }

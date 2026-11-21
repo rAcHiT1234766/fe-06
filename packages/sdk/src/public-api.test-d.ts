@@ -12,6 +12,8 @@ import type {
   DashKitProviderProps,
   ThemeInput,
 } from './index';
+import * as main from './index';
+import { registerMap, type MapGeoJson } from './map';
 
 declare const config: DashboardConfig;
 
@@ -96,8 +98,21 @@ describe('FR-6.3 <dashkit-dashboard>', () => {
     expectTypeOf<{ mode: 'print' }>().not.toExtend<Props>();
   });
 
-  it('mount() is on the global that the script tag adds', () => {
+  it('mount() and registerMap() are on the global that the script tag adds', () => {
     expectTypeOf(window.DashKit).toEqualTypeOf<DashKitGlobal | undefined>();
     expectTypeOf<DashKitGlobal['mount']>().returns.toEqualTypeOf<DashKitHandle>();
+    expectTypeOf<DashKitGlobal['registerMap']>().toEqualTypeOf(registerMap);
+  });
+});
+
+describe('the map entry', () => {
+  it('takes borders as a GeoJSON FeatureCollection', () => {
+    expectTypeOf(registerMap).parameters.toEqualTypeOf<[string, MapGeoJson]>();
+    expectTypeOf<{ type: 'FeatureCollection'; features: [] }>().toExtend<MapGeoJson>();
+    expectTypeOf<{ type: 'Feature'; features: [] }>().not.toExtend<MapGeoJson>();
+  });
+
+  it('is the only way in, so a host that shows no map never loads its chart code', () => {
+    expectTypeOf(main).not.toHaveProperty('registerMap');
   });
 });

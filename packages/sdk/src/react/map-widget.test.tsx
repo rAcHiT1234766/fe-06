@@ -1,8 +1,8 @@
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { DashboardConfig } from '../core/types';
+import { registerMap } from '../map';
 import { API_URL, demoToken, setupMockApi } from '../testing/mock-api';
-import { registerMap } from './charts/maps';
 import { Dashboard } from './Dashboard';
 import { DashKitProvider } from './DashKitProvider';
 

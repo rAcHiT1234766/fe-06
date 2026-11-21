@@ -1,4 +1,4 @@
-import { registerMap, type MapGeoJson } from '@dashkit/sdk';
+import { registerMap, type MapGeoJson } from '@dashkit/sdk/map';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';

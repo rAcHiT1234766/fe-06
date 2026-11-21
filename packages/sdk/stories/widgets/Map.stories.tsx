@@ -1,7 +1,7 @@
 import type { Meta } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 import world from '../../../../apps/demo/public/maps/world.json';
-import { registerMap, type MapGeoJson } from '../../src';
+import { registerMap, type MapGeoJson } from '../../src/map';
 import * as states from './widget-story';
 
 // The demo's borders: Natural Earth's 1:110m countries, named as the World Bank names them.

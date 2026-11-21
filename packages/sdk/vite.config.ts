@@ -10,9 +10,17 @@ const externalPackages = [...Object.keys(pkg.peerDependencies), ...Object.keys(p
 export default defineConfig({
   plugins: [react(), dts({ bundleTypes: true, tsconfigPath: './tsconfig.build.json' })],
   build: {
-    lib: { entry: 'src/index.ts', formats: ['es'], fileName: 'index' },
+    // The map is an entry of its own, so a host that shows no map leaves its chart code out.
+    lib: {
+      entry: { index: 'src/index.ts', map: 'src/map.ts' },
+      formats: ['es'],
+      fileName: (_format, entryName) => `${entryName}.js`,
+    },
     rolldownOptions: {
       external: (id) => externalPackages.some((name) => id === name || id.startsWith(`${name}/`)),
+      // Code both entries use, such as which maps are registered, is one shared file, so both see
+      // the same state. Without a hash in its name, a published version's files stay the same.
+      output: { chunkFileNames: 'chunks/[name].js' },
     },
   },
 });

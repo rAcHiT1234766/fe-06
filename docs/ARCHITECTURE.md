@@ -68,10 +68,10 @@ Dependencies point one way: element → React → core. No lint rule enforces it
 
 Two builds come from the same source:
 
-| Build      | Entry            | Output                                                             | Contents                                                                                                       |
-| ---------- | ---------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| npm        | `src/index.ts`   | `dist/index.js` (ES module) and `dist/index.d.ts`                  | The SDK's own code. React, React DOM, ECharts and react-grid-layout stay imports, so a host shares its copies. |
-| Script tag | `src/element.ts` | `dist/dashkit.js` (IIFE, `window.DashKit`) and `dist/element.d.ts` | Everything, React included. `import '@dashkit/sdk/element'` loads the same file.                               |
+| Build      | Entry                        | Output                                                                                                            | Contents                                                                                                                                                 |
+| ---------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| npm        | `src/index.ts`, `src/map.ts` | `dist/index.js` and `dist/map.js` (ES modules), their `.d.ts` files, and `dist/chunks/maps.js`, which both import | The SDK's own code. React, React DOM, ECharts and react-grid-layout stay imports, so a host shares its copies. Only `map.js` imports ECharts' map chart. |
+| Script tag | `src/element.ts`             | `dist/dashkit.js` (IIFE, `window.DashKit`) and `dist/element.d.ts`                                                | Everything, React and the map included. `import '@dashkit/sdk/element'` loads the same file.                                                             |
 
 ## How a widget gets its data
 
