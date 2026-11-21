@@ -78,4 +78,28 @@ describe('Map widget', () => {
       { field: 'country', values: ['India'], sourceWidgetId: 'by-country' },
     ]);
   });
+
+  it('says in development which map is missing and where registerMap comes from', async () => {
+    // The warning waits 5 seconds, for borders that load after the dashboard. Vitest's fake timers
+    // did not reach the component's timer in this test DOM, so the test waits that long.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const [widget] = config.widgets;
+      // A name no other test registers, since registered maps last for the whole file.
+      const unmapped = { ...config, widgets: [{ ...widget!, options: { map: 'nowhere' } }] };
+      render(
+        <DashKitProvider apiUrl={API_URL} token={await demoToken('ravi')}>
+          <Dashboard config={unmapped} />
+        </DashKitProvider>,
+      );
+      await screen.findByRole('table', { name: 'Population by country' });
+      expect(warn).not.toHaveBeenCalled();
+
+      await vi.waitFor(() => expect(warn).toHaveBeenCalledOnce(), { timeout: 8000 });
+      expect(warn.mock.calls[0]![0]).toContain('no map named "nowhere"');
+      expect(warn.mock.calls[0]![0]).toContain("registerMap() from '@dashkit/sdk/map'");
+    } finally {
+      warn.mockRestore();
+    }
+  });
 });

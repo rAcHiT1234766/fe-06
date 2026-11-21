@@ -153,7 +153,10 @@ export function MapView(props: WidgetViewProps) {
   useEffect(() => {
     if (isRegistered || isProduction()) return;
     const timer = setTimeout(
-      () => console.warn(`DashKit: no map named "${name}" has been registered with registerMap().`),
+      () =>
+        console.warn(
+          `DashKit: no map named "${name}" has been registered. Register its borders with registerMap() from '@dashkit/sdk/map', or with DashKit.registerMap() on a page that loads dashkit.js.`,
+        ),
       5000,
     );
     return () => clearTimeout(timer);
