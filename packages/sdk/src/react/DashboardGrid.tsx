@@ -83,9 +83,9 @@ export function DashboardGrid({
   const [resizingId, setResizingId] = useState<string>();
 
   // While the mouse button is held near the window's edge, Chrome scrolls the page as it would to
-  // extend a text selection, and the widget being resized no longer follows the pointer: it is left
-  // behind out of view, or grows with the scroll. The grid does not cancel the press that starts a
-  // resize, so this does.
+  // extend a text selection, and the widget being resized no longer follows the pointer: it grows
+  // with the scroll only while the pointer moves, and once the pointer stops, the page scrolls on and
+  // leaves it out of view. The grid does not cancel the press that starts a resize, so this does.
   useEffect(() => {
     const grid = containerRef.current;
     if (!grid) return;

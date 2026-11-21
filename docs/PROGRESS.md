@@ -71,9 +71,10 @@ map test was run at three window sizes.
   full run before that change, which touched only the test setup.
 
 The section below said that in Chrome, a widget resized near the bottom of the window grows with
-the scroll, far past the pointer. A probe for the fix found it left behind instead: held 4 pixels
-above the bottom of the window, the page scrolled 870 pixels and the widget ended out of view above
-it.
+the scroll, far past the pointer. A probe without the fix found otherwise: the widget grew with the
+scroll only while the pointer moved, from 244 to 376 pixels tall. Held still 4 pixels above the
+bottom of the window, the pointer left it at that size while the page scrolled on, 870 pixels in
+all, and the widget ended 128 pixels above the window, out of view.
 
 ### Known gaps
 

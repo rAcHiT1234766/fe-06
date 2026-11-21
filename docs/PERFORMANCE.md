@@ -132,11 +132,11 @@ at 811, outside it.
 
 While the mouse button is held, Chrome scrolls the page once the pointer comes within about 20
 pixels of the window's edge, as it does to extend a text selection, because the grid's drag library
-does not cancel the mouse press; and the widget being resized grows with every pixel scrolled. In a
-probe at `570ce15`, the page started scrolling when the pointer reached 701 pixels, a quarter of the
-way through the drag, and scrolled 5218 pixels; with the mouse press cancelled, it did not scroll
-at all and 4 of 200 frames were over 50 ms. At `9637048` the drag reached that band only in its
-last tenth, and the page scrolled 142 pixels.
+does not cancel the mouse press; and while the pointer moves, the widget being resized grows with
+every pixel scrolled. In a probe at `570ce15`, the page started scrolling when the pointer reached
+701 pixels, a quarter of the way through the drag, and scrolled 5218 pixels; with the mouse press
+cancelled, it did not scroll at all and 4 of 200 frames were over 50 ms. At `9637048` the drag
+reached that band only in its last tenth, and the page scrolled 142 pixels.
 
 The test now scrolls each drag's start point to 300 pixels down the window first, so it measures
 the same drag whatever sits above the grid. With that change, `9637048` and `570ce15` gave the same
