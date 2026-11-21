@@ -9,15 +9,22 @@ and the map's chart code in every build. [DECISIONS.md](DECISIONS.md) and
 [LEARNING_LOG.md](LEARNING_LOG.md) record them under "After Phase 7 — Closing the known gaps". The
 deployment stays on Render's free plan, as `render.yaml` already sets it.
 
+Two commits followed. In development, the console's warning for a map whose borders never arrive
+now names the map entry, for a host that upgrades and loses its `registerMap` call. And the comments
+and reports now say exactly what Chrome's scroll did to a widget being resized, as a probe without
+the fix measured it.
+
 ### Commits
 
-| Commit    | Change                                                                          |
-| --------- | ------------------------------------------------------------------------------- |
-| `81e5956` | A chart being resized with the mouse is drawn once, when the drag ends          |
-| `59132a6` | The page stays still while a resize corner is held near the window's edge       |
-| `9fc1548` | An edit undone by hand counts as nothing to save                                |
-| `646a504` | The map test finds India by its tooltip, and each unit test file ends quietly   |
-| `7690cff` | The map is an entry of its own, `@dashkit/sdk/map`, which only map hosts import |
+| Commit    | Change                                                                           |
+| --------- | -------------------------------------------------------------------------------- |
+| `81e5956` | A chart being resized with the mouse is drawn once, when the drag ends           |
+| `59132a6` | The page stays still while a resize corner is held near the window's edge        |
+| `9fc1548` | An edit undone by hand counts as nothing to save                                 |
+| `646a504` | The map test finds India by its tooltip, and each unit test file ends quietly    |
+| `7690cff` | The map is an entry of its own, `@dashkit/sdk/map`, which only map hosts import  |
+| `22bf826` | The warning for a missing map names the map entry                                |
+| `3787e16` | The comments and reports say what Chrome's scroll does to a widget being resized |
 
 ### Check results
 
@@ -26,19 +33,20 @@ deployment stays on Render's free plan, as `render.yaml` already sets it.
 | `pnpm install`         | pass from a fresh clone, frozen lockfile                                                                                                                                                                                          |
 | `pnpm lint`            | pass, zero warnings                                                                                                                                                                                                               |
 | `pnpm typecheck`       | pass in every package                                                                                                                                                                                                             |
-| `pnpm test:coverage`   | 54 files, 524 tests passed: 306 in the SDK, the same 119 component tests again on React 18, 95 in the mock engine, 4 in the API. Lines covered: 99.6% of the SDK core and 97.8% of the query engine, above both gates             |
+| `pnpm test:coverage`   | 54 files, 526 tests passed: 307 in the SDK, the same 120 component tests again on React 18, 95 in the mock engine, 4 in the API. Lines covered: 99.6% of the SDK core and 97.8% of the query engine, above both gates             |
 | `pnpm test:e2e`        | 108 passed: 26 user flows in Chromium, Firefox and WebKit, and 15 axe checks and 15 Storybook checks in Chromium; 60 skipped (the same 30 outside Chromium)                                                                       |
 | `pnpm build`           | pass                                                                                                                                                                                                                              |
 | `pnpm build-storybook` | pass; JSDoc found on all 39 public exports and their members                                                                                                                                                                      |
-| `pnpm size` (gzipped)  | npm `dist/index.js` 25.7 kB; as bundled by a host 222.6 kB, or 246.2 kB with the map entry (target 300); `dashkit.js` 313.8 kB (target 500)                                                                                       |
+| `pnpm size` (gzipped)  | npm `dist/index.js` 25.8 kB; as bundled by a host 222.7 kB, or 246.2 kB with the map entry (target 300); `dashkit.js` 313.9 kB (target 500)                                                                                       |
 | `pnpm check:package`   | the nine expected files; each build carries the libraries it should, and only the map entry imports the map chart; the packed SDK installs and type-checks on React 18 and 19, strictest and default settings                     |
 | `pnpm perf`            | from fresh clones of `111c8e0` and `7690cff`, twice each: resizing on a CPU slowed four times dropped 3 frames over 50 ms in each run at `7690cff`, against 9 and 10 at `111c8e0`; [PERFORMANCE.md](PERFORMANCE.md) has the table |
 
-These ran on a fresh clone of `7690cff`, the last change to code. [TEST_REPORT.md](TEST_REPORT.md)
-has the output. The one error line the unit tests still print comes from the test that makes the
+These ran on a fresh clone of `3787e16`, which has every change above; `pnpm perf` ran at
+`7690cff`, and the commits after it change a warning's text and comments only.
+[TEST_REPORT.md](TEST_REPORT.md) has the output. The one error line the unit tests still print comes from the test that makes the
 API unreachable on purpose; the last full run before `646a504` printed 18.
 
-The demo script was run again at `7690cff`: all eleven steps against production builds of the
+The demo script was run again at `3787e16`: all eleven steps against production builds of the
 API, the demo and Storybook, served as the Blueprint deploys them, passed 25 of 25 checks with no
 page errors, and the demo's Population explorer drew its map through the new map entry.
 
@@ -47,8 +55,8 @@ page errors, and the demo's Population explorer drew its map through the new map
 Before each commit, the working repository passed Prettier, lint, typecheck, the unit tests with
 coverage, build, size, build-storybook, `check:package` and the full `test:e2e`, with the ports
 checked free first, apart from the exceptions below. The changes in `81e5956`, `59132a6`,
-`9fc1548` and `7690cff` were each undone once and their new tests run again, and those failed
-without them. `646a504` changes tests only: its error lines were counted before and after, and the
+`9fc1548`, `7690cff` and `22bf826` were each undone once and their new tests run again, and those
+failed without them. `646a504` changes tests only: its error lines were counted before and after, and the
 map test was run at three window sizes.
 
 | Commit    | Unit tests                   | End to end, passed |
@@ -58,7 +66,10 @@ map test was run at three window sizes.
 | `9fc1548` | 522, under the coverage gate | 108                |
 | `646a504` | 522, under the coverage gate | 108                |
 | `7690cff` | 524, under the coverage gate | 108                |
+| `22bf826` | 526, under the coverage gate | 108                |
+| `3787e16` | 526, under the coverage gate | 108                |
 
+- `22bf826` and `3787e16` were checked together, before being committed as two.
 - At `81e5956`, Prettier's check also read a file of the author's that is kept out of the
   repository, and failed on it. The check has left that file out since; every file in the
   repository passed.

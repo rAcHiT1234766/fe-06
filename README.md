@@ -200,12 +200,12 @@ decisions behind them. Every decision made along the way is in [docs/DECISIONS.m
 
 | Check                                    | Result                                                                                                                         |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Unit, component and type tests (Vitest)  | 524 passed, the component tests on both React 19 and React 18                                                                  |
+| Unit, component and type tests (Vitest)  | 526 passed, the component tests on both React 19 and React 18                                                                  |
 | End-to-end tests (Playwright)            | 108 passed: 26 user flows in Chromium, Firefox and WebKit, and 15 axe accessibility checks and 15 Storybook checks in Chromium |
 | Coverage, SDK core and query engine      | 99.6% and 97.8% of lines; CI fails if either drops below its gate                                                              |
 | Installed package                        | Installs and type-checks in fresh projects on React 18 and 19                                                                  |
-| Bundle, npm build as a host bundles it   | 222.6 kB gzipped, or 246.2 kB with the map entry (target 300 kB)                                                               |
-| Bundle, script tag                       | 313.8 kB gzipped (target 500 kB)                                                                                               |
+| Bundle, npm build as a host bundles it   | 222.7 kB gzipped, or 246.2 kB with the map entry (target 300 kB)                                                               |
+| Bundle, script tag                       | 313.9 kB gzipped (target 500 kB)                                                                                               |
 | Mount to first chart                     | median 155 ms (target 1.5 s)                                                                                                   |
 | Cross-filter, click to every chart drawn | median 257 ms (target 300 ms)                                                                                                  |
 

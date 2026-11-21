@@ -129,13 +129,13 @@ a series' own defaults override the chart's. Setting a short transition on every
 
 | Check                                    | Result                                                                                                                     |
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Unit, component and type tests           | 524 passed, the component tests on React 19 and 18                                                                         |
+| Unit, component and type tests           | 526 passed, the component tests on React 19 and 18                                                                         |
 | End-to-end tests                         | 108 passed: 26 user flows in Chromium, Firefox and WebKit; 15 axe accessibility checks and 15 Storybook checks in Chromium |
 | Permission matrix                        | No out-of-scope row for any demo user, and no query on a measure outside the user's scope                                  |
 | Coverage, SDK core and query engine      | 99.6% and 97.8% of lines; CI fails if either drops below its gate                                                          |
 | Installed from the packed tarball        | Types check on React 18 and 19                                                                                             |
-| npm build, as a host bundles it          | 222.6 kB gzipped, or 246.2 kB with the map entry (target 300)                                                              |
-| Script-tag build                         | 313.8 kB gzipped (target 500)                                                                                              |
+| npm build, as a host bundles it          | 222.7 kB gzipped, or 246.2 kB with the map entry (target 300)                                                              |
+| Script-tag build                         | 313.9 kB gzipped (target 500)                                                                                              |
 | Mount to first chart                     | median 155 ms (target 1.5 s)                                                                                               |
 | Cross-filter, click to every chart drawn | median 257 ms (target 300 ms)                                                                                              |
 | Identical queries from 10 widgets        | 5 requests for 5 distinct queries                                                                                          |

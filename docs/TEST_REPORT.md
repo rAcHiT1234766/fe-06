@@ -1,7 +1,7 @@
 # Test report
 
 Every result on this page comes from runs on 21 November 2026 on a fresh clone of commit
-`7690cff`, the last change to code, on the machine described in [PERFORMANCE.md](PERFORMANCE.md) (Windows 11, Intel Core i5-1135G7, 16 GB).
+`3787e16`, the last commit before this report, on the machine described in [PERFORMANCE.md](PERFORMANCE.md) (Windows 11, Intel Core i5-1135G7, 16 GB).
 [PROGRESS.md](PROGRESS.md) has the results of each commit before it. Performance numbers are on
 that page.
 
@@ -21,11 +21,11 @@ that page.
 | --------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Lint                  | `pnpm lint`            | Pass, no warnings                                                                                                                  |
 | Types                 | `pnpm typecheck`       | Pass in every package                                                                                                              |
-| Unit, component, type | `pnpm test:coverage`   | 54 files, 524 tests passed, no type errors; coverage above every gate                                                              |
-| End to end            | `pnpm test:e2e`        | 108 passed, 60 skipped (the accessibility and Storybook checks run in Chromium only), in 6.2 minutes                               |
+| Unit, component, type | `pnpm test:coverage`   | 54 files, 526 tests passed, no type errors; coverage above every gate                                                              |
+| End to end            | `pnpm test:e2e`        | 108 passed, 60 skipped (the accessibility and Storybook checks run in Chromium only), in 6.1 minutes                               |
 | Build                 | `pnpm build`           | Pass                                                                                                                               |
 | Storybook             | `pnpm build-storybook` | Pass; the API reference generator found JSDoc on all 39 public exports and their members                                           |
-| Bundle size           | `pnpm size`            | 222.6 kB gzipped as a host bundles the npm build, 246.2 kB with the map entry (target 300); 313.8 kB for `dashkit.js` (target 500) |
+| Bundle size           | `pnpm size`            | 222.7 kB gzipped as a host bundles the npm build, 246.2 kB with the map entry (target 300); 313.9 kB for `dashkit.js` (target 500) |
 | Installed package     | `pnpm check:package`   | Each build carries the libraries it should, and the packed SDK installs into four fresh projects and type-checks in each           |
 
 CI runs all of these on every push, the end-to-end tests in all three browsers.
@@ -37,21 +37,21 @@ measuring coverage:
 
 ```text
  Test Files  54 passed (54)
-      Tests  524 passed (524)
+      Tests  526 passed (526)
  Type Errors  no errors
-   Duration  77.55s (tests 43%, environment 23%, import 19%, setup 10%, transform 3%, typecheck 1%, worker 1%)
+   Duration  82.16s (tests 44%, environment 22%, import 19%, setup 9%, transform 3%, typecheck 1%, worker 1%)
 ```
 
 | Project                | Area                                                                                                                                                                                                                                                                                                                     |   Tests |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------: |
 | `sdk`                  | Core: query client 19, widget edits 17, filter store 14, layouts 12, dashboard edits 11, theme 11, config schema 10, number formats 9, drill-down queries 8, CSV files 7, undo history 5, render timing 5, query merging 5, dashboard comparison 4, ids from titles 3, unsaved-draft registry 1, no hard-coded colours 1 |     142 |
 | `sdk`                  | Chart options 18, keyboard arrangement 7, colours for map classes 3, map registration 1, ECharts theme 1                                                                                                                                                                                                                 |      30 |
-| `sdk`                  | Components on React 19: builder 30, element 17, dashboard 13, cross-filtering 13, ECharts hook 10, `DashKit.mount()` 7, responsive 7, dashboard picker 6, CSV export 4, drill-down 4, filter controls 4, table paging 3, map widget 1                                                                                    |     119 |
+| `sdk`                  | Components on React 19: builder 30, element 17, dashboard 13, cross-filtering 13, ECharts hook 10, `DashKit.mount()` 7, responsive 7, dashboard picker 6, CSV export 4, drill-down 4, filter controls 4, table paging 3, map widget 2                                                                                    |     120 |
 | `sdk`                  | Type tests: the public API 11, core types 4                                                                                                                                                                                                                                                                              |      15 |
-| `sdk on React 18`      | The same 119 component tests, against React 18.3.1                                                                                                                                                                                                                                                                       |     119 |
+| `sdk on React 18`      | The same 120 component tests, against React 18.3.1                                                                                                                                                                                                                                                                       |     120 |
 | `@dashkit/mock-engine` | Permission matrix 38, API routes 29, query execution 28                                                                                                                                                                                                                                                                  |      95 |
 | `@dashkit/mock-api`    | The HTTP server: CORS for listed and other origins, preflight, and passing the token and body through                                                                                                                                                                                                                    |       4 |
-| **Total**              |                                                                                                                                                                                                                                                                                                                          | **524** |
+| **Total**              |                                                                                                                                                                                                                                                                                                                          | **526** |
 
 What they cover, against the plan in the implementation guide:
 
@@ -86,7 +86,8 @@ What they cover, against the plan in the implementation guide:
 - **The known gaps closed.** The content comparison behind "Unsaved changes", with order and
   `undefined` properties that mean nothing; an edit reversed by hand, and a widget moved and moved
   back, leaving nothing to save; a chart drawn once when a resize with the mouse ends; and the
-  press on a resize corner cancelled, so the browser does not scroll the page during the drag.
+  press on a resize corner cancelled, so the browser does not scroll the page during the drag; and
+  the warning for a map whose borders never arrive, which names the map entry.
 - **Types.** `expectTypeOf` tests check that the public types accept correct use and reject wrong
   use, such as passing both `dashboardId` and `config`, or reading the wrong `detail` type from a
   `dashkit:*` event, and that `registerMap` comes from the map entry and not the main one.
@@ -106,7 +107,7 @@ rather than which lines ran.
 | ------------------------------------------- | ---------: | -------: | --------: | -----: | ------------------ |
 | SDK core, `packages/sdk/src/core`           |     98.45% |   95.26% |    98.44% | 99.56% | 97 / 93 / 97 / 99  |
 | Query engine, `packages/mock-engine/src`    |     96.23% |   94.58% |      100% | 97.78% | 95 / 93 / 100 / 97 |
-| Everything measured, the interface code too |     96.86% |   92.00% |    97.32% | 98.21% | none               |
+| Everything measured, the interface code too |     96.91% |   92.00% |    97.47% | 98.27% | none               |
 
 ## The installed package
 
@@ -168,7 +169,7 @@ builds Storybook and serves the static files, as they are deployed, for the Stor
 
 ```text
   60 skipped
-  108 passed (6.2m)
+  108 passed (6.1m)
 ```
 
 ### Accessibility

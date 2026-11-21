@@ -154,7 +154,7 @@ numbers stay comparable with the runs before.
 The charts drawn once at the end of a resize, the page kept still during one, and the map's own
 entry were measured on 21 November 2026: `pnpm perf` ran from fresh clones of `111c8e0`, the code
 measured in the section above with only comments and documentation changed since, and `7690cff`,
-the last change to code. Each ran twice, in the order `111c8e0`, `7690cff`, `7690cff`, `111c8e0`,
+which has every change measured here. Each ran twice, in the order `111c8e0`, `7690cff`, `7690cff`, `111c8e0`,
 and each cell gives the first run and then the second.
 
 | Measurement                                               |            `111c8e0` |           `7690cff` | Target                 |
@@ -207,8 +207,8 @@ and 2.9 kB gzipped to the whole bundle, while `dist/index.js` alone grew from 16
 features beyond the requirements then added 28.8 kB, to 313.4 kB, most of it ECharts' map and its
 colour classes, and `dist/index.js` grew to 25.4 kB; the npm build as a host bundles it went from
 217.6 to 245.8 kB. Since the map moved to its own entry, `@dashkit/sdk/map`, a host that shows no
-map bundles 222.6 kB, and one that also imports the map entry 246.2 kB; `dist/index.js` alone is
-25.7 kB, and `dashkit.js`, which keeps the map, 313.8 kB.
+map bundles 222.7 kB, and one that also imports the map entry 246.2 kB; `dist/index.js` alone is
+25.8 kB, and `dashkit.js`, which keeps the map, 313.9 kB.
 
 | Package                                                       | Minified     | Share | Gzipped      |
 | ------------------------------------------------------------- | ------------ | ----- | ------------ |
