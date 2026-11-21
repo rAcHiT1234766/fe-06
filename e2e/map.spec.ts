@@ -24,13 +24,42 @@ async function showExplorer(page: Page) {
   await expect(page.getByRole('img', { name: `${MAP} chart` })).toBeVisible();
 }
 
+// Moves the pointer across the map until its tooltip names the country, and returns that point,
+// so the test finds a country wherever the map draws it rather than at one place in one window.
+async function pointOver(page: Page, country: string) {
+  const chart = page.getByRole('img', { name: `${MAP} chart` });
+  // ECharts adds its tooltip to the chart's element, after its own drawing. The country's name is
+  // an element of its own there, and the tooltip keeps its text while hidden.
+  const isNamed = () =>
+    chart.evaluate((element, name) => {
+      const tooltip = element.children[1];
+      const isShown = tooltip?.checkVisibility({ opacityProperty: true, visibilityProperty: true });
+      return (
+        Boolean(isShown) &&
+        [...tooltip!.querySelectorAll('*')].some((part) => part.textContent === name)
+      );
+    }, country);
+  // The pointer only reaches what is in the window.
+  await chart.scrollIntoViewIfNeeded();
+  const box = (await chart.boundingBox())!;
+  // A grid fine enough to land in any large country; a few small ones fall between its points.
+  for (let row = 1; row < 12; row++) {
+    for (let column = 1; column < 24; column++) {
+      const point = { x: box.x + (box.width * column) / 24, y: box.y + (box.height * row) / 12 };
+      await page.mouse.move(point.x, point.y);
+      if (!(await isNamed())) continue;
+      // Asked again from a pixel along, in case the tooltip still showed where the pointer was.
+      await page.mouse.move(point.x + 1, point.y);
+      if (await isNamed()) return point;
+    }
+  }
+  throw new Error(`The map's tooltip never named ${country}.`);
+}
+
 test('Map: a click on a country filters the dashboard by it', async ({ page }) => {
   await showExplorer(page);
-  const chart = page.getByRole('img', { name: `${MAP} chart` });
-  const box = (await chart.boundingBox())!;
-  // India, on the desktop viewport every browser here uses. The map keeps its proportions, so a
-  // country is always in the same place in a widget of the same size.
-  await chart.click({ position: { x: box.width * 0.732, y: box.height * 0.444 } });
+  const india = await pointOver(page, 'India');
+  await page.mouse.click(india.x, india.y);
 
   await expect(chip(page)).toHaveText('Country: India');
   await expect(mostPopulous(page)).toHaveText(['India']);

@@ -4,12 +4,22 @@ import { afterAll, afterEach, beforeAll } from 'vitest';
 
 export const API_URL = 'http://api.test';
 
+interface HappyDomWindow {
+  happyDOM?: { waitUntilComplete(): Promise<void> };
+}
+
 // Runs the real query engine behind MSW for the calling test file; handlers a test adds are reset.
 export function setupMockApi() {
   const server = setupServer(...createMockApiHandlers(API_URL));
   beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
   afterEach(() => server.resetHandlers());
-  afterAll(() => server.close());
+  afterAll(async () => {
+    // A component that unmounts stops waiting for its requests, but they carry on. One still on its
+    // way when the server closes goes to the real network, which has no api.test, and one still
+    // open when the test DOM closes is aborted; both print an error. So the file waits for them.
+    await (window as HappyDomWindow).happyDOM?.waitUntilComplete();
+    server.close();
+  });
   return server;
 }
 
