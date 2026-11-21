@@ -12,8 +12,9 @@ import {
   type EChartsType,
 } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
-import { useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import type { ChartOption } from '../charts/chart-options';
+import { ResizingContext } from '../resizing-context';
 
 // Registering only what the widgets draw keeps the rest of ECharts out of the bundle.
 registerChartModules([
@@ -71,6 +72,18 @@ export function useEChart(
     onFinishedRef.current = onFinished;
   });
 
+  // Drawing a chart again at every step of a drag costs a frame each time on a slow device, so a
+  // widget being resized draws once, when the drag ends, and its chart is stretched until then.
+  const isResizing = useContext(ResizingContext);
+  const isResizingRef = useRef(isResizing);
+  const hasMissedResizeRef = useRef(false);
+  useEffect(() => {
+    isResizingRef.current = isResizing;
+    if (isResizing || !hasMissedResizeRef.current) return;
+    hasMissedResizeRef.current = false;
+    chartRef.current?.resize();
+  }, [isResizing]);
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -83,7 +96,10 @@ export function useEChart(
     });
     // Fired once a render, and any animation it started, is complete.
     chart.on('finished', () => onFinishedRef.current?.());
-    const resizeObserver = new ResizeObserver(() => chart.resize());
+    const resizeObserver = new ResizeObserver(() => {
+      if (isResizingRef.current) hasMissedResizeRef.current = true;
+      else chart.resize();
+    });
     resizeObserver.observe(container);
     // Canvas text only uses fonts that have finished loading, so measure again once they have.
     void document.fonts.ready.then(() => {

@@ -154,6 +154,40 @@ test('FR-5.10 an editor undoes a resize and a removal from the keyboard, and red
   await page.getByRole('button', { name: 'Cancel' }).click();
 });
 
+test('NFR-P5 a chart resized with the mouse is stretched during the drag and drawn again at the end', async ({
+  page,
+}) => {
+  await signIn(page, 'asha');
+  await page.getByRole('button', { name: 'Edit dashboard' }).click();
+  await describeDashboard(page);
+
+  const cell = page.locator('.react-grid-item', {
+    has: widgetTitled(page, 'Population by region'),
+  });
+  const chart = cell.locator('.dk-chart');
+  const canvas = chart.locator('canvas').first();
+  const bitmapWidth = () => canvas.evaluate((element: HTMLCanvasElement) => element.width);
+  const widthOf = async (locator: Locator) => (await locator.boundingBox())!.width;
+  const drawnWidth = await bitmapWidth();
+  const startWidth = await widthOf(cell);
+
+  const handle = await centreOf(cell.locator('.react-resizable-handle'));
+  await page.mouse.move(handle.x, handle.y);
+  await page.mouse.down();
+  await page.mouse.move(handle.x - startWidth / 3, handle.y, { steps: 20 });
+  await expect.poll(() => widthOf(cell)).toBeLessThan(startWidth * 0.8);
+  // Not drawn again yet, but filling the narrower widget rather than spilling out of it.
+  expect(await bitmapWidth()).toBe(drawnWidth);
+  expect(Math.abs((await widthOf(canvas)) - (await widthOf(chart)))).toBeLessThan(1);
+
+  await page.mouse.up();
+  await expect.poll(bitmapWidth).toBeLessThan(drawnWidth);
+  await expect
+    .poll(async () => Math.abs((await widthOf(canvas)) - (await widthOf(chart))))
+    .toBeLessThan(1);
+  await page.getByRole('button', { name: 'Cancel' }).click();
+});
+
 test('FR-5.11 an editor moves and resizes a widget from the keyboard, and the focus stays on its handle', async ({
   page,
 }) => {

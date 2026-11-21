@@ -16,6 +16,15 @@
   transition: none;
 }
 
+/* A chart being resized is drawn again when the drag ends. Until then its drawing is stretched to
+   fill the widget, rather than spilling out of it or leaving a gap. ECharts sizes its own element
+   and canvases inline, so this has to win over those; its tooltip, the next element, is left alone. */
+.dk-grid .react-grid-item.resizing .dk-chart > div:first-child,
+.dk-grid .react-grid-item.resizing .dk-chart > div:first-child > canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 .dk-grid .react-grid-placeholder {
   z-index: 1;
   border-radius: var(--dk-radius);

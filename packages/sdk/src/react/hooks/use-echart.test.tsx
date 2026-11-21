@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChartOption } from '../charts/chart-options';
+import { ResizingContext } from '../resizing-context';
 import { useEChart } from './use-echart';
 
 const chart = {
@@ -17,14 +18,18 @@ vi.mock('echarts/core', async (importOriginal) => ({
   init,
 }));
 
-const observer = { observe: vi.fn(), disconnect: vi.fn() };
+const observer = { observe: vi.fn(), disconnect: vi.fn(), reportResize: () => {} };
 
 beforeEach(() => {
   init.mockReturnValue(chart);
-  // The observer is replaced so its teardown can be checked; happy-dom has no document.fonts.
+  // The observer is replaced so its teardown can be checked and its reports made by the tests;
+  // happy-dom has no document.fonts.
   vi.stubGlobal(
     'ResizeObserver',
     class {
+      constructor(callback: () => void) {
+        observer.reportResize = callback;
+      }
       observe = observer.observe;
       disconnect = observer.disconnect;
     },
@@ -162,6 +167,32 @@ describe('useEChart', () => {
     finishedHandlers[0]!({ dataIndex: 0 });
     expect(latest).toHaveBeenCalledOnce();
     expect(first).not.toHaveBeenCalled();
+  });
+
+  it('NFR-P5 draws again when its element changes size, but only once a resize with the mouse ends', async () => {
+    const chartIn = (isResizing: boolean) => (
+      <ResizingContext.Provider value={isResizing}>
+        <Chart option={{}} theme={{}} />
+      </ResizingContext.Provider>
+    );
+    const view = render(chartIn(false));
+    // It also measures once the fonts have loaded.
+    await document.fonts.ready;
+    chart.resize.mockClear();
+    observer.reportResize();
+    expect(chart.resize).toHaveBeenCalledOnce();
+
+    view.rerender(chartIn(true));
+    observer.reportResize();
+    observer.reportResize();
+    expect(chart.resize).toHaveBeenCalledOnce();
+    view.rerender(chartIn(false));
+    expect(chart.resize).toHaveBeenCalledTimes(2);
+
+    // A resize that never changed the element's size has nothing to draw.
+    view.rerender(chartIn(true));
+    view.rerender(chartIn(false));
+    expect(chart.resize).toHaveBeenCalledTimes(2);
   });
 
   it('NFR-C4 disconnects its observer and disposes the chart on unmount', () => {

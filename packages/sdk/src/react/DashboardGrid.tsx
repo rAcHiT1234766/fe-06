@@ -5,6 +5,7 @@ import type { DashboardConfig, LayoutItem, WidgetConfig } from '../core/types';
 import { arrangeByKey, isArrowKey, type ArrowKey } from './arrange-by-key';
 import { BreakpointContext } from './breakpoint-context';
 import { useDashKit } from './context';
+import { ResizingContext } from './resizing-context';
 import { widgetRegistry } from './widgets/registry';
 import { WidgetFrame } from './widgets/WidgetFrame';
 
@@ -79,6 +80,7 @@ export function DashboardGrid({
   const hintId = useId();
   // Read by screen readers after each key press, since a widget moving is otherwise silent.
   const [keyNote, setKeyNote] = useState('');
+  const [resizingId, setResizingId] = useState<string>();
 
   const arrangeWithKey = (event: KeyboardEvent, { id, title }: WidgetConfig) => {
     if (!isArrowKey(event.key) || event.ctrlKey || event.metaKey || event.altKey) return;
@@ -131,31 +133,37 @@ export function DashboardGrid({
         dragConfig={{ enabled: isEditing, handle: '.dk-drag-handle' }}
         resizeConfig={{ enabled: isEditing }}
         onDragStop={saveLayout}
-        onResizeStop={saveLayout}
+        onResizeStart={(_layout, item) => setResizingId(item?.i)}
+        onResizeStop={(next) => {
+          setResizingId(undefined);
+          saveLayout(next);
+        }}
       >
         {placed.map(({ widget }) => (
           <div key={widget.id} className="dk-grid-cell">
-            <WidgetFrame
-              widget={widget}
-              // While editing, the data is a draft's, and the header is full of the editor's controls.
-              canExport={allowExport && !isEditing}
-              actions={
-                isEditing && (
-                  <div className="dk-widget-actions">
-                    {actionsFor?.(widget)}
-                    <button
-                      type="button"
-                      className="dk-drag-handle"
-                      aria-label={`Move or resize ${widget.title}`}
-                      aria-describedby={hintId}
-                      title="Drag to move"
-                      data-dk-hint={KEY_HINT}
-                      onKeyDown={(event) => arrangeWithKey(event, widget)}
-                    />
-                  </div>
-                )
-              }
-            />
+            <ResizingContext.Provider value={widget.id === resizingId}>
+              <WidgetFrame
+                widget={widget}
+                // While editing, the data is a draft's, and the header is full of the editor's controls.
+                canExport={allowExport && !isEditing}
+                actions={
+                  isEditing && (
+                    <div className="dk-widget-actions">
+                      {actionsFor?.(widget)}
+                      <button
+                        type="button"
+                        className="dk-drag-handle"
+                        aria-label={`Move or resize ${widget.title}`}
+                        aria-describedby={hintId}
+                        title="Drag to move"
+                        data-dk-hint={KEY_HINT}
+                        onKeyDown={(event) => arrangeWithKey(event, widget)}
+                      />
+                    </div>
+                  )
+                }
+              />
+            </ResizingContext.Provider>
           </div>
         ))}
       </GridLayout>
