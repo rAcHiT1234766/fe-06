@@ -440,6 +440,23 @@ describe('undo and redo', () => {
     expect(isOff('Undo')).toBe(true);
     fireEvent.click(button('Cancel'));
   });
+
+  it('counts an edit reversed by hand, rather than with Undo, as nothing to save', async () => {
+    await renderEditing('asha');
+    const panel = await openSettings('Population by region');
+    change(panel, 'Title', 'People');
+    expect(saveStatus()).toBe('Unsaved changes');
+    change(panel, 'Title', 'Population by region');
+    expect(saveStatus()).toBe('');
+
+    // A move and a move back leave the layout items in another order, which means nothing.
+    const handle = () => button('Move or resize Countries');
+    fireEvent.keyDown(handle(), { key: 'ArrowUp' });
+    expect(saveStatus()).toBe('Unsaved changes');
+    fireEvent.keyDown(handle(), { key: 'ArrowDown' });
+    expect(saveStatus()).toBe('');
+    fireEvent.click(button('Cancel'));
+  });
 });
 
 describe('moving and resizing from the keyboard', () => {

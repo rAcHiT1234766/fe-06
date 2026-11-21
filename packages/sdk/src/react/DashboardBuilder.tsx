@@ -3,6 +3,7 @@ import {
   useEffect,
   useId,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -28,6 +29,7 @@ import {
   type History,
 } from '../core/config/history';
 import { canEditAt } from '../core/config/layout';
+import { isSameDashboard } from '../core/config/same-dashboard';
 import { validateDashboard } from '../core/config/schema';
 import type {
   DashboardConfig,
@@ -115,7 +117,11 @@ function Builder({ loadedConfig, isStartingInEdit, onSave }: BuilderProps) {
   const savedConfig = saved?.base === loadedConfig ? saved.config : loadedConfig;
   const pendingHistory = isEditor && draft?.base === savedConfig ? draft.history : undefined;
   const pendingDraft = pendingHistory?.present;
-  const hasUnsavedChanges = pendingDraft !== undefined && pendingDraft !== savedConfig;
+  // Compared by content, so an edit undone by hand, rather than with Undo, leaves nothing to save.
+  const hasUnsavedChanges = useMemo(
+    () => pendingDraft !== undefined && !isSameDashboard(pendingDraft, savedConfig),
+    [pendingDraft, savedConfig],
+  );
   // In a narrow container the dashboard is only shown; a draft waits until there is room again.
   const isRoomy = canEditAt(useContext(BreakpointContext));
   const draftConfig = isRoomy ? pendingDraft : undefined;
