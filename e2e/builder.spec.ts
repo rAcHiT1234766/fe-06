@@ -188,6 +188,36 @@ test('NFR-P5 a chart resized with the mouse is stretched during the drag and dra
   await page.getByRole('button', { name: 'Cancel' }).click();
 });
 
+test('NFR-P5 holding a resize corner near the bottom of the window does not scroll the page', async ({
+  page,
+}) => {
+  await signIn(page, 'asha');
+  await page.getByRole('button', { name: 'Edit dashboard' }).click();
+  await describeDashboard(page);
+
+  const corner = page
+    .locator('.react-grid-item', { has: widgetTitled(page, 'Population by region') })
+    .locator('.react-resizable-handle');
+  const { height } = page.viewportSize()!;
+  // The corner starts 120 pixels above the bottom of the window, and the drag ends 4 pixels above it.
+  await corner.scrollIntoViewIfNeeded();
+  const box = (await corner.boundingBox())!;
+  await page.evaluate(
+    (offset) => window.scrollBy(0, offset),
+    box.y + box.height / 2 - (height - 120),
+  );
+  const start = await centreOf(corner);
+  const scrolled = await page.evaluate(() => window.scrollY);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(start.x, height - 4, { steps: 20 });
+  // Chrome scrolls on a timer while the button is held there, so the pointer waits a moment.
+  await page.waitForTimeout(500);
+  expect(await page.evaluate(() => window.scrollY)).toBe(scrolled);
+  await page.mouse.up();
+  await page.getByRole('button', { name: 'Cancel' }).click();
+});
+
 test('FR-5.11 an editor moves and resizes a widget from the keyboard, and the focus stays on its handle', async ({
   page,
 }) => {

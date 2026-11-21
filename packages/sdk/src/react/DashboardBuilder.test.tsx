@@ -507,6 +507,19 @@ describe('moving and resizing from the keyboard', () => {
   });
 });
 
+describe('resizing with the mouse', () => {
+  it('cancels the press on a resize corner, so the browser does not scroll the page during the drag', async () => {
+    await renderEditing('asha');
+    const cell = widget('Countries').closest('.react-grid-item')!;
+    const corner = cell.querySelector('.react-resizable-handle')!;
+    // fireEvent returns false when the event's default action was cancelled.
+    expect(fireEvent.mouseDown(corner)).toBe(false);
+    fireEvent.mouseUp(corner);
+    expect(fireEvent.mouseDown(widget('Countries'))).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  });
+});
+
 describe('saving', () => {
   const leavePage = () => {
     const event = new Event('beforeunload', { cancelable: true });

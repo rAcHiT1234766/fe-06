@@ -1,4 +1,4 @@
-import { useContext, useId, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useContext, useEffect, useId, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { GridLayout, useContainerWidth, type Layout } from 'react-grid-layout';
 import { COLUMNS, layoutFor } from '../core/config/layout';
 import type { DashboardConfig, LayoutItem, WidgetConfig } from '../core/types';
@@ -81,6 +81,22 @@ export function DashboardGrid({
   // Read by screen readers after each key press, since a widget moving is otherwise silent.
   const [keyNote, setKeyNote] = useState('');
   const [resizingId, setResizingId] = useState<string>();
+
+  // While the mouse button is held near the window's edge, Chrome scrolls the page as it would to
+  // extend a text selection, and the widget being resized no longer follows the pointer: it is left
+  // behind out of view, or grows with the scroll. The grid does not cancel the press that starts a
+  // resize, so this does.
+  useEffect(() => {
+    const grid = containerRef.current;
+    if (!grid) return;
+    const cancelResizePress = (event: MouseEvent) => {
+      if (event.target instanceof Element && event.target.closest('.react-resizable-handle')) {
+        event.preventDefault();
+      }
+    };
+    grid.addEventListener('mousedown', cancelResizePress);
+    return () => grid.removeEventListener('mousedown', cancelResizePress);
+  }, [containerRef]);
 
   const arrangeWithKey = (event: KeyboardEvent, { id, title }: WidgetConfig) => {
     if (!isArrowKey(event.key) || event.ctrlKey || event.metaKey || event.altKey) return;
