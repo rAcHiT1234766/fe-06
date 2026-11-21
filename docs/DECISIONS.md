@@ -142,7 +142,7 @@ Each entry says what was chosen and why. Entries marked "agreed" were confirmed 
 - **A draft remembers the saved config it started from.**
   The builder edits a copy and writes nothing until Save. If the loaded config changes underneath, after a reload or a change of user, the draft is dropped instead of being shown on top of another user's dashboard. The same applies to the copy kept after a save.
 - **Unsaved changes are any edit since the draft started, compared by identity.**
-  An edit that is undone by hand still counts. Comparing content would need a comparison that ignores key order and layout order, for little gain. Undo, built later, gives back the very config the draft started from, so undoing every edit does clear it.
+  An edit that is undone by hand still counts. Comparing content would need a comparison that ignores key order and layout order, for little gain. Undo, built later, gives back the very config the draft started from, so undoing every edit does clear it. Changed later: unsaved changes are now found by comparing content, see "Closing the known gaps" below.
 - **Only the `lg` layout is stored.**
   The builder edits the 12-column layout; the smaller layouts of Phase 5 are derived from it. Layout changes are recorded when a drag or resize ends.
 - **The SDK's own grid styles replace the grid library's stylesheet.**
@@ -420,6 +420,18 @@ The author asked for five features the requirements do not list. Each is recorde
 
 ## After Phase 7 — Closing the known gaps
 
+- **A chart being resized with the mouse is drawn once, when the drag ends.**
+  Until then its last drawing is stretched to fill the widget. Drawing it again at every step of the drag adds work to each step, and the performance report gave that as the reason resizing missed NFR-P5 on a slow CPU; with the change, the frames over 50 ms there fell from 9 and 10 to 3 in each run. The stretched chart looks squashed or blurred for as long as the button is held, which seemed the smaller cost. A resize from the keyboard, or any other change of size, still draws at once.
+- **The grid cancels the mouse press on a resize corner.**
+  While the button is held near the window's edge, Chrome scrolls the page as it would to extend a text selection, and the widget being resized is left behind out of view. The grid's drag library does not cancel the press, so the grid does, for its resize corners only; text elsewhere can still be selected. Firefox and WebKit did not scroll. The first explanation of this, in a test comment, blamed the grid library; a probe that cancelled the press showed it was the browser, and the comment was corrected in a later commit.
+- **Unsaved changes are found by comparing content, not identity.**
+  A title typed and then typed back, or a widget moved and moved back, left nothing to save but still showed "Unsaved changes" and warned before leaving the page. Widgets and layout items are matched by id, since their order means nothing, and a property set to `undefined` counts as missing, as it would once saved as JSON. The comparison runs again only when the draft or the saved dashboard changes.
+- **The map test finds India by its tooltip.**
+  It moves the pointer across a grid of points on the map until the tooltip names India, checks again a pixel along in case the tooltip was late, and clicks there, so it passes whatever the window's size. The name is matched as an element of its own, because WebKit's `innerText` runs it into the value.
+- **A test file waits for its requests before closing the mock API.**
+  A component that unmounts stops waiting for its requests, but they carry on. happy-dom's `waitUntilComplete()` waits for every request the test DOM still has open, so none reaches the real network or is aborted when the DOM closes. Tracking MSW's own request events instead left requests that the DOM aborted, which printed `AbortError` lines.
+- **Testing Library waits up to 5 seconds.**
+  On a busy machine, a wait for the mock API could pass the default limit of 1 second and fail its test, with or without the change above, as two runs one after the other showed. The limit only ends a wait that is failing anyway, so a passing test takes no longer for it.
 - **The map is an entry of its own, `@dashkit/sdk/map`** (agreed).
   `registerMap` and `MapGeoJson` moved there from `@dashkit/sdk`, and registering a map also registers ECharts' map chart and its colour classes. A host that shows no map never imports the entry, so its bundle leaves them out: 222.6 kB compressed, against 246.3 kB before. A host with maps ships 246.2 kB. A map widget already showed its figures as a table until `registerMap` was called, so nothing else had to change. Moving an export changes the public API, which was agreed before the change.
 - **What both entries use is one shared file, with no hash in its name.**

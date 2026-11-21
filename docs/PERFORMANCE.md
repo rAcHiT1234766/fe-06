@@ -2,7 +2,8 @@
 
 Every number on this page was measured on 18 November 2026: the timings in the main table on the
 code at commit `a0f0817`, the bundle sizes at `9637048`, the last change to code, and the timings
-under "Re-measured after Phase 7" at both. The targets come from the project requirements (NFR-P1
+under "Re-measured after Phase 7" at both. The sections after that one give their own dates and
+commits. The targets come from the project requirements (NFR-P1
 to NFR-P6). Where a target is missed, the row says so and why.
 
 ## How it was measured
@@ -61,7 +62,8 @@ the way a hand moves.
   the same filter takes 43 ms at normal speed.
 - **Resizing on a CPU four times slower (NFR-P5).** Each step of a resize changes the widget's
   size, and its chart redraws to fit, so a slow CPU drops some frames; 9 of 219 were over 50 ms.
-  Dragging, which moves widgets without resizing their charts, stayed smooth.
+  Dragging, which moves widgets without resizing their charts, stayed smooth. A chart being resized
+  is now drawn once, when the drag ends; see "Re-measured after closing the known gaps".
 
 ## Re-measured after Phase 7
 
@@ -142,9 +144,46 @@ frames in two rounds each: 10 of about 210 over 50 ms on the slowed CPU. The tab
 changed test for both commits, so the rows are comparable with each other but not with the tables
 above, which used the old one.
 
-A user who holds a resize corner near the bottom of the window in Chrome sees the same: the page
-scrolls and the widget grows with it. That is the browser's behaviour and was the same at
-`9637048`; the test no longer measures it.
+A user who held a resize corner near the bottom of the window in Chrome saw the same until
+`59132a6`: the page scrolled and the widget stopped following the pointer. The grid now cancels the
+press on a resize corner, so the page stays still. The test keeps its start height, so that its
+numbers stay comparable with the runs before.
+
+## Re-measured after closing the known gaps
+
+The charts drawn once at the end of a resize, the page kept still during one, and the map's own
+entry were measured on 21 November 2026: `pnpm perf` ran from fresh clones of `111c8e0`, the code
+measured in the section above with only comments and documentation changed since, and `7690cff`,
+the last change to code. Each ran twice, in the order `111c8e0`, `7690cff`, `7690cff`, `111c8e0`,
+and each cell gives the first run and then the second.
+
+| Measurement                                               |            `111c8e0` |           `7690cff` | Target                 |
+| --------------------------------------------------------- | -------------------: | ------------------: | ---------------------- |
+| Mount to first chart finished, animation on, median       |         206 / 205 ms |        232 / 160 ms | ≤ 1.5 s                |
+| Same, reduced motion                                      |          101 / 98 ms |         116 / 99 ms | ≤ 1.5 s                |
+| Same, animation on, CPU 4× slower                         |       1889 / 1649 ms |      1840 / 1722 ms | ≤ 1.5 s                |
+| Filter by a region not seen before, animation on, median  |         279 / 287 ms |        267 / 263 ms | ≤ 300 ms               |
+| Clear the filter, animation on, median                    |         252 / 260 ms |        244 / 245 ms | ≤ 300 ms               |
+| Filter by a region not seen before, CPU 4× slower, median |         788 / 826 ms |        626 / 758 ms | ≤ 300 ms               |
+| Resize with 12 widgets: frames over 50 ms                 |  0 of 147 / 0 of 142 | 0 of 152 / 1 of 166 | No visible jank        |
+| Resize, CPU 4× slower: frames over 50 ms                  | 9 of 234 / 10 of 194 | 3 of 184 / 3 of 199 | No visible jank        |
+| Resize, CPU 4× slower: 95th percentile                    |       50.0 / 99.9 ms |      33.3 / 33.4 ms | No visible jank        |
+| Resize, CPU 4× slower: worst frame                        |         567 / 600 ms |        350 / 483 ms | No visible jank        |
+| Identical queries from 10 widgets                         |           5 requests |          5 requests | One per distinct query |
+
+Resizing on the slowed CPU improved: 3 frames over 50 ms in each run rather than 9 and 10, and a
+95th percentile of 33.3 and 33.4 ms, about the 30 frames a second that the reading of "no visible
+jank" above allows, rather than 50.0 and 99.9 ms. It still misses that reading, since one frame in
+each run took 350 ms or more, past its 100 ms. A further run, which logged where the slow frames
+fell, had one: the first frame after the press on the resize corner, at 333 ms. The frames of the
+drag itself and of the release, when the chart is drawn again, stayed under 50 ms. That is one run,
+so it shows where the long frame can fall rather than that it always falls there.
+
+The other rows are within the spread between runs. Moving the map to its own entry changes none of
+them, since the demo imports that entry and so loads the same code as before. The machine was
+slower than earlier the same day: `111c8e0` mounted in 1889 and 1649 ms on the slowed CPU, against
+1226 ms for the same code in the section above, so that row missed its 1.5 s at both commits, as it
+did on 18 November. A cross-filter on the slowed CPU missed its 300 ms at both, as before.
 
 ## Cross-filter latency before and after the brief transitions
 
@@ -167,7 +206,9 @@ build at the end of Phase 7. What came after, from paged tables to multi-select,
 and 2.9 kB gzipped to the whole bundle, while `dist/index.js` alone grew from 16.7 to 20.1 kB. The
 features beyond the requirements then added 28.8 kB, to 313.4 kB, most of it ECharts' map and its
 colour classes, and `dist/index.js` grew to 25.4 kB; the npm build as a host bundles it went from
-217.6 to 245.8 kB.
+217.6 to 245.8 kB. Since the map moved to its own entry, `@dashkit/sdk/map`, a host that shows no
+map bundles 222.6 kB, and one that also imports the map entry 246.2 kB; `dist/index.js` alone is
+25.7 kB, and `dashkit.js`, which keeps the map, 313.8 kB.
 
 | Package                                                       | Minified     | Share | Gzipped      |
 | ------------------------------------------------------------- | ------------ | ----- | ------------ |
@@ -184,7 +225,8 @@ colour classes, and `dist/index.js` grew to 25.4 kB; the npm build as a host bun
 
 ECharts and its renderer are 62% of the script-tag build, even though only the bar, line and pie
 charts, the grid, legend and tooltip components, and the canvas renderer are registered; the map
-chart and its colour classes have been registered since. The npm
+chart and its colour classes were added since, and the npm build carries them in the map entry
+only. The npm
 build keeps React, ECharts and the grid library as the host's dependencies, so a host that already
 uses any of them does not ship them twice.
 

@@ -129,13 +129,13 @@ a series' own defaults override the chart's. Setting a short transition on every
 
 | Check                                    | Result                                                                                                                     |
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Unit, component and type tests           | 512 passed, the component tests on React 19 and 18                                                                         |
-| End-to-end tests                         | 102 passed: 24 user flows in Chromium, Firefox and WebKit; 15 axe accessibility checks and 15 Storybook checks in Chromium |
+| Unit, component and type tests           | 524 passed, the component tests on React 19 and 18                                                                         |
+| End-to-end tests                         | 108 passed: 26 user flows in Chromium, Firefox and WebKit; 15 axe accessibility checks and 15 Storybook checks in Chromium |
 | Permission matrix                        | No out-of-scope row for any demo user, and no query on a measure outside the user's scope                                  |
 | Coverage, SDK core and query engine      | 99.6% and 97.8% of lines; CI fails if either drops below its gate                                                          |
 | Installed from the packed tarball        | Types check on React 18 and 19                                                                                             |
-| npm build, as a host bundles it          | 245.8 kB gzipped (target 300)                                                                                              |
-| Script-tag build                         | 313.4 kB gzipped (target 500)                                                                                              |
+| npm build, as a host bundles it          | 222.6 kB gzipped, or 246.2 kB with the map entry (target 300)                                                              |
+| Script-tag build                         | 313.8 kB gzipped (target 500)                                                                                              |
 | Mount to first chart                     | median 155 ms (target 1.5 s)                                                                                               |
 | Cross-filter, click to every chart drawn | median 257 ms (target 300 ms)                                                                                              |
 | Identical queries from 10 widgets        | 5 requests for 5 distinct queries                                                                                          |
@@ -145,7 +145,8 @@ the machine. Two targets are missed on a CPU slowed four times: a cross-filter t
 and resizing drops a few frames. Both are in the performance report with the reason. A re-run after
 the stretch items found no slowdown from them; that day the machine was slower, and the mount on a
 slowed CPU missed its 1.5 seconds as well. Another after the five extra features found no slowdown
-from those either."
+from those either. Drawing a chart being resized only when the drag ends then cut the frames dropped
+on the slowed CPU from about ten to three."
 
 ## 9. What is missing, and what comes next (9:00–9:45)
 
