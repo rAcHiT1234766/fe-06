@@ -1,5 +1,83 @@
 # Progress
 
+## After Phase 7 — Getting ready to deploy (22 November 2026)
+
+Before the first push to GitHub, the Blueprint was checked against Render's documentation and its
+three services were built and run on Linux, the way Render will build and run them. The services
+themselves wait on the author's GitHub and Render accounts; [DEPLOYMENT.md](DEPLOYMENT.md) has the
+steps.
+
+### Commits
+
+| Commit    | Change                                                                                   |
+| --------- | ---------------------------------------------------------------------------------------- |
+| `4fe0ad5` | The static sites set `SKIP_INSTALL_DEPS`, so only their build commands install with pnpm |
+
+### Render's documentation
+
+- A static site is `type: web` with `runtime: static` and a `staticPublishPath`; static sites take
+  no `plan`, and `render.yaml` gives them none.
+- Render installs a static site's dependencies by itself unless `SKIP_INSTALL_DEPS` is `true`, and
+  does not say with which package manager. Both static sites now set it.
+- Render asks for each `sync: false` value only when the Blueprint is first created, and ignores
+  them when it is updated later, so a wrong address is fixed under the service's **Environment**,
+  as DEPLOYMENT.md says.
+- `NODE_VERSION` comes before `.node-version`, `.nvmrc` and `engines` in `package.json`.
+- A free web service spins down after 15 minutes without traffic and takes about a minute to spin
+  up; each workspace gets 750 free instance hours a month.
+
+### Rehearsal on Linux
+
+Each service was cloned from `4fe0ad5` in a fresh Ubuntu 24.04 container with Node 24.22.1, the
+version Render's documentation gives as its default, installed in a folder owned by the user that
+runs the build. Each ran the build command from that commit's `render.yaml`:
+
+| Service             | Build | Of which `pnpm install` | Result                                                 |
+| ------------------- | ----- | ----------------------- | ------------------------------------------------------ |
+| `dashkit-demo`      | 423 s | 6 min 42 s              | pass; the packages downloaded slowly on this first run |
+| `dashkit-storybook` | 67 s  | 46 s                    | pass                                                   |
+| `dashkit-api`       | 89 s  | 50 s                    | pass                                                   |
+
+The API then ran its start command in a container held to a free instance's 512 MB and 0.1 CPU. It
+answered `/health` 4 seconds after starting, and used 43 MB after the deployed-site checks and
+45 MB after the demo script. The two static sites' published folders were served from the host as
+a static host serves them.
+
+- The deployed-site checks passed 12 of 12: health, CORS for the demo's origin and against
+  another, the demo app and the plain HTML page with five widgets each, Ravi's two regions, the
+  API's 403 for a viewer's save, Storybook's 72 entries, a widget story, the API reference, and no
+  page errors.
+- The demo script passed 25 of 25 checks in 19 seconds, with no page errors, at the API's 0.1 CPU.
+- npm warned that it did not run pnpm's own install scripts; pnpm installed and built without them.
+
+If Render's image refuses the global install, DEPLOYMENT.md's fallback now runs pnpm through npx.
+It used to be `corepack enable`, which writes beside Node just as a global install does.
+`npx --yes pnpm@12.21.0` ran pnpm 12.21.0 and a filtered command here. DEPLOYMENT.md also says that
+a public repository shows the commits' email address, and what to do if GitHub refuses the push
+for it.
+
+### Known gaps
+
+These replace the list in the section below.
+
+- Two performance targets are missed on a CPU slowed four times, though met at full speed: a
+  cross-filter (NFR-P4; medians of 626 and 758 ms in the last runs) and smooth resizing (NFR-P5;
+  3 frames over 50 ms in each run, the worst 350 and 483 ms, against no frame over 100 ms).
+  Mounting on a slowed CPU missed its 1.5 s in those runs (medians of 1840 and 1722 ms), on a
+  machine slower than earlier the same day, when it met it.
+- The services are not deployed yet, so nothing has been tested on Render itself, Lighthouse
+  included. The rehearsal's image was shaped like Render's, not Render's own: the first deploy is
+  the first test of `npm install --global` there, and DEPLOYMENT.md has the fallback.
+- A free Render API sleeps after about 15 minutes idle and keeps dashboards in memory, so a saved
+  dashboard, or one created with the picker, lasts until the service restarts.
+- Screen readers in browse mode keep the arrow keys for reading, so a screen reader user switches
+  to focus mode to move a widget from its handle.
+- The script-tag build still carries the map's chart code, since one script cannot leave part of
+  itself out.
+- The demo app builds into one 1,001.7 kB chunk (327.0 kB gzipped) and Vite warns about its size;
+  it also loads the 164 kB map borders. This is the demo only; the SDK's own sizes are in the
+  section below.
+
 ## After Phase 7 — Closing the known gaps (21 November 2026)
 
 Six of the known gaps listed in the section below were closed at the author's request: charts

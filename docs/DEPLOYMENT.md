@@ -21,6 +21,9 @@ Storybook needs no server, so the API only ever talks to the demo app.
    git push -u origin master
    ```
 
+   The repository can be public or private: Render reads a private one once you allow it. Each
+   commit carries the email address configured in git, and a public repository shows it to anyone.
+
 2. **Create a Render account** at https://render.com, signing up with GitHub. When Render asks
    which repositories it may read, allow this one.
 
@@ -87,13 +90,14 @@ Every push to `master` deploys all three again.
 
 ## If something goes wrong
 
-| What you see                                              | Likely cause and fix                                                                                                                                         |
-| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| The demo says "Could not reach the demo API at …"         | The API is still waking up: wait a minute and reload. If it persists, the address after "at" is wrong: fix `VITE_DASHKIT_API_URL` and deploy the demo again. |
-| The browser console shows a CORS error                    | `DASHKIT_ALLOWED_ORIGINS` does not match the demo's address exactly. Check `https`, the spelling, and that there is no trailing slash.                       |
-| A build fails at `npm install --global pnpm`              | Replace `npm install --global pnpm@12.21.0` with `corepack enable` in that service's build command; the repository pins the pnpm version in `package.json`.  |
-| The API's deploy log shows a syntax error in a `.ts` file | Node is older than 24. Check that `NODE_VERSION` is `24` on `dashkit-api`.                                                                                   |
-| The API log warns that `DASHKIT_TOKEN_SECRET` is not set  | The variable is missing. Add it with any long random value; until then tokens end whenever the API restarts.                                                 |
+| What you see                                              | Likely cause and fix                                                                                                                                                                                              |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The demo says "Could not reach the demo API at …"         | The API is still waking up: wait a minute and reload. If it persists, the address after "at" is wrong: fix `VITE_DASHKIT_API_URL` and deploy the demo again.                                                      |
+| The browser console shows a CORS error                    | `DASHKIT_ALLOWED_ORIGINS` does not match the demo's address exactly. Check `https`, the spelling, and that there is no trailing slash.                                                                            |
+| `git push` is refused with `GH007`                        | Your GitHub account keeps its email address private and blocks pushes that show it. Under GitHub's **Settings**, **Emails**, untick **Block command line pushes that expose my email**, then push again.          |
+| A build fails at `npm install --global pnpm`              | In that service's build command, delete `npm install --global pnpm@12.21.0 &&` and write `npx --yes pnpm@12.21.0` wherever it then says `pnpm`. npx runs pnpm from npm's cache, so nothing is installed globally. |
+| The API's deploy log shows a syntax error in a `.ts` file | Node is older than 24. Check that `NODE_VERSION` is `24` on `dashkit-api`.                                                                                                                                        |
+| The API log warns that `DASHKIT_TOKEN_SECRET` is not set  | The variable is missing. Add it with any long random value; until then tokens end whenever the API restarts.                                                                                                      |
 
 ## Without a Blueprint
 
