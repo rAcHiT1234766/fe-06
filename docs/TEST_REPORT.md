@@ -221,7 +221,11 @@ check was a one-off script, not part of CI.
 - **Performance is measured, not gated.** `pnpm perf` takes several minutes and depends on the
   machine, so it runs by hand; CI gates only the bundle sizes. Two targets are missed on a CPU
   slowed four times; see [PERFORMANCE.md](PERFORMANCE.md).
-- **Not yet tested on the deployed demo**, including Lighthouse, until it is deployed.
+- **The deployed services are checked by script, not by these suites.** The unit and end-to-end
+  tests run on local builds. On 22 November 2026, after the first deploy, the deployed-site checks
+  (12) and the demo script (25 checks) passed against the services on Render, and Lighthouse
+  scored the demo app; [PROGRESS.md](PROGRESS.md) and [PERFORMANCE.md](PERFORMANCE.md) have the
+  results.
 
 ## Running the tests
 

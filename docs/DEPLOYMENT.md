@@ -62,8 +62,8 @@ Storybook needs no server, so the API only ever talks to the demo app.
    the table shows only South Asia and East Asia & Pacific.
 3. Open `https://<demo address>/plain-html/`. The same dashboard appears, from one script tag.
 4. Open the Storybook address and pick any widget story.
-5. Send me the three addresses. I will put them in the README, point the remaining docs at them,
-   run the automated checks against them and record a Lighthouse score in `PERFORMANCE.md`.
+5. If the addresses differ from those under [Live links](../README.md#live-links) in the README,
+   put the new ones there.
 
 ## Settings
 
@@ -92,6 +92,7 @@ Every push to `master` deploys all three again.
 
 | What you see                                              | Likely cause and fix                                                                                                                                                                                              |
 | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Opening the API's address shows `Missing bearer token`    | Nothing is wrong. The API has no page: every route but `/health` answers only requests carrying a token, which the demo app fetches. Open `/health` to check the API.                                             |
 | The demo says "Could not reach the demo API at …"         | The API is still waking up: wait a minute and reload. If it persists, the address after "at" is wrong: fix `VITE_DASHKIT_API_URL` and deploy the demo again.                                                      |
 | The browser console shows a CORS error                    | `DASHKIT_ALLOWED_ORIGINS` does not match the demo's address exactly. Check `https`, the spelling, and that there is no trailing slash.                                                                            |
 | `git push` is refused with `GH007`                        | Your GitHub account keeps its email address private and blocks pushes that show it. Under GitHub's **Settings**, **Emails**, untick **Block command line pushes that expose my email**, then push again.          |

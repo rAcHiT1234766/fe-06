@@ -1,5 +1,83 @@
 # Progress
 
+## After Phase 7 — Deployed (22 November 2026)
+
+The repository is on GitHub at https://github.com/rAcHiT1234766/fe-06, and Render deploys its
+three services from `render.yaml` on every push to `master`. All three build on Render's own image
+with the commands in `render.yaml`, the global pnpm install included.
+
+| Service             | Address                                                                     |
+| ------------------- | --------------------------------------------------------------------------- |
+| `dashkit-api`       | https://dashkit-api.onrender.com                                            |
+| `dashkit-demo`      | https://dashkit-demo.onrender.com, with the plain HTML page at /plain-html/ |
+| `dashkit-storybook` | https://dashkit-storybook.onrender.com                                      |
+
+### Commits
+
+| Commit    | Change                                                                                      |
+| --------- | ------------------------------------------------------------------------------------------- |
+| `6c6dcd7` | Storybook's in-browser API has https addresses, so Storybook served over https can reach it |
+| `f888433` | The demo app and the plain HTML page have a meta description                                |
+
+### What the deploy found
+
+The first run of the deployed-site checks against Render stopped at Storybook's widget story, which
+never drew. The stories call made-up addresses such as `http://dashkit-api.test`, which a service
+worker answers inside the browser. Render serves Storybook over https, and the browser blocked those
+http requests as mixed content before the service worker saw them. Locally, and in the rehearsal
+below, Storybook was served over http, so neither could show it. `6c6dcd7` makes the three addresses
+https.
+
+Lighthouse's first runs scored SEO 91, for a missing meta description, which `f888433` added.
+
+Opening the API's bare address shows `{"error":{"code":"UNAUTHENTICATED","message":"Missing bearer
+token"}}`. That is the API refusing an anonymous request, as it should; DEPLOYMENT.md now says so
+under "If something goes wrong".
+
+### Check results
+
+| Check                | Result                                                                                                        |
+| -------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Deployed-site checks | 12 of 12 at `6c6dcd7`, and again at `f888433`                                                                 |
+| Demo script          | 25 of 25 at `6c6dcd7`, in 28 seconds, with no page errors                                                     |
+| Lighthouse, desktop  | medians of three runs at `f888433`: performance 96, accessibility 100, best practices 100, SEO 100            |
+| Lighthouse, mobile   | medians of three runs at `f888433`: performance 82 (77 to 87), accessibility 100, best practices 100, SEO 100 |
+
+[PERFORMANCE.md](PERFORMANCE.md) has each Lighthouse run and what holds back the mobile score.
+
+The demo script saves an edited dashboard as Asha. Afterwards, Acme's Overview dashboard on the
+live API was put back to the starting one, read from a fresh local API, and compared with it: the
+same apart from the save stamps. The next deploy restarted the API, which removed those too.
+
+Before `6c6dcd7`: Prettier, lint, typecheck, and the 15 Storybook end-to-end tests in Chromium on a
+fresh Storybook build. Before `f888433`: Prettier, lint and the demo build, which put the
+description in both pages. The demo's end-to-end tests were not run for `f888433`, because another
+program held port 5173 and Playwright would have tested it instead; the deployed-site checks ran on
+the deployed pages in their place.
+
+### Known gaps
+
+These replace the list in the section below.
+
+- Two performance targets are missed on a CPU slowed four times, though met at full speed: a
+  cross-filter (NFR-P4; medians of 626 and 758 ms in the last runs) and smooth resizing (NFR-P5;
+  3 frames over 50 ms in each run, the worst 350 and 483 ms, against no frame over 100 ms).
+  Mounting on a slowed CPU missed its 1.5 s in those runs (medians of 1840 and 1722 ms), on a
+  machine slower than earlier the same day, when it met it.
+- The demo app builds into one 1,001.7 kB chunk (327.0 kB gzipped), and Vite warns about its size.
+  It holds Lighthouse's mobile performance at 82: the page shows nothing until that script has
+  downloaded and run. The demo also loads the 164 kB map borders. This is the demo only; the SDK's
+  own sizes are in the section below.
+- Lighthouse scored the demo app's main page only, not the plain HTML page or Storybook.
+- A free Render API sleeps after about 15 minutes idle and keeps dashboards in memory, so a saved
+  dashboard, or one created with the picker, lasts until the service restarts, and every push to
+  `master` restarts it.
+- No recorded walkthrough has been made.
+- Screen readers in browse mode keep the arrow keys for reading, so a screen reader user switches
+  to focus mode to move a widget from its handle.
+- The script-tag build still carries the map's chart code, since one script cannot leave part of
+  itself out.
+
 ## After Phase 7 — Getting ready to deploy (22 November 2026)
 
 Before the first push to GitHub, the Blueprint was checked against Render's documentation and its

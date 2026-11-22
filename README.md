@@ -8,8 +8,18 @@ when one is clicked, and editable by the people allowed to edit.
 
 ## Live links
 
-The demo, Storybook and a recorded walkthrough are not deployed yet. Until they are, the
-[next section](#run-it-locally) runs all of them on your machine in a few minutes.
+- **Demo app:** https://dashkit-demo.onrender.com, the fictional host product with the dashboard
+- **Plain HTML page:** https://dashkit-demo.onrender.com/plain-html/, the same dashboard from one
+  script tag and one element
+- **Storybook:** https://dashkit-storybook.onrender.com, every widget and its states, the theming
+  playground and the API reference
+- **Demo API:** https://dashkit-api.onrender.com/health. The API has no page of its own: its other
+  routes answer only requests carrying a token, which the demo app fetches for you.
+
+All three run on Render's free plan. After about 15 minutes without visitors the API sleeps, and
+the next visit waits up to a minute while it wakes. The API keeps dashboards in memory, so a saved
+change lasts until it restarts. A recorded walkthrough is not made yet; the
+[next section](#run-it-locally) runs everything on your machine in a few minutes.
 
 ## Run it locally
 
@@ -17,7 +27,7 @@ You need [Node.js](https://nodejs.org) 24 or later and [pnpm](https://pnpm.io) 1
 (`npm install --global pnpm@12`). Ports 4000 and 5173 must be free.
 
 ```sh
-git clone <this repository's URL> dashkit
+git clone https://github.com/rAcHiT1234766/fe-06.git dashkit
 cd dashkit
 pnpm install
 pnpm dev
@@ -220,5 +230,4 @@ Details, including the two targets missed on a CPU slowed four times, are in
 
 ## Roadmap
 
-- Deploy the API, the demo and Storybook, and run Lighthouse on the deployed demo.
 - Keep cross-filtering within 300 ms on slow devices.

@@ -143,3 +143,11 @@
 - **Requests outlive the component that made them.** Unmounting stops a component waiting, not the request. A test that closes its mock server too early sends the rest to the real network. The test DOM knows what is still open, so waiting for it is simpler than tracking each request.
 - **Check whether a failure is new before blaming the change.** A test that failed after a change also failed without it, run on the same busy machine one after the other. The cause was the machine's load against a 1-second limit, not the change.
 - **Optional features as their own entry.** A subpath export lets a host opt in to code it needs, and a bundler leaves out what is never imported. State both entries use has to be one shared file, or each would keep its own copy. Measuring the two entries as separate inputs overstated a host's bundle, since the bundler split code that an app importing both does not.
+
+## After Phase 7 — Deploying
+
+- **Rehearse where you can, and say what the rehearsal cannot show.** A container shaped like Render's build image ran each service's real build command, and the API ran with a free instance's 512 MB and 0.1 CPU. It could not show how Render's own image treats a global install, nor anything that depends on https.
+- **https changes what a page may request.** A page served over https may not fetch an http address: the browser blocks it as mixed content before any service worker sees it. Storybook's mock API worked over http on every local run and failed on its first https deploy.
+- **An API's root is not a health check.** The API answers every route but `/health` only with a token, so opening its bare address shows "Missing bearer token". That means the API is up and refusing an anonymous request, as it should.
+- **Every push redeploys everything.** Render deploys all three services from `master` on each push, so the API restarts and its in-memory dashboards go back to the starters. A check that saves a dashboard on a shared deploy should put it back.
+- **Score the page people open.** Lighthouse's mobile settings slow the CPU four times and the network to slow 4G, which is where the demo app's single large script shows. Desktop and mobile were each run three times, since one run can move by several points.

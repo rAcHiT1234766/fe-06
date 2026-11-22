@@ -27,28 +27,28 @@ with the targets; the throttled runs show how much headroom there is.
 
 ## Results
 
-| Requirement  | What was measured                                                                | Result                                                                                     | Target                         | Met           |
-| ------------ | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------ | ------------- |
-| NFR-P1       | npm build as a host bundles it: minified, every dependency except React included | 217.6 kB gzipped                                                                           | ≤ 300 kB                       | Yes           |
-| NFR-P1       | `dist/index.js` alone, dependencies external                                     | 20.1 kB gzipped                                                                            | (context)                      |               |
-| NFR-P2       | Script-tag build, `dist/dashkit.js`, everything included                         | 284.6 kB gzipped                                                                           | ≤ 500 kB                       | Yes           |
-| NFR-P3       | Mount to first chart finished, animation on                                      | median 155 ms, worst 637 ms                                                                | ≤ 1.5 s                        | Yes           |
-| NFR-P3       | Same, reduced motion                                                             | median 103 ms, worst 123 ms                                                                | ≤ 1.5 s                        | Yes           |
-| NFR-P3       | Same, animation on, CPU 4× slower                                                | median 1281 ms, worst 1489 ms                                                              | ≤ 1.5 s                        | Yes           |
-| NFR-P3       | Page navigation to first chart finished, animation on                            | median 274 ms, worst 773 ms                                                                | (context)                      |               |
-| NFR-P3       | Same, CPU 4× slower                                                              | median 1807 ms, worst 1972 ms                                                              | (context)                      |               |
-| NFR-P4       | Filter by a region not filtered before, animation on                             | median 257 ms, worst 300 ms                                                                | ≤ 300 ms                       | Yes           |
-| NFR-P4       | Clear the filter (every result cached), animation on                             | median 238 ms, worst 261 ms                                                                | ≤ 300 ms                       | Yes           |
-| NFR-P4       | Filter by a new region, reduced motion                                           | median 43 ms, worst 53 ms                                                                  | ≤ 300 ms                       | Yes           |
-| NFR-P4       | Clear the filter, reduced motion                                                 | median 33 ms, worst 33 ms                                                                  | ≤ 300 ms                       | Yes           |
-| NFR-P4       | Filter by a new region, animation on, CPU 4× slower                              | median 534 ms, worst 572 ms                                                                | ≤ 300 ms                       | No, see below |
-| NFR-P4       | Clear the filter, animation on, CPU 4× slower                                    | median 464 ms, worst 491 ms                                                                | ≤ 300 ms                       | No, see below |
-| NFR-P5       | Drag a widget across the builder with 12 widgets                                 | frames every 16.7 ms (median and 95th percentile), worst 17 ms; 0 of 139 frames over 50 ms | No visible jank                | Yes           |
-| NFR-P5       | Resize a widget with 12 widgets                                                  | median 16.7 ms, 95th percentile 16.8 ms, worst 33 ms; 0 of 138 frames over 50 ms           | No visible jank                | Yes           |
-| NFR-P5       | Drag, CPU 4× slower                                                              | median 16.7 ms, 95th percentile 16.8 ms, worst 100 ms; 1 of 202 frames over 50 ms          | No visible jank                | Yes           |
-| NFR-P5       | Resize, CPU 4× slower                                                            | median 16.7 ms, 95th percentile 50.0 ms, worst 267 ms; 9 of 219 frames over 50 ms          | No visible jank                | No, see below |
-| NFR-P6       | A new dashboard with 10 widgets, every query appearing twice                     | 5 requests for 5 distinct queries                                                          | One request per distinct query | Yes           |
-| Page quality | Lighthouse on the deployed demo                                                  | Not measured yet: it needs the demo deployed                                               |                                |               |
+| Requirement  | What was measured                                                                | Result                                                                                                                                     | Target                         | Met           |
+| ------------ | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ | ------------- |
+| NFR-P1       | npm build as a host bundles it: minified, every dependency except React included | 217.6 kB gzipped                                                                                                                           | ≤ 300 kB                       | Yes           |
+| NFR-P1       | `dist/index.js` alone, dependencies external                                     | 20.1 kB gzipped                                                                                                                            | (context)                      |               |
+| NFR-P2       | Script-tag build, `dist/dashkit.js`, everything included                         | 284.6 kB gzipped                                                                                                                           | ≤ 500 kB                       | Yes           |
+| NFR-P3       | Mount to first chart finished, animation on                                      | median 155 ms, worst 637 ms                                                                                                                | ≤ 1.5 s                        | Yes           |
+| NFR-P3       | Same, reduced motion                                                             | median 103 ms, worst 123 ms                                                                                                                | ≤ 1.5 s                        | Yes           |
+| NFR-P3       | Same, animation on, CPU 4× slower                                                | median 1281 ms, worst 1489 ms                                                                                                              | ≤ 1.5 s                        | Yes           |
+| NFR-P3       | Page navigation to first chart finished, animation on                            | median 274 ms, worst 773 ms                                                                                                                | (context)                      |               |
+| NFR-P3       | Same, CPU 4× slower                                                              | median 1807 ms, worst 1972 ms                                                                                                              | (context)                      |               |
+| NFR-P4       | Filter by a region not filtered before, animation on                             | median 257 ms, worst 300 ms                                                                                                                | ≤ 300 ms                       | Yes           |
+| NFR-P4       | Clear the filter (every result cached), animation on                             | median 238 ms, worst 261 ms                                                                                                                | ≤ 300 ms                       | Yes           |
+| NFR-P4       | Filter by a new region, reduced motion                                           | median 43 ms, worst 53 ms                                                                                                                  | ≤ 300 ms                       | Yes           |
+| NFR-P4       | Clear the filter, reduced motion                                                 | median 33 ms, worst 33 ms                                                                                                                  | ≤ 300 ms                       | Yes           |
+| NFR-P4       | Filter by a new region, animation on, CPU 4× slower                              | median 534 ms, worst 572 ms                                                                                                                | ≤ 300 ms                       | No, see below |
+| NFR-P4       | Clear the filter, animation on, CPU 4× slower                                    | median 464 ms, worst 491 ms                                                                                                                | ≤ 300 ms                       | No, see below |
+| NFR-P5       | Drag a widget across the builder with 12 widgets                                 | frames every 16.7 ms (median and 95th percentile), worst 17 ms; 0 of 139 frames over 50 ms                                                 | No visible jank                | Yes           |
+| NFR-P5       | Resize a widget with 12 widgets                                                  | median 16.7 ms, 95th percentile 16.8 ms, worst 33 ms; 0 of 138 frames over 50 ms                                                           | No visible jank                | Yes           |
+| NFR-P5       | Drag, CPU 4× slower                                                              | median 16.7 ms, 95th percentile 16.8 ms, worst 100 ms; 1 of 202 frames over 50 ms                                                          | No visible jank                | Yes           |
+| NFR-P5       | Resize, CPU 4× slower                                                            | median 16.7 ms, 95th percentile 50.0 ms, worst 267 ms; 9 of 219 frames over 50 ms                                                          | No visible jank                | No, see below |
+| NFR-P6       | A new dashboard with 10 widgets, every query appearing twice                     | 5 requests for 5 distinct queries                                                                                                          | One request per distinct query | Yes           |
+| Page quality | Lighthouse on the deployed demo                                                  | Desktop: performance 96, accessibility, best practices and SEO 100. Mobile: performance 82, the rest 100. Medians of three runs; see below | None set                       | —             |
 
 "No visible jank" is read here as a 95th-percentile frame time within 33 ms (30 frames a second)
 and no single frame over 100 ms. The drag and resize are paced at one pointer move per 16 ms,
@@ -184,6 +184,33 @@ them, since the demo imports that entry and so loads the same code as before. Th
 slower than earlier the same day: `111c8e0` mounted in 1889 and 1649 ms on the slowed CPU, against
 1226 ms for the same code in the section above, so that row missed its 1.5 s at both commits, as it
 did on 18 November. A cross-filter on the slowed CPU missed its 300 ms at both, as before.
+
+## Lighthouse on the deployed demo
+
+Lighthouse 13.6.0 ran in Chrome 137, headless, on 22 November 2026, against the demo app at
+https://dashkit-demo.onrender.com as Render served it from `f888433`, with the API on Render awake.
+It ran three times with its default mobile settings (a phone-sized screen, a CPU slowed four times
+and a slow 4G network, simulated) and three times with its desktop preset, on the machine described
+above.
+
+| Run       | Performance | Accessibility | Best practices | SEO | First paint | Largest paint | Blocking time |
+| --------- | ----------- | ------------- | -------------- | --- | ----------- | ------------- | ------------- |
+| Desktop 1 | 96          | 100           | 100            | 100 | 0.8 s       | 1.1 s         | 0 ms          |
+| Desktop 2 | 99          | 100           | 100            | 100 | 0.5 s       | 0.8 s         | 10 ms         |
+| Desktop 3 | 96          | 100           | 100            | 100 | 0.8 s       | 1.1 s         | 0 ms          |
+| Mobile 1  | 82          | 100           | 100            | 100 | 2.7 s       | 3.5 s         | 233 ms        |
+| Mobile 2  | 77          | 100           | 100            | 100 | 2.7 s       | 3.5 s         | 393 ms        |
+| Mobile 3  | 87          | 100           | 100            | 100 | 2.5 s       | 3.3 s         | 159 ms        |
+
+Layout shift stayed at 0.006 or below in every run. The first runs, at `6c6dcd7`, scored SEO 91,
+for the missing meta description that `f888433` added; their other scores were within the ranges
+above.
+
+On the mobile settings, the demo app's one script, 1,001.7 kB (327.0 kB gzipped), is what holds
+back the first paint: the page shows nothing until it has downloaded and run, and Lighthouse counts
+1.1 s of JavaScript running on the slowed CPU, and 119 KiB that the first view does not use. The
+whole page weighs 389 KiB as sent. Splitting the demo app's script would help this score; the SDK's
+own sizes are in the bundle section below.
 
 ## Cross-filter latency before and after the brief transitions
 

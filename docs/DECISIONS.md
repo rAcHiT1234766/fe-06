@@ -440,3 +440,14 @@ The author asked for five features the requirements do not list. Each is recorde
   One classic script cannot leave part of itself out, so `dashkit.js` still carries the map's chart code. `DashKit.registerMap` was already on the global but missing from its types; `DashKitGlobal` now declares it.
 - **A host's bundle with the map is measured as one app that imports both entries.**
   Given the two entries as separate inputs, the bundler split their shared code into chunks and the total grew by 3 kB, which an app importing both into its own code does not see.
+
+## After Phase 7 — Deploying
+
+- **The static sites set `SKIP_INSTALL_DEPS`.**
+  Render installs a static site's dependencies by itself unless told not to, and its documentation does not say with which package manager. Both build commands already install with pnpm, so Render's own install is turned off.
+- **If Render refuses the global pnpm install, pnpm runs through npx.**
+  `corepack enable` writes beside Node just as `npm install --global` does, so it would fail the same way. `npx --yes pnpm@12.21.0` installs nothing globally.
+- **Storybook's made-up API addresses are https.**
+  A page served over https may not request http addresses, and the browser blocks them before a service worker can answer. Nothing ever resolves these addresses, so the scheme costs nothing.
+- **The demo's two pages have a meta description.**
+  It was Lighthouse's one failing SEO audit on the deployed demo.
