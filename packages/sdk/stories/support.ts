@@ -3,10 +3,12 @@ import { demoUsers } from '@dashkit/mock-engine/users';
 import type { ActiveFilter, DashboardConfig, DashKitTheme, ThemeInput } from '../src';
 import { QueryClient } from '../src/core/query-client';
 
-// Storybook runs without a server: the mock API answers these addresses inside the browser.
-export const API_URL = 'http://dashkit-api.test';
-export const LOADING_API_URL = 'http://never-answers.test';
-export const OFFLINE_API_URL = 'http://unreachable.test';
+// Storybook runs without a server: the mock API answers these addresses inside the browser. They
+// are https because a Storybook served over https, as Render serves it, blocks http requests
+// before the mock API can answer them.
+export const API_URL = 'https://dashkit-api.test';
+export const LOADING_API_URL = 'https://never-answers.test';
+export const OFFLINE_API_URL = 'https://unreachable.test';
 
 /**
  * Gets a demo user's embed token from the mock API, as a host's backend would mint one, and the
