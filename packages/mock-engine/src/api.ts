@@ -32,6 +32,15 @@ const metaFor = ({ scopes }: TokenClaims) => ({
 
 const notFound = () => new ApiError(404, 'NOT_FOUND', 'Not found');
 
+/** What `GET /` answers, with no token needed. */
+const ABOUT = {
+  name: 'DashKit demo API',
+  status: 'ok',
+  about:
+    'Serves data to the DashKit demo app. Every route except this one, /health and /auth/demo-token needs a bearer token, which the demo app gets for itself.',
+  health: '/health',
+};
+
 async function readJson(request: Request): Promise<unknown> {
   try {
     return (await request.json()) as unknown;
@@ -85,6 +94,8 @@ export function createApi(tokenSecret: string): MockApi {
     const { pathname } = new URL(request.url);
     const { method } = request;
 
+    // Someone who opens the API's bare address learns what it is rather than meeting a 401.
+    if (method === 'GET' && pathname === '/') return Response.json(ABOUT);
     if (method === 'GET' && pathname === '/health') return Response.json({ status: 'ok' });
     if (method === 'POST' && pathname === '/auth/demo-token') {
       const body = await readJson(request);

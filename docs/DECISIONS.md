@@ -451,3 +451,5 @@ The author asked for five features the requirements do not list. Each is recorde
   A page served over https may not request http addresses, and the browser blocks them before a service worker can answer. Nothing ever resolves these addresses, so the scheme costs nothing.
 - **The demo's two pages have a meta description.**
   It was Lighthouse's one failing SEO audit on the deployed demo.
+- **The API's bare address says what it is, with no token.**
+  Opening it showed "Missing bearer token", which reads as a fault. `GET /` now answers with the API's name, `"status": "ok"` and where its health check is; it reveals nothing the code does not, and every data route still needs a token.

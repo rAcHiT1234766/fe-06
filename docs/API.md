@@ -234,11 +234,12 @@ lists every property.
 
 Both install paths call the same API. The demo's is `apps/mock-api`, a Node server on port 4000
 (`PORT` changes it); Storybook and the unit tests run the same code inside the browser or the test
-process through MSW. Every route except `/health` and `/auth/demo-token` needs
+process through MSW. Every route except `/`, `/health` and `/auth/demo-token` needs
 `Authorization: Bearer <token>`.
 
 | Method | Path               | Purpose                                                   | Notes                                                                                                     |
 | ------ | ------------------ | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| GET    | `/`                | Says what the API is                                      | `{ "name", "status": "ok", "about", "health": "/health" }`, so its bare address answers a browser         |
 | GET    | `/health`          | Liveness check                                            | `{ "status": "ok" }`                                                                                      |
 | POST   | `/auth/demo-token` | Signs a token for a demo user                             | **Demo only: stands in for the host's backend.** Body `{ "userId": "ravi" }`, answer `{ "token": "..." }` |
 | GET    | `/meta`            | The dimensions, measures and aggregations a query may use | Each with its label; measures with their format and default aggregation, only those the token allows      |

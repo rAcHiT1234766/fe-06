@@ -63,6 +63,20 @@ describe('demo API', () => {
     expect(await call('GET', '/health')).toEqual({ status: 200, body: { status: 'ok' } });
   });
 
+  it('says what it is at its bare address, without a token', async () => {
+    expect(await call('GET', '/')).toMatchObject({
+      status: 200,
+      body: { name: 'DashKit demo API', status: 'ok', health: '/health' },
+    });
+  });
+
+  it('opens nothing else at its bare address', async () => {
+    expect(await call('POST', '/')).toMatchObject({
+      status: 401,
+      body: { error: { code: 'UNAUTHENTICATED' } },
+    });
+  });
+
   it('FR-3.1 signs tokens only for known demo users', async () => {
     expect(await tokenFor('ravi')).toMatch(/^[\w-]+\.[\w-]+\.[\w-]+$/);
     expect(await call('POST', '/auth/demo-token', { body: { userId: 'toString' } })).toMatchObject({

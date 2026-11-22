@@ -13,8 +13,8 @@ when one is clicked, and editable by the people allowed to edit.
   script tag and one element
 - **Storybook:** https://dashkit-storybook.onrender.com, every widget and its states, the theming
   playground and the API reference
-- **Demo API:** https://dashkit-api.onrender.com/health. The API has no page of its own: its other
-  routes answer only requests carrying a token, which the demo app fetches for you.
+- **Demo API:** https://dashkit-api.onrender.com, which says what it is. Its data routes answer only
+  requests carrying a token, which the demo app fetches for you.
 
 All three run on Render's free plan. After about 15 minutes without visitors the API sleeps, and
 the next visit waits up to a minute while it wakes. The API keeps dashboards in memory, so a saved
