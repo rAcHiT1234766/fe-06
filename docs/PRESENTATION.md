@@ -1,8 +1,8 @@
 # Presentation: ten minutes
 
 Slide by slide, with speaker notes, following the timing in section 19.4 of the implementation
-guide. Every number comes from [TEST_REPORT.md](TEST_REPORT.md), [PERFORMANCE.md](PERFORMANCE.md)
-or the code. The live demo follows [DEMO_SCRIPT.md](DEMO_SCRIPT.md).
+guide. Every number comes from [TEST_REPORT.md](TEST_REPORT.md), [PERFORMANCE.md](PERFORMANCE.md),
+[PROGRESS.md](PROGRESS.md) or the code. The live demo follows [DEMO_SCRIPT.md](DEMO_SCRIPT.md).
 
 | Slide | Time       | Title                                |
 | ----- | ---------- | ------------------------------------ |
@@ -46,7 +46,12 @@ their dashboards. It installs from npm into a React app, or with one script tag 
 
 ## 3. Live demo (1:00–4:30)
 
-**On the slide:** the demo, plain HTML and Storybook addresses, and "Backup: recording".
+**On the slide:**
+
+- Demo: https://dashkit-demo.onrender.com
+- Plain HTML: https://dashkit-demo.onrender.com/plain-html/
+- Storybook: https://dashkit-storybook.onrender.com
+- Backup: recording
 
 **Say:** follow shots 1 to 9 of [DEMO_SCRIPT.md](DEMO_SCRIPT.md). Leave Storybook and the numbers
 to the slides. If the API is still waking up, go to slide 4 and come back.
@@ -129,7 +134,7 @@ a series' own defaults override the chart's. Setting a short transition on every
 
 | Check                                    | Result                                                                                                                     |
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Unit, component and type tests           | 526 passed, the component tests on React 19 and 18                                                                         |
+| Unit, component and type tests           | 528 passed, the component tests on React 19 and 18                                                                         |
 | End-to-end tests                         | 108 passed: 26 user flows in Chromium, Firefox and WebKit; 15 axe accessibility checks and 15 Storybook checks in Chromium |
 | Permission matrix                        | No out-of-scope row for any demo user, and no query on a measure outside the user's scope                                  |
 | Coverage, SDK core and query engine      | 99.6% and 97.8% of lines; CI fails if either drops below its gate                                                          |
@@ -139,10 +144,13 @@ a series' own defaults override the chart's. Setting a short transition on every
 | Mount to first chart                     | median 155 ms (target 1.5 s)                                                                                               |
 | Cross-filter, click to every chart drawn | median 257 ms (target 300 ms)                                                                                              |
 | Identical queries from 10 widgets        | 5 requests for 5 distinct queries                                                                                          |
+| Lighthouse on the live demo              | Desktop: performance 96; accessibility, best practices and SEO 100. Mobile: performance 82                                 |
 
-**Say:** "All of this runs in CI on every push, apart from the performance run, which depends on
-the machine. Two targets are missed on a CPU slowed four times: a cross-filter takes 534 ms there,
-and resizing drops a few frames. Both are in the performance report with the reason. A re-run after
+**Say:** "All of this runs in CI on every push, apart from the performance and Lighthouse runs,
+which depend on the machine. On a simulated phone, Lighthouse scores performance 82, because the
+demo app ships as one large script; accessibility, best practices and SEO score 100. Two targets
+are missed on a CPU slowed four times: a cross-filter takes 534 ms there, and resizing drops a few
+frames. Both are in the performance report with the reason. A re-run after
 the stretch items found no slowdown from them; that day the machine was slower, and the mount on a
 slowed CPU missed its 1.5 seconds as well. Another after the five extra features found no slowdown
 from those either. Drawing a chart being resized only when the drag ends then cut the frames dropped
@@ -168,7 +176,11 @@ dashboards in a database and let the host's backend sign tokens."
 
 ## 10. Thank you (9:45–10:00)
 
-**On the slide:** the GitHub repository, the demo and the Storybook addresses.
+**On the slide:**
+
+- Code: https://github.com/rAcHiT1234766/fe-06
+- Demo: https://dashkit-demo.onrender.com
+- Storybook: https://dashkit-storybook.onrender.com
 
 **Say:** "Thank you. The README runs everything locally in a few minutes, and Storybook has the
 integrator docs."

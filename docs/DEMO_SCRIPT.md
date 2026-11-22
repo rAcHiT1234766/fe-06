@@ -12,21 +12,22 @@ three purposes:
 
 | What            | Deployed (see [DEPLOYMENT.md](DEPLOYMENT.md)) | Locally, after `pnpm dev` and `pnpm storybook` |
 | --------------- | --------------------------------------------- | ---------------------------------------------- |
-| Demo app        | `https://<demo address>`                      | http://localhost:5173                          |
-| Plain HTML page | `https://<demo address>/plain-html/`          | http://localhost:5173/plain-html/              |
-| Storybook       | `https://<storybook address>`                 | http://localhost:6006                          |
-| Demo API        | `https://<api address>`                       | http://localhost:4000                          |
+| Demo app        | https://dashkit-demo.onrender.com             | http://localhost:5173                          |
+| Plain HTML page | https://dashkit-demo.onrender.com/plain-html/ | http://localhost:5173/plain-html/              |
+| Storybook       | https://dashkit-storybook.onrender.com        | http://localhost:6006                          |
+| Demo API        | https://dashkit-api.onrender.com              | http://localhost:4000                          |
 
 ## Before you record
 
-1. Open `https://<api address>/health` and wait for `{"status":"ok"}`. A free API that has been
+1. Open https://dashkit-api.onrender.com/health and wait for `{"status":"ok"}`. A free API that has been
    idle takes up to a minute to wake.
 2. In Chrome, open three tabs: the plain HTML page, the demo app and Storybook. Set the zoom to
    100 % and the window to about 1280 × 800. Close DevTools.
 3. Reload the demo app so it starts as Asha, in the Acme Global brand, on the Analytics page, with
    the starter dashboard. The dark **Demo** bar at the top holds the controls the shots use;
    everything below it is the host product.
-4. Put the step 8 snippet below in a text editor, with the API's address filled in, ready to copy.
+4. Put the step 8 snippet below in a text editor, ready to copy. It calls the deployed API; for a
+   local run, change its first line to `http://localhost:4000`.
 5. Silence notifications. On Windows 11, Snipping Tool can record the screen; any recorder will do.
 
 ## Shots
@@ -43,7 +44,7 @@ three purposes:
 | 8   | 3:30–3:55 | Choose Ravi. Point out that there is no **Edit dashboard** button. Press F12, open **Console**, paste the snippet below and press Enter.                                                                                                                                                                         | "Ravi is a viewer, so there is no edit button. Even a hand-made save request with his valid token is refused by the API."                                                                                                    | No edit button. The console prints `403` and `FORBIDDEN`, "Only editors can change dashboards".                                                                                                                                                                           |
 | 9   | 3:55–4:10 | Close DevTools. Narrow the window to phone width, or press Ctrl+Shift+M in DevTools and pick a phone.                                                                                                                                                                                                            | "The layout follows its container, down to a phone."                                                                                                                                                                         | One widget per row; the page does not scroll sideways.                                                                                                                                                                                                                    |
 | 10  | 4:10–4:35 | Restore the window. On the Storybook tab, open **Widgets › Bar chart** and click Loading, Empty and Error. Open **Concepts › Theming** and move the radius slider. Open **API reference**.                                                                                                                       | "Storybook shows every widget in every state, a theming playground, and the API reference generated from the TypeScript types."                                                                                              | Each state renders; the playground restyles as you drag; the reference lists every export.                                                                                                                                                                                |
-| 11  | 4:35–5:00 | Show [TEST_REPORT.md](TEST_REPORT.md) and [PERFORMANCE.md](PERFORMANCE.md), or the latest GitHub Actions run.                                                                                                                                                                                                    | "512 unit and component tests, and 102 end-to-end checks across three browsers, accessibility included. First chart in 155 ms, a cross-filter in 257 ms, 246 kB gzipped."                                                    | The reports' summary tables.                                                                                                                                                                                                                                              |
+| 11  | 4:35–5:00 | Show [TEST_REPORT.md](TEST_REPORT.md) and [PERFORMANCE.md](PERFORMANCE.md), or the latest run under the repository's [Actions](https://github.com/rAcHiT1234766/fe-06/actions) tab.                                                                                                                              | "528 unit, component and type tests, and 108 end-to-end checks across three browsers, accessibility included. First chart in 155 ms, a cross-filter in 257 ms, 246 kB gzipped."                                              | The reports' summary tables.                                                                                                                                                                                                                                              |
 
 ### Snippet for step 8
 
@@ -51,7 +52,7 @@ Paste it into the console of the demo app's tab, so the request comes from the d
 The first time, Chrome asks you to type `allow pasting` before it accepts a paste.
 
 ```js
-const api = 'https://<api address>';
+const api = 'https://dashkit-api.onrender.com';
 const { token } = await (
   await fetch(`${api}/auth/demo-token`, {
     method: 'POST',

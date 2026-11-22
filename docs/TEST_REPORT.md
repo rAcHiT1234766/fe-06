@@ -3,7 +3,8 @@
 Every result on this page comes from runs on 21 November 2026 on a fresh clone of commit
 `3787e16`, the last commit before this report, on the machine described in [PERFORMANCE.md](PERFORMANCE.md) (Windows 11, Intel Core i5-1135G7, 16 GB).
 [PROGRESS.md](PROGRESS.md) has the results of each commit before it. Performance numbers are on
-that page.
+that page. Since then, `1498753` added two unit tests for the API's bare address: 528 pass, with
+coverage above every gate, as PROGRESS.md records.
 
 | Tool       | Version                                                   |
 | ---------- | --------------------------------------------------------- |
