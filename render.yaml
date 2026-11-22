@@ -32,6 +32,10 @@ services:
     envVars:
       - key: NODE_VERSION
         value: '24'
+      # Render installs a static site's dependencies itself unless this is set, and its docs do not
+      # say with which package manager. The build command installs them with pnpm instead.
+      - key: SKIP_INSTALL_DEPS
+        value: 'true'
       # Read at build time, so changing it needs a new deploy.
       - key: VITE_DASHKIT_API_URL
         sync: false
@@ -46,3 +50,6 @@ services:
     envVars:
       - key: NODE_VERSION
         value: '24'
+      # As for the demo: the build command installs the dependencies with pnpm.
+      - key: SKIP_INSTALL_DEPS
+        value: 'true'
