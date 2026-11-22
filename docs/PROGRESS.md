@@ -18,6 +18,7 @@ with the commands in `render.yaml`, the global pnpm install included.
 | --------- | ------------------------------------------------------------------------------------------- |
 | `6c6dcd7` | Storybook's in-browser API has https addresses, so Storybook served over https can reach it |
 | `f888433` | The demo app and the plain HTML page have a meta description                                |
+| `1498753` | The API's bare address says what it is, with no token needed                                |
 
 ### What the deploy found
 
@@ -30,15 +31,16 @@ https.
 
 Lighthouse's first runs scored SEO 91, for a missing meta description, which `f888433` added.
 
-Opening the API's bare address shows `{"error":{"code":"UNAUTHENTICATED","message":"Missing bearer
-token"}}`. That is the API refusing an anonymous request, as it should; DEPLOYMENT.md now says so
-under "If something goes wrong".
+Opening the API's bare address showed `{"error":{"code":"UNAUTHENTICATED","message":"Missing
+bearer token"}}`: the API refusing an anonymous request, as it should, but it read as a fault. Since
+`1498753`, `GET /` answers without a token with the API's name, `"status": "ok"` and where its health
+check is. Every other method on `/`, and every data route, still answers 401 without one.
 
 ### Check results
 
 | Check                | Result                                                                                                        |
 | -------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Deployed-site checks | 12 of 12 at `6c6dcd7`, and again at `f888433`                                                                 |
+| Deployed-site checks | 12 of 12 at `6c6dcd7`, `f888433` and `1498753`                                                                |
 | Demo script          | 25 of 25 at `6c6dcd7`, in 28 seconds, with no page errors                                                     |
 | Lighthouse, desktop  | medians of three runs at `f888433`: performance 96, accessibility 100, best practices 100, SEO 100            |
 | Lighthouse, mobile   | medians of three runs at `f888433`: performance 82 (77 to 87), accessibility 100, best practices 100, SEO 100 |
@@ -50,7 +52,9 @@ live API was put back to the starting one, read from a fresh local API, and comp
 same apart from the save stamps. The next deploy restarted the API, which removed those too.
 
 Before `6c6dcd7`: Prettier, lint, typecheck, and the 15 Storybook end-to-end tests in Chromium on a
-fresh Storybook build. Before `f888433`: Prettier, lint and the demo build, which put the
+fresh Storybook build. Before `1498753`: Prettier, lint, typecheck and the unit tests with coverage,
+528 passing, above both gates; its new test failed with the route removed. On Render it answered
+at `/` and still gave 401 for `POST /` and `GET /meta`. Before `f888433`: Prettier, lint and the demo build, which put the
 description in both pages. The demo's end-to-end tests were not run for `f888433`, because another
 program held port 5173 and Playwright would have tested it instead; the deployed-site checks ran on
 the deployed pages in their place.
